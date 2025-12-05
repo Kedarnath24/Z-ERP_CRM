@@ -19,6 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import StaffDropdown from '@/components/StaffDropdown';
+import TipDialog from '@/components/TipDialog';
 
 type Service = {
   id: string;
@@ -161,6 +162,14 @@ export default function POSRegister() {
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const [customerSearchResults, setCustomerSearchResults] = useState<any[]>([]);
   const [isCustomerAutoFilled, setIsCustomerAutoFilled] = useState(false);
+
+  // Tip dialog state
+  const [showTipDialog, setShowTipDialog] = useState(false);
+  const [tipTransactionData, setTipTransactionData] = useState<{
+    billAmount: number;
+    transactionId: string;
+    serviceStaff: Array<{ id: string; name: string }>;
+  } | null>(null);
 
   // Load team members for dropdowns
   useEffect(() => {
@@ -1446,6 +1455,28 @@ export default function POSRegister() {
         description: `Total: ${formatPrice(total)} - Payment recorded successfully`,
       });
     }
+
+    // Extract service staff from cart items
+    const serviceStaff: Array<{ id: string; name: string }> = [];
+    const staffSet = new Set<string>();
+    
+    cartItems.forEach(item => {
+      if (item.assignedPerson && !staffSet.has(item.assignedPerson)) {
+        staffSet.add(item.assignedPerson);
+        serviceStaff.push({
+          id: item.assignedPerson,
+          name: item.assignedPerson
+        });
+      }
+    });
+
+    // Show tip dialog after successful sale
+    setTipTransactionData({
+      billAmount: total / 100, // Convert cents to rupees
+      transactionId: transaction.id,
+      serviceStaff: serviceStaff.length > 0 ? serviceStaff : [{ id: staffName, name: staffName }]
+    });
+    setShowTipDialog(true);
     
     // Reset form and handle tabs
     setCart({});
@@ -3435,6 +3466,21 @@ export default function POSRegister() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Tip Dialog */}
+      {tipTransactionData && (
+        <TipDialog
+          isOpen={showTipDialog}
+          onClose={() => {
+            setShowTipDialog(false);
+            setTipTransactionData(null);
+          }}
+          billAmount={tipTransactionData.billAmount}
+          staffMember={tipTransactionData.serviceStaff.length === 1 ? tipTransactionData.serviceStaff[0].name : ''}
+          serviceStaff={tipTransactionData.serviceStaff}
+          transactionId={tipTransactionData.transactionId}
+        />
+      )}
     </div>
   );
 }
