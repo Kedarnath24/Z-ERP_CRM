@@ -1,5 +1,22 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
+const buildInitials = (name: string, fallback = 'MW') => {
+  const trimmed = (name || '').trim();
+  if (!trimmed) return fallback;
+
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) {
+    return (parts[0].slice(0, 2) || fallback).toUpperCase();
+  }
+
+  const letters = `${parts[0][0] || ''}${parts[1][0] || ''}`.trim();
+  if (letters.length > 0) {
+    return letters.slice(0, 2).toUpperCase();
+  }
+
+  return (trimmed.slice(0, 2) || fallback).toUpperCase();
+};
+
 interface Workspace {
   id: string;
   name: string;
@@ -11,6 +28,7 @@ interface Workspace {
   bookingLink: string;
   prefix: string;
   maxDigits: number;
+  userCustomized?: boolean;
 }
 
 interface WorkspaceContextType {
@@ -42,7 +60,10 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     try {
       const workspacesData = localStorage.getItem('workspaces');
       if (workspacesData) {
-        parsed = JSON.parse(workspacesData);
+        parsed = JSON.parse(workspacesData).map((workspace: Workspace) => ({
+          ...workspace,
+          userCustomized: workspace.userCustomized ?? false,
+        }));
       }
     } catch {
       parsed = [];
@@ -53,26 +74,29 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       const defaultWorkspace: Workspace = {
         id: Date.now().toString(),
         name: company?.name || 'My Workspace',
-        initials: (company?.name || 'MW').substring(0, 2).toUpperCase(),
+        initials: buildInitials(company?.name || 'My Workspace'),
         color: 'bg-purple-500',
         email: company?.email || '',
         description: company?.industry || 'Default workspace',
         status: 'Active',
         bookingLink: `${window.location.origin}/book/default`,
         prefix: 'BK',
-        maxDigits: 4
+        maxDigits: 4,
+        userCustomized: false,
       };
       
       parsed = [defaultWorkspace];
       try { localStorage.setItem('workspaces', JSON.stringify(parsed)); } catch {}
-    } else if (company?.name && parsed.length === 1) {
+    } else if (typeof company?.name === 'string' && parsed.length === 1) {
       // Update the first workspace name if company name is available
       // This ensures workspace name stays in sync with business name
       const firstWorkspace = parsed[0];
-      if (firstWorkspace.name !== company.name || firstWorkspace.initials !== company.name.substring(0, 2).toUpperCase()) {
+      const desiredInitials = buildInitials(company.name, firstWorkspace.initials || 'MW');
+      if (!firstWorkspace.userCustomized && (firstWorkspace.name !== company.name || firstWorkspace.initials !== desiredInitials)) {
         firstWorkspace.name = company.name;
-        firstWorkspace.initials = company.name.substring(0, 2).toUpperCase();
+        firstWorkspace.initials = desiredInitials;
         firstWorkspace.description = company.industry || firstWorkspace.description;
+        firstWorkspace.userCustomized = false;
         try { localStorage.setItem('workspaces', JSON.stringify(parsed)); } catch {}
       }
     }
@@ -129,12 +153,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   };
 
   const setWorkspaces = (newWorkspaces: Workspace[]) => {
-    setWorkspacesState(newWorkspaces);
-    try { localStorage.setItem('workspaces', JSON.stringify(newWorkspaces)); } catch {}
+    const normalized = newWorkspaces.map(workspace => ({
+      ...workspace,
+      userCustomized: workspace.userCustomized ?? false,
+    }));
+
+    setWorkspacesState(normalized);
+    try { localStorage.setItem('workspaces', JSON.stringify(normalized)); } catch {}
     
     // Update selected workspace if it was modified
     if (selectedWorkspace) {
-      const updated = newWorkspaces.find(w => w.id === selectedWorkspace.id);
+      const updated = normalized.find(w => w.id === selectedWorkspace.id);
       if (updated) {
         setSelectedWorkspaceState(updated);
       } else {

@@ -622,52 +622,114 @@ export default function ProductsPage() {
     }
   };
 
-  // Recommended product templates
+  // Recommended product templates loaded from `sample-retail.csv`
   const recommendedProducts: Omit<Product, 'id' | 'createdAt'>[] = [
-    // Spa Products
-    { name: 'Essential Oil Set', price: '1500', currency: 'INR', description: 'Premium aromatherapy essential oils collection', category: 'Spa Products', sku: 'SPA-001', stock: '50', isEnabled: true },
-    { name: 'Massage Oil', price: '800', currency: 'INR', description: 'Organic therapeutic massage oil', category: 'Spa Products', sku: 'SPA-002', stock: '100', isEnabled: true },
-    { name: 'Bath Bombs Set', price: '1000', currency: 'INR', description: 'Luxurious bath bombs with natural ingredients', category: 'Spa Products', sku: 'SPA-003', stock: '75', isEnabled: true },
-    { name: 'Body Scrub', price: '900', currency: 'INR', description: 'Exfoliating body scrub with sea salt', category: 'Spa Products', sku: 'SPA-004', stock: '60', isEnabled: true },
-    { name: 'Spa Gift Set', price: '3500', currency: 'INR', description: 'Complete spa experience gift package', category: 'Spa Products', sku: 'SPA-005', stock: '30', isEnabled: true },
-    
-    // Hair Care
-    { name: 'Professional Shampoo', price: '1200', currency: 'INR', description: 'Salon-grade nourishing shampoo', category: 'Hair Care', sku: 'HAIR-001', stock: '120', isEnabled: true },
-    { name: 'Deep Conditioning Mask', price: '1400', currency: 'INR', description: 'Intensive hair repair treatment', category: 'Hair Care', sku: 'HAIR-002', stock: '80', isEnabled: true },
-    { name: 'Hair Serum', price: '1100', currency: 'INR', description: 'Anti-frizz shine serum', category: 'Hair Care', sku: 'HAIR-003', stock: '90', isEnabled: true },
-    { name: 'Heat Protection Spray', price: '750', currency: 'INR', description: 'Thermal styling protectant', category: 'Hair Care', sku: 'HAIR-004', stock: '100', isEnabled: true },
-    { name: 'Hair Color Kit', price: '950', currency: 'INR', description: 'Professional at-home coloring system', category: 'Hair Care', sku: 'HAIR-005', stock: '45', isEnabled: true },
-    
-    // Skin Care
-    { name: 'Facial Cleanser', price: '850', currency: 'INR', description: 'Gentle daily face wash', category: 'Skin Care', sku: 'SKIN-001', stock: '150', isEnabled: true },
-    { name: 'Vitamin C Serum', price: '1600', currency: 'INR', description: 'Brightening anti-aging serum', category: 'Skin Care', sku: 'SKIN-002', stock: '70', isEnabled: true },
-    { name: 'Moisturizer SPF 30', price: '1300', currency: 'INR', description: 'Daily hydrating sunscreen', category: 'Skin Care', sku: 'SKIN-003', stock: '110', isEnabled: true },
-    { name: 'Eye Cream', price: '1400', currency: 'INR', description: 'Anti-wrinkle eye treatment', category: 'Skin Care', sku: 'SKIN-004', stock: '65', isEnabled: true },
-    { name: 'Face Mask Set', price: '1200', currency: 'INR', description: 'Variety pack of sheet masks', category: 'Skin Care', sku: 'SKIN-005', stock: '85', isEnabled: true },
-    
-    // Makeup
-    { name: 'Foundation', price: '1500', currency: 'INR', description: 'Full coverage liquid foundation', category: 'Makeup', sku: 'MAKE-001', stock: '95', isEnabled: true },
-    { name: 'Eyeshadow Palette', price: '1800', currency: 'INR', description: '12-shade professional palette', category: 'Makeup', sku: 'MAKE-002', stock: '60', isEnabled: true },
-    { name: 'Lipstick Set', price: '1300', currency: 'INR', description: 'Long-lasting matte lipsticks', category: 'Makeup', sku: 'MAKE-003', stock: '120', isEnabled: true },
-    { name: 'Makeup Brush Set', price: '2300', currency: 'INR', description: 'Professional 12-piece brush collection', category: 'Makeup', sku: 'MAKE-004', stock: '40', isEnabled: true },
-    
-    // Fitness Equipment
-    { name: 'Yoga Mat', price: '1200', currency: 'INR', description: 'Non-slip premium yoga mat', category: 'Fitness Equipment', sku: 'FIT-001', stock: '80', isEnabled: true },
-    { name: 'Resistance Bands Set', price: '850', currency: 'INR', description: '5-piece resistance training set', category: 'Fitness Equipment', sku: 'FIT-002', stock: '100', isEnabled: true },
-    { name: 'Dumbbells Pair', price: '1500', currency: 'INR', description: 'Adjustable weight dumbbells', category: 'Fitness Equipment', sku: 'FIT-003', stock: '50', isEnabled: true },
-    { name: 'Foam Roller', price: '950', currency: 'INR', description: 'Muscle recovery foam roller', category: 'Fitness Equipment', sku: 'FIT-004', stock: '70', isEnabled: true },
-    { name: 'Jump Rope', price: '500', currency: 'INR', description: 'Speed jump rope for cardio', category: 'Fitness Equipment', sku: 'FIT-005', stock: '120', isEnabled: true },
-    
-    // Supplements
-    { name: 'Protein Powder', price: '1900', currency: 'INR', description: 'Whey protein isolate', category: 'Supplements', sku: 'SUP-001', stock: '90', isEnabled: true },
-    { name: 'Pre-Workout', price: '1400', currency: 'INR', description: 'Energy and focus supplement', category: 'Supplements', sku: 'SUP-002', stock: '75', isEnabled: true },
-    { name: 'Multivitamin', price: '1100', currency: 'INR', description: 'Daily essential vitamins', category: 'Supplements', sku: 'SUP-003', stock: '150', isEnabled: true },
-    { name: 'BCAA Supplement', price: '1300', currency: 'INR', description: 'Muscle recovery amino acids', category: 'Supplements', sku: 'SUP-004', stock: '85', isEnabled: true },
-    
-    // Retail
-    { name: 'Water Bottle', price: '600', currency: 'INR', description: 'Insulated stainless steel bottle', category: 'Retail', sku: 'RET-001', stock: '200', isEnabled: true },
-    { name: 'Gym Bag', price: '1500', currency: 'INR', description: 'Spacious sports duffle bag', category: 'Retail', sku: 'RET-002', stock: '60', isEnabled: true },
-    { name: 'Towel Set', price: '850', currency: 'INR', description: 'Quick-dry microfiber towels', category: 'Retail', sku: 'RET-003', stock: '100', isEnabled: true },
+    { name: 'ELEMENTS 2.0 CALM SERUM 100ML', price: '1900', currency: 'INR', description: '', category: 'WELLA', sku: '200', stock: '0', isEnabled: true },
+    { name: 'ELEMENTS 2.0 CALM SHAMPOO 250ML', price: '1250', currency: 'INR', description: '', category: 'WELLA', sku: '201', stock: '0', isEnabled: true },
+    { name: 'ELEMENTS 2.0 COND 200ml', price: '1350', currency: 'INR', description: '', category: 'WELLA', sku: '202', stock: '0', isEnabled: true },
+    { name: 'ELEMENTS 2.0 MASK 150ml', price: '1400', currency: 'INR', description: '', category: 'WELLA', sku: '203', stock: '0', isEnabled: true },
+    { name: 'ELEMENTS 2.0 SHAMPOO 250ML', price: '1250', currency: 'INR', description: '', category: 'WELLA', sku: '204', stock: '0', isEnabled: true },
+    { name: 'ELEMENTS 2.0 SPRAY 150ml', price: '1850', currency: 'INR', description: '', category: 'WELLA', sku: '205', stock: '0', isEnabled: true },
+    { name: 'WP FUSION COND 200ML', price: '1300', currency: 'INR', description: '', category: 'WELLA', sku: '206', stock: '0', isEnabled: true },
+    { name: 'WP FUSION MASK 150ML', price: '1350', currency: 'INR', description: '', category: 'WELLA', sku: '207', stock: '0', isEnabled: true },
+    { name: 'WP FUSION SHP 250ML', price: '1200', currency: 'INR', description: '', category: 'WELLA', sku: '208', stock: '0', isEnabled: true },
+    { name: 'NUTRICURLS COND 200ml', price: '1350', currency: 'INR', description: '', category: 'WELLA', sku: '209', stock: '0', isEnabled: true },
+    { name: 'NUTRICURLS MASK 150ML', price: '1400', currency: 'INR', description: '', category: 'WELLA', sku: '210', stock: '0', isEnabled: true },
+    { name: 'NUTRICURLS SHAMPOO 250ML', price: '1250', currency: 'INR', description: '', category: 'WELLA', sku: '211', stock: '0', isEnabled: true },
+    { name: 'WP OIL REF COND 200ML', price: '1350', currency: 'INR', description: '', category: 'WELLA', sku: '212', stock: '0', isEnabled: true },
+    { name: 'WP OIL REF MASK 150ml', price: '1250', currency: 'INR', description: '', category: 'WELLA', sku: '213', stock: '0', isEnabled: true },
+    { name: 'WP OIL REF SHP 250ml', price: '1250', currency: 'INR', description: '', category: 'WELLA', sku: '214', stock: '0', isEnabled: true },
+    { name: 'WP OIL REFLECTN SERUM100ML', price: '1400', currency: 'INR', description: '', category: 'WELLA', sku: '215', stock: '0', isEnabled: true },
+    { name: 'WP OIL REFLECTNS SERUM 30ML', price: '750', currency: 'INR', description: '', category: 'WELLA', sku: '216', stock: '0', isEnabled: true },
+    { name: 'SP BALANCE SCALP LOTION 125ML', price: '1350', currency: 'INR', description: '', category: 'SYSPROF', sku: '217', stock: '0', isEnabled: true },
+    { name: 'SP BALANCE SCALP MASK 200ML', price: '2000', currency: 'INR', description: '', category: 'SYSPROF', sku: '218', stock: '0', isEnabled: true },
+    { name: 'SP BALANCE SCALP SHMP 250ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '219', stock: '0', isEnabled: true },
+    { name: 'SP CLEAR SCALP SHMP 250ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '220', stock: '0', isEnabled: true },
+    { name: 'SP COLOR SAVE COND 200ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '221', stock: '0', isEnabled: true },
+    { name: 'SP COLOR SAVE MASK 200ML', price: '2000', currency: 'INR', description: '', category: 'SYSPROF', sku: '222', stock: '0', isEnabled: true },
+    { name: 'SP COLOR SAVE SHMP 250ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '223', stock: '0', isEnabled: true },
+    { name: 'SP COND HYDRATE 200ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '224', stock: '0', isEnabled: true },
+    { name: 'SP HYDRATE MASK 200ML', price: '2000', currency: 'INR', description: '', category: 'SYSPROF', sku: '225', stock: '0', isEnabled: true },
+    { name: 'SP HYDRATE SHMP 250ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '226', stock: '0', isEnabled: true },
+    { name: 'SP LUXE KER PRTCT SHMP 200ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '227', stock: '0', isEnabled: true },
+    { name: 'SP LUXE KER REST TRM MASK 150ML', price: '2000', currency: 'INR', description: '', category: 'SYSPROF', sku: '228', stock: '0', isEnabled: true },
+    { name: 'SP LUXE OIL 100ML', price: '3300', currency: 'INR', description: '', category: 'SYSPROF', sku: '229', stock: '0', isEnabled: true },
+    { name: 'SP LUXE OIL 30ML', price: '1200', currency: 'INR', description: '', category: 'SYSPROF', sku: '230', stock: '0', isEnabled: true },
+    { name: 'SP REPAIR COND 200ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '231', stock: '0', isEnabled: true },
+    { name: 'SP REPAIR MASK 200ML', price: '2000', currency: 'INR', description: '', category: 'SYSPROF', sku: '232', stock: '0', isEnabled: true },
+    { name: 'SP REPAIR SHAMPOO 250ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '233', stock: '0', isEnabled: true },
+    { name: 'SP SMOOTHEN COND 200ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '234', stock: '0', isEnabled: true },
+    { name: 'SP SMOOTHEN SHMP 250ML', price: '1600', currency: 'INR', description: '', category: 'SYSPROF', sku: '235', stock: '0', isEnabled: true },
+    { name: 'SP VOLUMIZE SHMP 250ML', price: '1800', currency: 'INR', description: '', category: 'SYSPROF', sku: '236', stock: '0', isEnabled: true },
+    { name: 'SP DIA ALPHA ENERGY 100ML', price: '6000', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '237', stock: '0', isEnabled: true },
+    { name: 'SP DIA BAL ENERGY SER 100ML', price: '5650', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '238', stock: '0', isEnabled: true },
+    { name: 'SP DIA BAL MSK 200ML', price: '2900', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '239', stock: '0', isEnabled: true },
+    { name: 'SP DIA BAL SHP 250ML', price: '2250', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '240', stock: '0', isEnabled: true },
+    { name: 'SP DIA BALANCE LOTION 125ML', price: '2300', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '241', stock: '0', isEnabled: true },
+    { name: 'SP DIA CLR SAVE CND 200ML', price: '2500', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '242', stock: '0', isEnabled: true },
+    { name: 'SP DIA CLR SAVE MSK 200ML', price: '2900', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '243', stock: '0', isEnabled: true },
+    { name: 'SP DIA CLR SAVE SHP 250ML', price: '2050', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '244', stock: '0', isEnabled: true },
+    { name: 'SP DIA HYDRATE CND 200ML', price: '2500', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '245', stock: '0', isEnabled: true },
+    { name: 'SP DIA HYDRATE MSK 200ML', price: '2900', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '246', stock: '0', isEnabled: true },
+    { name: 'SP DIA HYDRATE SHP 250ML', price: '2100', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '247', stock: '0', isEnabled: true },
+    { name: 'SP DIA LIQUID HAIR 100ML', price: '5500', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '248', stock: '0', isEnabled: true },
+    { name: 'SP DIA LUXE K- CND 200ML', price: '2500', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '249', stock: '0', isEnabled: true },
+    { name: 'SP DIA LUXE KERA MASK 200ML', price: '3150', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '250', stock: '0', isEnabled: true },
+    { name: 'SP DIA LUXE KERA SHMP 250ML', price: '2100', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '251', stock: '0', isEnabled: true },
+    { name: 'SP DIA LUXEOIL 100 ML', price: '3500', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '252', stock: '0', isEnabled: true },
+    { name: 'SP DIA LUXEOIL 30ML', price: '1200', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '253', stock: '0', isEnabled: true },
+    { name: 'SP DIA PURIFY LOTION 125ML', price: '2300', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '254', stock: '0', isEnabled: true },
+    { name: 'SP DIA PURIFY MSK 200ML', price: '2900', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '255', stock: '0', isEnabled: true },
+    { name: 'SP DIA PURIFY SHP 250ML M', price: '2250', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '256', stock: '0', isEnabled: true },
+    { name: 'SP DIA REPAIR CND 200ML', price: '2500', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '257', stock: '0', isEnabled: true },
+    { name: 'SP DIA SMOOTHEN CND 200ML', price: '2600', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '258', stock: '0', isEnabled: true },
+    { name: 'SP DIA REPAIR MSK 200ML', price: '2900', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '259', stock: '0', isEnabled: true },
+    { name: 'SP DIA REPAIR SHP 250ML', price: '2250', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '260', stock: '0', isEnabled: true },
+    { name: 'SP DIA SMOOTHEN MSK 200ML', price: '2900', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '261', stock: '0', isEnabled: true },
+    { name: 'SP DIA SMOOTHEN SHP 250ML', price: '2250', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '262', stock: '0', isEnabled: true },
+    { name: 'SP DIA VOLUMIZE MSK 200ML', price: '2900', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '263', stock: '0', isEnabled: true },
+    { name: 'SP DIA VOLUMIZE SHP 250ML', price: '2250', currency: 'INR', description: '', category: 'SYSPROF DIA', sku: '264', stock: '0', isEnabled: true },
+    { name: 'WP ULTIME REPAIR REPAIRING SHAMPOO 250ML', price: '1800', currency: 'INR', description: '', category: 'ULTIME REPAIR', sku: '265', stock: '0', isEnabled: true },
+    { name: 'WP ULTIME REPAIR REPAIRING DAILY COND 150ML', price: '1600', currency: 'INR', description: '', category: 'ULTIME REPAIR', sku: '266', stock: '0', isEnabled: true },
+    { name: 'WP ULTIME REPAIR REPAIRING INTENSE MASK 150ML', price: '2500', currency: 'INR', description: '', category: 'ULTIME REPAIR', sku: '267', stock: '0', isEnabled: true },
+    { name: 'WP ULTIME REPAIR MIRACLE HAIR RESCUE 30ML', price: '1050', currency: 'INR', description: '', category: 'ULTIME REPAIR', sku: '268', stock: '0', isEnabled: true },
+    { name: 'WP ULTIME REPAIR MIRACLE HAIR RESCUE 95ML', price: '3000', currency: 'INR', description: '', category: 'ULTIME REPAIR', sku: '269', stock: '0', isEnabled: true },
+    { name: 'WP ULTIME REPAIR MIRACLE OVERNIGHT HAIR TRMNT 95ML', price: '3000', currency: 'INR', description: '', category: 'ULTIME REPAIR', sku: '270', stock: '0', isEnabled: true },
+    { name: 'QOD ARGAN SHAMPOO 300 ML', price: '1650', currency: 'INR', description: '', category: 'QOD PROFESSIONAL', sku: '271', stock: '0', isEnabled: true },
+    { name: 'QOD ARGAN CONDITIONER 300 ML', price: '1650', currency: 'INR', description: '', category: 'QOD PROFESSIONAL', sku: '272', stock: '0', isEnabled: true },
+    { name: 'REVIVER HAIR REPAIR SHAMPOO 250 ML', price: '1575', currency: 'INR', description: '', category: 'DE FABULOUS', sku: '273', stock: '0', isEnabled: true },
+    { name: 'REVIVER HAIR REPAIR CONDITIONER 250 ML', price: '1575', currency: 'INR', description: '', category: 'DE FABULOUS', sku: '274', stock: '0', isEnabled: true },
+    { name: 'ABSOLUT REPAIR MOLECULAR SHAMPOO 300 ML', price: '1490', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '275', stock: '0', isEnabled: true },
+    { name: 'ABSOLUT REPAIR MOLECULAR RINSE OFF SERUM 250 ML', price: '1600', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '276', stock: '0', isEnabled: true },
+    { name: 'ABSOLUT REPAIR MOLECULAR MASK 250 ML', price: '1600', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '277', stock: '0', isEnabled: true },
+    { name: 'SCALP ADVANCED ANTI GRASS OILINESS SHAMPOO 300 ML', price: '990', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '278', stock: '0', isEnabled: true },
+    { name: 'SCALP ADVANCED ANTI DANDRUFF SHAMPOO 300 ML', price: '990', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '279', stock: '0', isEnabled: true },
+    { name: 'SCALP ADVANCED ANTI GRASS OILINESS 2 IN 1 CLAY 250 ML', price: '1150', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '280', stock: '0', isEnabled: true },
+    { name: 'PRO LONGER SHAMPOO 300 ML', price: '745', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '281', stock: '0', isEnabled: true },
+    { name: 'PRO LONGER MASK 250 ML', price: '920', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '282', stock: '0', isEnabled: true },
+    { name: 'METAL DX SHAMPOO 300 ML', price: '1490', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '283', stock: '0', isEnabled: true },
+    { name: 'METAL DX MASK 250 ML', price: '1600', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '284', stock: '0', isEnabled: true },
+    { name: 'SE ABSOLUT REPAIR SHAMPOO 300 ML', price: '845', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '285', stock: '0', isEnabled: true },
+    { name: 'SE ABSOLUT REPAIR MASK 250 ML', price: '990', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '286', stock: '0', isEnabled: true },
+    { name: 'SE ABSOLUT REPAIR OIL 90 ML', price: '1390', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '287', stock: '0', isEnabled: true },
+    { name: 'LISS UNLIMITED SHAMPOO 300 ML', price: '790', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '288', stock: '0', isEnabled: true },
+    { name: 'LISS UNLIMITED MASK 250 ML', price: '990', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '289', stock: '0', isEnabled: true },
+    { name: 'LISS UNLIMITED SERUM 125 ML', price: '890', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '290', stock: '0', isEnabled: true },
+    { name: 'VITAMINO COLOR SHAMPOO 300 ML', price: '790', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '291', stock: '0', isEnabled: true },
+    { name: 'VITAMINO COLOR MASK 250 ML', price: '990', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '292', stock: '0', isEnabled: true },
+    { name: 'VITAMINO COLOR SPECTRUM SHAMPOO 300 ML', price: '1490', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '293', stock: '0', isEnabled: true },
+    { name: 'VITAMINO COLOR SPECTRUM MASK 250 ML', price: '1600', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '294', stock: '0', isEnabled: true },
+    { name: 'CURL EXPRESSION SHAMPOO 300 ML', price: '1490', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '295', stock: '0', isEnabled: true },
+    { name: 'CURL EXPRESSION CREAM 200 ML', price: '1490', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '296', stock: '0', isEnabled: true },
+    { name: 'CURL EXPRESSION MASK 250 ML', price: '1600', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '297', stock: '0', isEnabled: true },
+    { name: 'INFORCER SHAMPOO 300 ML', price: '790', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '298', stock: '0', isEnabled: true },
+    { name: 'INFORCER MASK 250 ML', price: '990', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '299', stock: '0', isEnabled: true },
+    { name: 'SILVER SHAMPOO 300 ML', price: '790', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '300', stock: '0', isEnabled: true },
+    { name: 'XTENSO CARE PRO KERATIN BLUE SHAMPOO 250 ML', price: '690', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '301', stock: '0', isEnabled: true },
+    { name: 'XTENSO CARE PRO KERATIN BLUE MASQUE 196 ML', price: '770', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '302', stock: '0', isEnabled: true },
+    { name: 'XTENSO CARE PRO SULPHATE FREE SHAMPOO 250 ML', price: '1100', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '303', stock: '0', isEnabled: true },
+    { name: 'XTENSO CARE PRO SULPHATE FREE MASQUE 196 ML', price: '1290', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '304', stock: '0', isEnabled: true },
+    { name: 'XTENSO CARE SERUM50 ML', price: '750', currency: 'INR', description: '', category: 'LOREAL PROFESSIONEL', sku: '305', stock: '0', isEnabled: true },
   ];
 
   useEffect(() => {
@@ -866,46 +928,17 @@ export default function ProductsPage() {
         {/* Products Grid */}
         <AnimatePresence mode="popLayout">
           {filteredProducts.length === 0 && products.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="text-center py-12"
-            >
-              <div className="inline-block p-6 bg-white rounded-3xl shadow-lg mb-4">
-                <Package className="w-16 h-16 text-gray-300" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No products yet</h3>
-              <p className="text-gray-500 mb-6">Get started by adding your first product or load recommended templates</p>
-              <div className="flex gap-3 justify-center">
-                <Button
-                  onClick={handleOpenNew}
-                  className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Add Product
-                </Button>
-                <Button
-                  onClick={() => {
-                    const productsToAdd = recommendedProducts.map((product, index) => ({
-                      ...product,
-                      id: `rec-${Date.now()}-${index}`,
-                      createdAt: new Date().toISOString(),
-                    }));
-                    saveProducts(productsToAdd);
-                    toast({
-                      title: 'Recommended Products Loaded',
-                      description: `${productsToAdd.length} product templates have been added to your inventory.`,
-                    });
-                  }}
-                  variant="outline"
-                  className="border-blue-300 text-blue-700 hover:bg-blue-50"
-                >
-                  <Package className="w-5 h-5 mr-2" />
-                  Load Recommended Products
-                </Button>
-              </div>
-            </motion.div>
+            <>
+              {(() => {
+                const productsToAdd = recommendedProducts.map((product, index) => ({
+                  ...product,
+                  id: `rec-${Date.now()}-${index}`,
+                  createdAt: new Date().toISOString(),
+                }));
+                saveProducts(productsToAdd);
+                return null;
+              })()}
+            </>
           ) : filteredProducts.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}

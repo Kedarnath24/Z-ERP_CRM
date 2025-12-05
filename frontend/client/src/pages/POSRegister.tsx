@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
+import StaffDropdown from '@/components/StaffDropdown';
 
 type Service = {
   id: string;
@@ -146,6 +147,8 @@ export default function POSRegister() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [showStaffDropdown, setShowStaffDropdown] = useState(false);
   const [showServiceStaffDropdown, setShowServiceStaffDropdown] = useState<string | null>(null);
+  const staffWrapperRef = useRef<HTMLDivElement | null>(null);
+  const itemWrapperRefs = useRef<Record<string, HTMLDivElement | null>>({});
   
   // Multi-tab POS state
   const [posTabs, setPosTabs] = useState<POSTab[]>([]);
@@ -428,14 +431,58 @@ export default function POSRegister() {
   }, [posTabs, activeTabId, loadTabData, toast]);
 
   // Filter staff suggestions
-  const filteredStaffSuggestions = useMemo(() => {
-    if (!staffName.trim()) return teamMembers;
-    const query = staffName.toLowerCase();
-    return teamMembers.filter(m => 
-      (m.name && m.name.toLowerCase().includes(query)) ||
-      (m.email && m.email.toLowerCase().includes(query))
-    );
-  }, [teamMembers, staffName]);
+  const getStaffSuggestions = useCallback(
+    (mode: 'general' | 'service' | 'sales', search: string) => {
+      if (teamMembers.length === 0) return [] as TeamMember[];
+
+      const keywords = {
+        service: ['service', 'stylist', 'therapist', 'artist', 'technician', 'trainer', 'specialist', 'consultant'],
+        sales: ['sales', 'manager', 'consultant', 'cashier', 'front', 'reception', 'advisor', 'seller'],
+      } as const;
+
+      const query = search.trim().toLowerCase();
+      const modeKeywords = mode === 'general' ? [...keywords.service, ...keywords.sales] : keywords[mode];
+
+      return teamMembers
+        .map(member => {
+          const name = (member.name || '').toLowerCase();
+          const email = (member.email || '').toLowerCase();
+          const role = (member.role || '').toLowerCase();
+
+          let score = 0;
+
+          if (role) {
+            const matchesMode = modeKeywords.some(keyword => role.includes(keyword));
+            if (matchesMode) {
+              score += mode === 'general' ? 10 : 30;
+            } else if (mode !== 'general' && role.includes('support')) {
+              score += 8;
+            }
+          }
+
+          if (query) {
+            if (name.startsWith(query)) score += 25;
+            else if (name.includes(query)) score += 15;
+            if (email.includes(query)) score += 10;
+            if (role.includes(query)) score += 8;
+          } else {
+            score += 5; // baseline so we always have ordering
+          }
+
+          return {
+            member,
+            score,
+            sortName: member.name || member.email || '',
+          };
+        })
+        .sort((a, b) => {
+          if (b.score !== a.score) return b.score - a.score;
+          return a.sortName.localeCompare(b.sortName, undefined, { sensitivity: 'base' });
+        })
+        .map(entry => entry.member);
+    },
+    [teamMembers]
+  );
   
   // Membership tier configuration
   const MEMBERSHIP_TIERS = [
@@ -1975,7 +2022,7 @@ export default function POSRegister() {
                     <UserCheck className="h-4 w-4" />
                     Staff Handling Bill *
                   </Label>
-                  <div className="relative">
+                  <div className="relative" ref={staffWrapperRef}>
                     <Input
                       id="staff-name"
                       placeholder="Select or type staff name..."
@@ -1995,49 +2042,21 @@ export default function POSRegister() {
                       <ChevronDown size={18} className={`transition-transform ${showStaffDropdown ? 'rotate-180' : ''}`} />
                     </button>
 
-                    {/* Staff Dropdown */}
-                    <AnimatePresence>
-                      {showStaffDropdown && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          className="absolute z-50 w-full mt-1 bg-white border border-blue-200 rounded-lg shadow-lg max-h-48 overflow-y-auto"
-                        >
-                          {teamMembers.length === 0 ? (
-                            <div className="px-4 py-3 text-sm text-slate-500">
-                              <p className="font-medium">No team members found</p>
-                              <p className="text-xs mt-1">You can still type a name manually</p>
-                            </div>
-                          ) : filteredStaffSuggestions.length === 0 ? (
-                            <div className="px-4 py-3 text-sm text-slate-500">
-                              <p>No matching staff found</p>
-                              <p className="text-xs mt-1">Press Enter to use "{staffName}"</p>
-                            </div>
-                          ) : (
-                            filteredStaffSuggestions.map((member) => (
-                              <button
-                                key={member.id}
-                                type="button"
-                                onClick={() => {
-                                  setStaffName(member.name || member.email || 'Staff');
-                                  setShowStaffDropdown(false);
-                                }}
-                                className="w-full px-4 py-2 text-left hover:bg-blue-50 flex items-center gap-3 border-b last:border-b-0 transition-colors"
-                              >
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-sm font-medium">
-                                  {(member.name || member.email || 'S').charAt(0).toUpperCase()}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-slate-900 truncate">{member.name || 'Unnamed'}</p>
-                                  {member.role && <p className="text-xs text-slate-400">{member.role}</p>}
-                                </div>
-                              </button>
-                            ))
-                          )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    <StaffDropdown
+                      anchorEl={staffWrapperRef.current}
+                      items={getStaffSuggestions('general', staffName)}
+                      query={staffName}
+                      visible={showStaffDropdown}
+                      maxHeight={220}
+                      title="Team Members"
+                      subtitle="Select who is handling this bill"
+                      emptyMessage="No matching team member. Press Enter to keep the typed name."
+                      onSelect={(member) => {
+                        setStaffName(member.name || member.email || 'Staff');
+                        setShowStaffDropdown(false);
+                      }}
+                      onClose={() => setShowStaffDropdown(false)}
+                    />
                   </div>
                   <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
                     <Users className="h-3 w-3" />
@@ -2054,7 +2073,7 @@ export default function POSRegister() {
                     <p className="text-sm text-slate-500 mt-1">Add services to get started</p>
                   </div>
                 ) : (
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[400px] overflow-visible">
                     <AnimatePresence mode="popLayout">
                       {cartItems.map(item => (
                         <motion.div
@@ -2123,7 +2142,7 @@ export default function POSRegister() {
                             <div className="relative">
                               <div className="flex items-center gap-2">
                                 <UserCheck className="h-3 w-3 text-slate-500 flex-shrink-0" />
-                                <div className="flex-1 relative">
+                                <div className="flex-1 relative" ref={(el) => { itemWrapperRefs.current[item.service.id] = el; }}>
                                   <Input
                                     placeholder={
                                       item.service.id.startsWith('product-') || item.service.id.startsWith('custom-product-')
@@ -2148,47 +2167,39 @@ export default function POSRegister() {
                                     <ChevronDown size={14} className={`transition-transform ${showServiceStaffDropdown === item.service.id ? 'rotate-180' : ''}`} />
                                   </button>
 
-                                  {/* Staff Dropdown for this item */}
-                                  <AnimatePresence>
-                                    {showServiceStaffDropdown === item.service.id && (
-                                      <motion.div
-                                        initial={{ opacity: 0, y: -5 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -5 }}
-                                        className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-40 overflow-y-auto"
-                                      >
-                                        {teamMembers.length === 0 ? (
-                                          <div className="px-3 py-2 text-xs text-slate-500">
-                                            <p>No team members. Type a name.</p>
-                                          </div>
-                                        ) : (
-                                          teamMembers.filter(m => {
-                                            const query = (item.assignedPerson || '').toLowerCase();
-                                            return !query || 
-                                              (m.name && m.name.toLowerCase().includes(query)) ||
-                                              (m.email && m.email.toLowerCase().includes(query));
-                                          }).slice(0, 5).map((member) => (
-                                            <button
-                                              key={member.id}
-                                              type="button"
-                                              onClick={() => {
-                                                updateAssignedPerson(item.service.id, member.name || member.email || 'Staff');
-                                                setShowServiceStaffDropdown(null);
-                                              }}
-                                              className="w-full px-3 py-1.5 text-left hover:bg-blue-50 flex items-center gap-2 border-b last:border-b-0 transition-colors"
-                                            >
-                                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-[10px] font-medium">
-                                                {(member.name || member.email || 'S').charAt(0).toUpperCase()}
-                                              </div>
-                                              <span className="text-xs font-medium text-slate-700 truncate">
-                                                {member.name || member.email}
-                                              </span>
-                                            </button>
-                                          ))
-                                        )}
-                                      </motion.div>
+                                  <StaffDropdown
+                                    anchorEl={itemWrapperRefs.current[item.service.id]}
+                                    items={getStaffSuggestions(
+                                      item.service.id.startsWith('product-') || item.service.id.startsWith('custom-product-')
+                                        ? 'sales'
+                                        : 'service',
+                                      item.assignedPerson || ''
                                     )}
-                                  </AnimatePresence>
+                                    query={item.assignedPerson || ''}
+                                    visible={showServiceStaffDropdown === item.service.id}
+                                    maxHeight={180}
+                                    title={
+                                      item.service.id.startsWith('product-') || item.service.id.startsWith('custom-product-')
+                                        ? 'Suggested Sales Team'
+                                        : 'Suggested Service Team'
+                                    }
+                                    subtitle={
+                                      item.service.id.startsWith('product-') || item.service.id.startsWith('custom-product-')
+                                        ? 'Front desk, sales, cashiers'
+                                        : 'Stylists, therapists, technicians'
+                                    }
+                                    emptyMessage="No matching staff. Press Enter to keep the typed name."
+                                    accent={
+                                      item.service.id.startsWith('product-') || item.service.id.startsWith('custom-product-')
+                                        ? 'sales'
+                                        : 'service'
+                                    }
+                                    onSelect={(member) => {
+                                      updateAssignedPerson(item.service.id, member.name || member.email || 'Staff');
+                                      setShowServiceStaffDropdown(null);
+                                    }}
+                                    onClose={() => setShowServiceStaffDropdown(null)}
+                                  />
                                 </div>
                               </div>
                               <p className="text-[10px] text-slate-400 ml-5 mt-0.5">

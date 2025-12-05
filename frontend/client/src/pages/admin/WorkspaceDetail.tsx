@@ -24,6 +24,7 @@ interface Workspace {
   bookingLink: string;
   prefix: string;
   maxDigits: number;
+  userCustomized?: boolean;
 }
 
 export default function WorkspaceDetail() {
@@ -100,6 +101,7 @@ export default function WorkspaceDetail() {
               prefix: editForm.prefix,
               maxDigits: editForm.maxDigits,
               initials: getInitials(editForm.name),
+                userCustomized: true,
             };
           }
           return w;

@@ -347,101 +347,111 @@ export default function ServicesPage() {
   };
 
   // Download Services Report as PDF (HTML-based printable)
-  const downloadServicesPDF = () => {
-    const report = generateServicesReport();
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Services Report</title>
-        <style>
-          body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #333; }
-          h1 { color: #7C3AED; border-bottom: 3px solid #7C3AED; padding-bottom: 10px; }
-          h2 { color: #4F46E5; margin-top: 30px; }
-          .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
-          .summary-card { background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); padding: 20px; border-radius: 12px; text-align: center; }
-          .summary-card h3 { font-size: 24px; color: #7C3AED; margin: 0; }
-          .summary-card p { color: #6B7280; margin: 5px 0 0 0; font-size: 14px; }
-          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          th { background: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%); color: white; padding: 12px; text-align: left; }
-          td { padding: 10px 12px; border-bottom: 1px solid #E5E7EB; }
-          tr:nth-child(even) { background: #F9FAFB; }
-          .status-active { color: #059669; font-weight: 600; }
-          .status-inactive { color: #DC2626; font-weight: 600; }
-          .footer { margin-top: 40px; text-align: center; color: #9CA3AF; font-size: 12px; }
-          @media print { body { padding: 20px; } }
-        </style>
-      </head>
-      <body>
-        <h1>📊 Services Report</h1>
-        <p style="color: #6B7280;">Generated on ${new Date().toLocaleDateString('en-IN')} at ${new Date().toLocaleTimeString('en-IN')}</p>
-        
-        <div class="summary-grid">
-          <div class="summary-card">
-            <h3>${report.summary.totalServices}</h3>
-            <p>Total Services</p>
+    const downloadServicesPDF = () => {
+      const report = generateServicesReport();
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) return;
+  
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Services Report</title>
+          <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 40px; color: #333; }
+            h1 { color: #7C3AED; border-bottom: 3px solid #7C3AED; padding-bottom: 10px; }
+            h2 { color: #4F46E5; margin-top: 30px; }
+            .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin: 20px 0; }
+            .summary-card { background: linear-gradient(135deg, #F3E8FF 0%, #E9D5FF 100%); padding: 20px; border-radius: 12px; text-align: center; }
+            .summary-card h3 { font-size: 24px; color: #7C3AED; margin: 0; }
+            .summary-card p { color: #6B7280; margin: 5px 0 0 0; font-size: 14px; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th { background: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%); color: white; padding: 12px; text-align: left; }
+            td { padding: 10px 12px; border-bottom: 1px solid #E5E7EB; }
+            tr:nth-child(even) { background: #F9FAFB; }
+            .status-active { color: #059669; font-weight: 600; }
+            .status-inactive { color: #DC2626; font-weight: 600; }
+            .footer { margin-top: 40px; text-align: center; color: #9CA3AF; font-size: 12px; }
+            @media print { body { padding: 20px; } }
+          </style>
+        </head>
+        <body>
+          <h1>📊 Services Report</h1>
+          <p style="color: #6B7280;">Generated on ${new Date().toLocaleDateString('en-IN')} at ${new Date().toLocaleTimeString('en-IN')}</p>
+          
+          <div class="summary-grid">
+            <div class="summary-card">
+              <h3>${report.summary.totalServices}</h3>
+              <p>Total Services</p>
+            </div>
+            <div class="summary-card">
+              <h3>${report.summary.enabledServices}</h3>
+              <p>Active Services</p>
+            </div>
+            <div class="summary-card">
+              <h3>₹${report.summary.totalRevenue.toLocaleString('en-IN')}</h3>
+              <p>Revenue Potential</p>
+            </div>
+            <div class="summary-card">
+              <h3>₹${report.summary.averagePrice}</h3>
+              <p>Average Price</p>
+            </div>
           </div>
-          <div class="summary-card">
-            <h3>${report.summary.enabledServices}</h3>
-            <p>Active Services</p>
+  
+          <h2>📁 Category Breakdown</h2>
+          <table>
+            <thead>
+              <tr><th>Category</th><th>Count</th><th>Total Value</th><th>Percentage</th></tr>
+            </thead>
+            <tbody>
+              ${report.categoryBreakdown.map(cat => `
+                <tr><td>${cat.name}</td><td>${cat.count}</td><td>₹${cat.totalRevenue.toLocaleString('en-IN')}</td><td>${cat.percentage}%</td></tr>
+              `).join('')}
+            </tbody>
+          </table>
+  
+          <h2>📋 Detailed Services List</h2>
+          <table>
+            <thead>
+              <tr><th>Service Name</th><th>Category</th><th>Price</th><th>Duration</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              ${report.allServices.map(s => `
+                <tr>
+                  <td><strong>${s.name}</strong></td>
+                  <td>${s.category}</td>
+                  <td>₹${s.price.toLocaleString('en-IN')}</td>
+                  <td>${s.duration} mins</td>
+                  <td class="${s.enabled ? 'status-active' : 'status-inactive'}">${s.enabled ? '✓ Active' : '✗ Inactive'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+  
+          <div class="footer">
+            <p>Generated by Zervos Business Suite • ${new Date().getFullYear()}</p>
           </div>
-          <div class="summary-card">
-            <h3>₹${report.summary.totalRevenue.toLocaleString('en-IN')}</h3>
-            <p>Revenue Potential</p>
-          </div>
-          <div class="summary-card">
-            <h3>₹${report.summary.averagePrice}</h3>
-            <p>Average Price</p>
-          </div>
-        </div>
-
-        <h2>📁 Category Breakdown</h2>
-        <table>
-          <thead>
-            <tr><th>Category</th><th>Count</th><th>Total Value</th><th>Percentage</th></tr>
-          </thead>
-          <tbody>
-            ${report.categoryBreakdown.map(cat => `
-              <tr><td>${cat.name}</td><td>${cat.count}</td><td>₹${cat.totalRevenue.toLocaleString('en-IN')}</td><td>${cat.percentage}%</td></tr>
-            `).join('')}
-          </tbody>
-        </table>
-
-        <h2>📋 Detailed Services List</h2>
-        <table>
-          <thead>
-            <tr><th>Service Name</th><th>Category</th><th>Price</th><th>Duration</th><th>Status</th></tr>
-          </thead>
-          <tbody>
-            ${report.allServices.map(s => `
-              <tr>
-                <td><strong>${s.name}</strong></td>
-                <td>${s.category}</td>
-                <td>₹${s.price.toLocaleString('en-IN')}</td>
-                <td>${s.duration} mins</td>
-                <td class="${s.enabled ? 'status-active' : 'status-inactive'}">${s.enabled ? '✓ Active' : '✗ Inactive'}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-
-        <div class="footer">
-          <p>Generated by Zervos Business Suite • ${new Date().getFullYear()}</p>
-        </div>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.print();
-    toast({ title: '📄 PDF Ready', description: 'Print dialog opened for PDF download' });
-  };
-
-  // CSV Template Download Function
+        </body>
+        </html>
+      `;
+  
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.print();
+      toast({ title: '📄 PDF Ready', description: 'Print dialog opened for PDF download' });
+    };
+  
+    const downloadReport = (type: 'csv' | 'excel' | 'pdf') => {
+      if (type === 'csv') {
+        downloadServicesCSV();
+      } else if (type === 'excel') {
+        downloadServicesExcel();
+      } else if (type === 'pdf') {
+        downloadServicesPDF();
+      }
+    };
+  
+    // CSV Template Download Function
   const downloadCSVTemplate = () => {
     const headers = [
       'Service Name',
@@ -658,36 +668,122 @@ export default function ServicesPage() {
     }
   };
 
-  // Recommended service templates
+  // Recommended service templates loaded from `sample-services.csv`
   const recommendedServices: Omit<Service, 'id' | 'createdAt'>[] = [
-    // Spa & Wellness
-    { name: 'Swedish Massage', duration: '60 mins', price: '2500', currency: 'INR', description: 'Full body relaxation massage with essential oils', category: 'Spa & Wellness', isEnabled: true },
-    { name: 'Deep Tissue Massage', duration: '90 mins', price: '3500', currency: 'INR', description: 'Therapeutic massage targeting deep muscle layers', category: 'Spa & Wellness', isEnabled: true },
-    { name: 'Hot Stone Therapy', duration: '75 mins', price: '3000', currency: 'INR', description: 'Relaxing massage using heated stones', category: 'Spa & Wellness', isEnabled: true },
-    { name: 'Aromatherapy Session', duration: '60 mins', price: '2800', currency: 'INR', description: 'Therapeutic massage with aromatic essential oils', category: 'Spa & Wellness', isEnabled: true },
-    { name: 'Body Scrub & Polish', duration: '45 mins', price: '2000', currency: 'INR', description: 'Exfoliating treatment for smooth, glowing skin', category: 'Spa & Wellness', isEnabled: true },
-    { name: 'Couples Spa Package', duration: '120 mins', price: '8000', currency: 'INR', description: 'Relaxing spa experience for two', category: 'Spa & Wellness', isEnabled: true },
-    
-    // Beauty & Salon
-    { name: 'Haircut & Styling', duration: '45 mins', price: '800', currency: 'INR', description: 'Professional haircut with styling', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Hair Coloring', duration: '120 mins', price: '4500', currency: 'INR', description: 'Full color treatment with conditioning', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Keratin Treatment', duration: '180 mins', price: '8500', currency: 'INR', description: 'Smoothing and straightening treatment', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Manicure & Pedicure', duration: '60 mins', price: '1200', currency: 'INR', description: 'Complete nail care and polish', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Gel Nails', duration: '45 mins', price: '1000', currency: 'INR', description: 'Long-lasting gel nail application', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Facial Treatment', duration: '60 mins', price: '2500', currency: 'INR', description: 'Deep cleansing and hydrating facial', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Makeup Application', duration: '60 mins', price: '2000', currency: 'INR', description: 'Professional makeup for special occasions', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Eyebrow Threading', duration: '15 mins', price: '100', currency: 'INR', description: 'Precise eyebrow shaping', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Waxing Service', duration: '30 mins', price: '500', currency: 'INR', description: 'Hair removal service', category: 'Beauty & Salon', isEnabled: true },
-    
-    // Fitness & Training
-    { name: 'Personal Training Session', duration: '60 mins', price: '1500', currency: 'INR', description: 'One-on-one fitness training', category: 'Fitness & Training', isEnabled: true },
-    { name: 'Group Fitness Class', duration: '45 mins', price: '500', currency: 'INR', description: 'High-energy group workout', category: 'Fitness & Training', isEnabled: true },
-    { name: 'Yoga Session', duration: '60 mins', price: '600', currency: 'INR', description: 'Mindful yoga practice for all levels', category: 'Fitness & Training', isEnabled: true },
-    { name: 'Pilates Class', duration: '55 mins', price: '800', currency: 'INR', description: 'Core-strengthening pilates workout', category: 'Fitness & Training', isEnabled: true },
-    { name: 'Spin Class', duration: '45 mins', price: '600', currency: 'INR', description: 'Indoor cycling workout', category: 'Fitness & Training', isEnabled: true },
-    { name: 'HIIT Training', duration: '45 mins', price: '900', currency: 'INR', description: 'High-intensity interval training', category: 'Fitness & Training', isEnabled: true },
-    { name: 'Nutrition Consultation', duration: '60 mins', price: '2000', currency: 'INR', description: 'Personalized nutrition planning', category: 'Consultation', isEnabled: true },
-    { name: 'Fitness Assessment', duration: '30 mins', price: '1000', currency: 'INR', description: 'Complete fitness evaluation', category: 'Consultation', isEnabled: true },
+    { name: 'Boy Hair Cut - Up to 7 Years', duration: '30 mins', price: '486', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Hair Cut- Men - Stylist', duration: '30 mins', price: '600', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Hair Cut- Men - Senior Stylist', duration: '30 mins', price: '695', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Hair Cut- Men - Top Stylist', duration: '30 mins', price: '810', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Hair Cut- Men - Creative Director', duration: '45 mins', price: '1019', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Hair Styling - Men', duration: '30 mins', price: '486', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Hair Cut- Women - Stylist', duration: '45 mins', price: '760', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Hair Cut- Women - Senior Stylist', duration: '45 mins', price: '850', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Hair Cut- Women - Top Stylist', duration: '45 mins', price: '1019', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Hair Cut- Women - Creative Director', duration: '60 mins', price: '1350', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Girl Hair Cut - Up to 7 Years', duration: '30 mins', price: '550', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Fringe Cut', duration: '15 mins', price: '350', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Wash & Blast Dry', duration: '30 mins', price: '600', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Straight Blow dry', duration: '45 mins', price: '800', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'In Curls/Out Curls', duration: '45 mins', price: '1000', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Blow dry - Extra Long', duration: '60 mins', price: '1200', currency: 'INR', description: '', category: 'Hair Services', isEnabled: true },
+    { name: 'Zero Trim', duration: '15 mins', price: '105', currency: 'INR', description: '', category: 'Grooming Services', isEnabled: true },
+    { name: 'Beard Shave', duration: '20 mins', price: '219', currency: 'INR', description: '', category: 'Grooming Services', isEnabled: true },
+    { name: 'Beard Design', duration: '30 mins', price: '381', currency: 'INR', description: '', category: 'Grooming Services', isEnabled: true },
+    { name: 'Beard Shape Up', duration: '20 mins', price: '219', currency: 'INR', description: '', category: 'Grooming Services', isEnabled: true },
+    { name: 'Head Shave', duration: '30 mins', price: '429', currency: 'INR', description: '', category: 'Grooming Services', isEnabled: true },
+    { name: 'Tint Re-Growth', duration: '45 mins', price: '1600', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'Global Colour Men', duration: '60 mins', price: '1500', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'Global Colour Women', duration: '90 mins', price: '2500', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: "Men's Cap Highlight", duration: '90 mins', price: '2000', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'Highlights - Full Head', duration: '120 mins', price: '6000', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'Highlights - Half Head', duration: '90 mins', price: '4000', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'T-Section Highlights', duration: '60 mins', price: '2000', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'Per Streak', duration: '30 mins', price: '600', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'Moustache Colour', duration: '15 mins', price: '290', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'Beard Colour', duration: '20 mins', price: '400', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'Colour Change / Correction', duration: '150 mins', price: '6000', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'Balayage/Ombre/Highlights', duration: '180 mins', price: '8000', currency: 'INR', description: '', category: 'Color Services', isEnabled: true },
+    { name: 'Temporary straightening - Ironing', duration: '60 mins', price: '876', currency: 'INR', description: '', category: 'Hair Treatment', isEnabled: true },
+    { name: 'Scrunching', duration: '45 mins', price: '800', currency: 'INR', description: '', category: 'Hair Treatment', isEnabled: true },
+    { name: 'Smoothening', duration: '120 mins', price: '5000', currency: 'INR', description: '', category: 'Hair Treatment', isEnabled: true },
+    { name: 'Hair Botox Treatment', duration: '150 mins', price: '8000', currency: 'INR', description: '', category: 'Hair Treatment', isEnabled: true },
+    { name: 'Silky Hair Treatment', duration: '180 mins', price: '9000', currency: 'INR', description: '', category: 'Hair Treatment', isEnabled: true },
+    { name: 'Nanoplastia', duration: '180 mins', price: '10000', currency: 'INR', description: '', category: 'Hair Treatment', isEnabled: true },
+    { name: 'Cysteine/Keratin', duration: '150 mins', price: '7000', currency: 'INR', description: '', category: 'Hair Treatment', isEnabled: true },
+    { name: 'Tonging', duration: '60 mins', price: '1181', currency: 'INR', description: '', category: 'Hair Treatment', isEnabled: true },
+    { name: 'Hair Perming', duration: '120 mins', price: '7000', currency: 'INR', description: '', category: 'Hair Treatment', isEnabled: true },
+    { name: 'Hair Ritual - Men', duration: '60 mins', price: '1800', currency: 'INR', description: '', category: 'Hair Spa', isEnabled: true },
+    { name: 'Anti Dandruff Ritual - Men', duration: '60 mins', price: '2500', currency: 'INR', description: '', category: 'Hair Spa', isEnabled: true },
+    { name: 'Hair Ritual - Women', duration: '75 mins', price: '2800', currency: 'INR', description: '', category: 'Hair Spa', isEnabled: true },
+    { name: 'Anti Dandruff Ritual - Women', duration: '75 mins', price: '3000', currency: 'INR', description: '', category: 'Hair Spa', isEnabled: true },
+    { name: 'Foot Reflexology 30 Min', duration: '30 mins', price: '1105', currency: 'INR', description: '', category: 'Spa & Massage', isEnabled: true },
+    { name: 'Foot Reflexology 45 Min', duration: '45 mins', price: '1324', currency: 'INR', description: '', category: 'Spa & Massage', isEnabled: true },
+    { name: 'Back & Shoulder Massage 30 Min', duration: '30 mins', price: '1105', currency: 'INR', description: '', category: 'Spa & Massage', isEnabled: true },
+    { name: 'Back & Shoulder Massage 45 Min', duration: '45 mins', price: '1324', currency: 'INR', description: '', category: 'Spa & Massage', isEnabled: true },
+    { name: 'Head Oil Massage Men 30 Min', duration: '30 mins', price: '1324', currency: 'INR', description: '', category: 'Spa & Massage', isEnabled: true },
+    { name: 'Head Oil Massage Men 45 Min', duration: '45 mins', price: '1648', currency: 'INR', description: '', category: 'Spa & Massage', isEnabled: true },
+    { name: 'Head Oil Massage Women 30 Min', duration: '30 mins', price: '1648', currency: 'INR', description: '', category: 'Spa & Massage', isEnabled: true },
+    { name: 'Head Oil Massage Women 45 Min', duration: '45 mins', price: '1960', currency: 'INR', description: '', category: 'Spa & Massage', isEnabled: true },
+    { name: 'Utlimate Hydrating Facial', duration: '60 mins', price: '3848', currency: 'INR', description: '', category: 'Facial Services', isEnabled: true },
+    { name: 'Skin Brightening Treatment', duration: '75 mins', price: '4400', currency: 'INR', description: '', category: 'Facial Services', isEnabled: true },
+    { name: 'Advanced Clean Up', duration: '45 mins', price: '2200', currency: 'INR', description: '', category: 'Facial Services', isEnabled: true },
+    { name: 'Instant Glow Facial', duration: '60 mins', price: '4199', currency: 'INR', description: '', category: 'Facial Services', isEnabled: true },
+    { name: 'Brilliance White  Facial', duration: '75 mins', price: '4799', currency: 'INR', description: '', category: 'Facial Services', isEnabled: true },
+    { name: 'Advanced Tan Removal', duration: '60 mins', price: '2752', currency: 'INR', description: '', category: 'Facial Services', isEnabled: true },
+    { name: 'Skin Brightening Facial', duration: '60 mins', price: '3848', currency: 'INR', description: '', category: 'Facial Services', isEnabled: true },
+    { name: 'Clean Up Ritual', duration: '30 mins', price: '1648', currency: 'INR', description: '', category: 'Facial Services', isEnabled: true },
+    { name: 'Deluxe Manicure', duration: '45 mins', price: '690', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Dead Sea Manicure', duration: '45 mins', price: '876', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Ice Cream Manicure', duration: '45 mins', price: '876', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Treatment Manicure', duration: '60 mins', price: '1648', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Luxury Manicure', duration: '60 mins', price: '1429', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Cut & File', duration: '15 mins', price: '250', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Change of Polish Laquer', duration: '15 mins', price: '219', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Deluxe Pedicure', duration: '60 mins', price: '876', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Dead Sea Pedicure', duration: '60 mins', price: '1105', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Ice Cream Pedicure', duration: '60 mins', price: '1105', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Treatment Pedicure', duration: '75 mins', price: '2200', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Luxury Pedicure', duration: '75 mins', price: '1648', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Gel Polish Removal', duration: '20 mins', price: '438', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Nail Extension Removal', duration: '30 mins', price: '657', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Gel Polish', duration: '45 mins', price: '990', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Cat Eye', duration: '45 mins', price: '1105', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'French Gel Polish', duration: '45 mins', price: '1600', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Semi Permanent Extension with Gel', duration: '90 mins', price: '2752', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Permanent Extension with Gel', duration: '120 mins', price: '4040', currency: 'INR', description: '', category: 'Nail Services', isEnabled: true },
+    { name: 'Detan Face & Neck', duration: '30 mins', price: '1100', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Nape', duration: '15 mins', price: '500', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Feet', duration: '20 mins', price: '750', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Underarms', duration: '15 mins', price: '550', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Half Arms', duration: '20 mins', price: '750', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Full Arms', duration: '30 mins', price: '1100', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Full Legs', duration: '40 mins', price: '1400', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Half Legs', duration: '30 mins', price: '1000', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Upper Back', duration: '25 mins', price: '900', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Lower Back', duration: '25 mins', price: '900', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Midriff', duration: '20 mins', price: '900', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Detan Full Back', duration: '40 mins', price: '1250', currency: 'INR', description: '', category: 'Detan Services', isEnabled: true },
+    { name: 'Eyebrow/Upper Lip/Chin/ For Head Threading', duration: '10 mins', price: '67', currency: 'INR', description: '', category: 'Threading & Waxing', isEnabled: true },
+    { name: 'Threading Sides', duration: '10 mins', price: '150', currency: 'INR', description: '', category: 'Threading & Waxing', isEnabled: true },
+    { name: 'Neck Threading', duration: '15 mins', price: '219', currency: 'INR', description: '', category: 'Threading & Waxing', isEnabled: true },
+    { name: 'Full Face Threading', duration: '20 mins', price: '552', currency: 'INR', description: '', category: 'Threading & Waxing', isEnabled: true },
+    { name: 'Upper Lip/ Chin Waxing', duration: '15 mins', price: '114', currency: 'INR', description: '', category: 'Threading & Waxing', isEnabled: true },
+    { name: 'Sides / Neck waxing', duration: '15 mins', price: '219', currency: 'INR', description: '', category: 'Threading & Waxing', isEnabled: true },
+    { name: 'Make Up Booking Advance', duration: '30 mins', price: '2000', currency: 'INR', description: '', category: 'Makeup Services', isEnabled: true },
+    { name: 'Outdoor Charges', duration: '60 mins', price: '2000', currency: 'INR', description: '', category: 'Makeup Services', isEnabled: true },
+    { name: 'Premium Bridal Package', duration: '180 mins', price: '11500', currency: 'INR', description: '', category: 'Bridal Services', isEnabled: true },
+    { name: 'Luxury Bridal Package', duration: '240 mins', price: '16170', currency: 'INR', description: '', category: 'Bridal Services', isEnabled: true },
+    { name: 'Groom Make Up Elegant', duration: '90 mins', price: '7000', currency: 'INR', description: '', category: 'Bridal Services', isEnabled: true },
+    { name: 'Groom Make Up HD', duration: '120 mins', price: '10000', currency: 'INR', description: '', category: 'Bridal Services', isEnabled: true },
+    { name: 'Groom Make Up Air Brush', duration: '120 mins', price: '18000', currency: 'INR', description: '', category: 'Bridal Services', isEnabled: true },
+    { name: 'Bridal Make Up Elegant', duration: '120 mins', price: '20000', currency: 'INR', description: '', category: 'Bridal Services', isEnabled: true },
+    { name: 'Bridal Make Up HD', duration: '150 mins', price: '25000', currency: 'INR', description: '', category: 'Bridal Services', isEnabled: true },
+    { name: 'Bridal Make Up Air Brush', duration: '180 mins', price: '30000', currency: 'INR', description: '', category: 'Bridal Services', isEnabled: true },
+    { name: 'Pary Make Up Men', duration: '60 mins', price: '5000', currency: 'INR', description: '', category: 'Makeup Services', isEnabled: true },
+    { name: 'Pary Make Up Women', duration: '75 mins', price: '7000', currency: 'INR', description: '', category: 'Makeup Services', isEnabled: true },
+    { name: 'Trial Make Up', duration: '60 mins', price: '3000', currency: 'INR', description: '', category: 'Makeup Services', isEnabled: true },
+    { name: 'Kids Make Up', duration: '45 mins', price: '4000', currency: 'INR', description: '', category: 'Makeup Services', isEnabled: true },
+    { name: 'Saree Draping', duration: '30 mins', price: '2000', currency: 'INR', description: '', category: 'Styling Services', isEnabled: true },
   ];
 
   useEffect(() => {
@@ -906,46 +1002,17 @@ export default function ServicesPage() {
         {/* Services Grid */}
         <AnimatePresence mode="popLayout">
           {filteredServices.length === 0 && services.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="text-center py-12"
-            >
-              <div className="inline-block p-6 bg-white rounded-3xl shadow-lg mb-4">
-                <Sparkles className="w-16 h-16 text-gray-300" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No services yet</h3>
-              <p className="text-gray-500 mb-6">Get started by adding your first service or load recommended templates</p>
-              <div className="flex gap-3 justify-center">
-                <Button
-                  onClick={handleOpenNew}
-                  className="bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700"
-                >
-                  <Plus className="w-5 h-5 mr-2" />
-                  Add Service
-                </Button>
-                <Button
-                  onClick={() => {
-                    const servicesToAdd = recommendedServices.map((service, index) => ({
-                      ...service,
-                      id: `rec-${Date.now()}-${index}`,
-                      createdAt: new Date().toISOString(),
-                    }));
-                    saveServices(servicesToAdd);
-                    toast({
-                      title: 'Recommended Services Loaded',
-                      description: `${servicesToAdd.length} service templates have been added to your catalog.`,
-                    });
-                  }}
-                  variant="outline"
-                  className="border-purple-300 text-purple-700 hover:bg-purple-50"
-                >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Load Recommended Services
-                </Button>
-              </div>
-            </motion.div>
+            <>
+              {(() => {
+                const servicesToAdd = recommendedServices.map((service, index) => ({
+                  ...service,
+                  id: `rec-${Date.now()}-${index}`,
+                  createdAt: new Date().toISOString(),
+                }));
+                saveServices(servicesToAdd);
+                return null;
+              })()}
+            </>
           ) : filteredServices.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -1478,6 +1545,9 @@ export default function ServicesPage() {
                     name: '',
                     duration: '',
                     price: '',
+                    actualPrice: '',
+                    offerPrice: '',
+                    barcode: '',
                     currency: 'INR',
                     description: '',
                     category: '',
@@ -1538,6 +1608,9 @@ export default function ServicesPage() {
                     name: '',
                     duration: '',
                     price: '',
+                    actualPrice: '',
+                    offerPrice: '',
+                    barcode: '',
                     currency: 'INR',
                     description: '',
                     category: '',

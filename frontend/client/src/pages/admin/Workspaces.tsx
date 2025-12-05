@@ -33,6 +33,7 @@ interface Workspace {
   bookingLink: string;
   prefix: string;
   maxDigits: number;
+  userCustomized?: boolean;
 }
 
 const getRandomColor = () => {
@@ -111,6 +112,7 @@ export default function Workspaces() {
         bookingLink: `https://hmvsolutions.zohobookings.in/#/${Date.now()}`,
         prefix: getInitials(workspaceName.trim()),
         maxDigits: 5,
+        userCustomized: true,
       };
       setWorkspaces([...workspaces, newWorkspace]);
       setWorkspaceName('');
@@ -185,6 +187,7 @@ export default function Workspaces() {
             prefix: editForm.prefix,
             maxDigits: editForm.maxDigits,
             initials: getInitials(editForm.name),
+            userCustomized: true,
           };
         }
         return w;

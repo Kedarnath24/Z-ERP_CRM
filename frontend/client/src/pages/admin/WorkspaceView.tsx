@@ -96,6 +96,7 @@ export default function WorkspaceView() {
             prefix: editForm.prefix,
             maxDigits: editForm.maxDigits,
             initials: getInitials(editForm.name),
+            userCustomized: true,
           };
         }
         return w;
