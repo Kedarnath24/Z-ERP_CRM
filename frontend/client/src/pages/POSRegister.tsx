@@ -18,6 +18,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import TipDialog from '@/components/TipDialog';
 
 type Service = {
   id: string;
@@ -67,35 +69,89 @@ type TeamMember = {
   status?: string;
 };
 
-// Initial services for different categories
+// Initial services - Foot Reflexology Centre
 const INITIAL_SERVICES: Service[] = [
-  // Beauty
-  { id: 'b1', name: 'Beard Design Session', price: 401500, description: 'Professional beard styling', duration: '30 min', category: 'Beauty' },
-  { id: 'b2', name: 'Facial Treatment', price: 79900, description: '60 min facial cleansing and mask', duration: '60 min', category: 'Beauty' },
-  { id: 'b3', name: 'Haircut', price: 59900, description: 'Standard haircut', duration: '45 min', category: 'Beauty' },
-  
-  // Salon
-  { id: 'sl1', name: 'Hair Color', price: 149900, description: 'Full hair coloring service', duration: '2 hr', category: 'Salon' },
-  { id: 'sl2', name: 'Hair Spa', price: 89900, description: 'Deep conditioning treatment', duration: '1 hr', category: 'Salon' },
-  { id: 'sl3', name: 'Manicure & Pedicure', price: 69900, description: 'Complete nail care', duration: '1 hr', category: 'Salon' },
-  
-  // Spa (Fashion related services)
-  { id: 'f1', name: 'Massage (30min)', price: 129900, description: 'Relaxing massage', duration: '30 min', category: 'Fashion' },
-  { id: 'f2', name: 'Body Scrub', price: 99900, description: 'Full body exfoliation', duration: '45 min', category: 'Fashion' },
-  
-  // Gym
-  { id: 'g1', name: 'Personal Training Session', price: 199900, description: 'One-on-one training', duration: '1 hr', category: 'Gym' },
-  { id: 'g2', name: 'Group Class', price: 49900, description: 'Group fitness class', duration: '45 min', category: 'Gym' },
-  { id: 'g3', name: 'Nutrition Consultation', price: 149900, description: 'Diet planning session', duration: '30 min', category: 'Gym' },
-  
-  // Clinic
-  { id: 'c1', name: 'General Consultation', price: 79900, description: 'Doctor consultation', duration: '20 min', category: 'Clinic' },
-  { id: 'c2', name: 'Physiotherapy Session', price: 119900, description: 'Physical therapy', duration: '45 min', category: 'Clinic' },
-  { id: 'c3', name: 'Diagnostic Tests', price: 299900, description: 'Basic health checkup', duration: '30 min', category: 'Clinic' },
-  
-  // Wellness/Other
-  { id: 'o1', name: 'Coffee Tasting Session', price: 39900, description: 'Guided coffee tasting', duration: '30 min', category: 'Other' },
-  { id: 'o2', name: 'Yoga Class', price: 59900, description: 'Group yoga session', duration: '1 hr', category: 'Other' },
+  {
+    id: 'reflex-45',
+    name: 'Foot Reflexology',
+    price: 100000, // 1000 Rs in cents
+    actualPrice: 100000,
+    duration: '45 mins',
+    category: 'Clinic',
+    description: 'Basic foot reflexology session'
+  },
+  {
+    id: 'reflex-60',
+    name: 'Foot Reflexology',
+    price: 130000, // 1300 Rs in cents
+    actualPrice: 130000,
+    duration: '60 mins',
+    category: 'Clinic',
+    description: 'Extended foot reflexology session'
+  },
+  {
+    id: 'reflex-back-shoulder',
+    name: 'Foot Reflexology (45 Mins) + Back & Shoulder (15 Mins)',
+    price: 130000, // 1300 Rs in cents
+    actualPrice: 130000,
+    duration: '60 mins',
+    category: 'Clinic',
+    description: 'Foot reflexology with back and shoulder treatment'
+  },
+  {
+    id: 'reflex-back-arm-shoulder',
+    name: 'Foot Reflexology (45 Mins) + Back, Arm & Shoulder (30 Mins)',
+    price: 160000, // 1600 Rs in cents
+    actualPrice: 160000,
+    duration: '75 mins',
+    category: 'Clinic',
+    description: 'Comprehensive foot reflexology with upper body treatment'
+  },
+  {
+    id: 'reflex-full-body',
+    name: 'Foot Reflexology (45 Mins) + Back, Arm, Shoulder, Neck, Hand & Head (45 Mins)',
+    price: 190000, // 1900 Rs in cents
+    actualPrice: 190000,
+    duration: '90 mins',
+    category: 'Clinic',
+    description: 'Complete full body reflexology session'
+  },
+  {
+    id: 'package-silver',
+    name: 'Silver Package',
+    price: 1000000, // 10000 Rs in cents
+    actualPrice: 1200000, // Worth 12000 Rs
+    duration: 'Package',
+    category: 'Other',
+    description: 'Pay Rs. 10,000 - Get services worth Rs. 12,000'
+  },
+  {
+    id: 'package-gold',
+    name: 'Gold Package',
+    price: 2000000, // 20000 Rs in cents
+    actualPrice: 2600000, // Worth 26000 Rs
+    duration: 'Package',
+    category: 'Other',
+    description: 'Pay Rs. 20,000 - Get services worth Rs. 26,000'
+  },
+  {
+    id: 'package-platinum',
+    name: 'Platinum Package',
+    price: 3000000, // 30000 Rs in cents
+    actualPrice: 4200000, // Worth 42000 Rs
+    duration: 'Package',
+    category: 'Other',
+    description: 'Pay Rs. 30,000 - Get services worth Rs. 42,000'
+  },
+  {
+    id: 'package-diamond',
+    name: 'Diamond Package',
+    price: 4000000, // 40000 Rs in cents
+    actualPrice: 6000000, // Worth 60000 Rs
+    duration: 'Package',
+    category: 'Other',
+    description: 'Pay Rs. 40,000 - Get services worth Rs. 60,000'
+  }
 ];
 
 const CATEGORY_ICONS = {
@@ -117,6 +173,7 @@ const CATEGORY_COLORS = {
 };
 
 export default function POSRegister() {
+  const { selectedWorkspace } = useWorkspace();
   const [, setLocation] = useLocation();
   const [services, setServices] = useState<Service[]>(INITIAL_SERVICES);
   const [cart, setCart] = useState<Record<string, CartData>>({});
@@ -136,6 +193,10 @@ export default function POSRegister() {
   const [pointsToEarn, setPointsToEarn] = useState(0);
   const [showLoyaltyInfo, setShowLoyaltyInfo] = useState(false);
   const { toast} = useToast();
+  
+  // Tip dialog state
+  const [showTipDialog, setShowTipDialog] = useState(false);
+  const [completedTransaction, setCompletedTransaction] = useState<any>(null);
 
   // Discount state - moved up for use in tab management
   const [discountType, setDiscountType] = useState<'percentage' | 'fixed'>('percentage');
@@ -163,11 +224,11 @@ export default function POSRegister() {
   useEffect(() => {
     loadTeamMembers();
     loadExistingCustomers();
-  }, []);
+  }, [selectedWorkspace]);
 
   const loadTeamMembers = () => {
     try {
-      const currentWorkspace = localStorage.getItem('zervos_current_workspace') || 'default';
+      const currentWorkspace = selectedWorkspace?.id || 'default';
       const members: TeamMember[] = [];
       
       // Try workspace-specific key first
@@ -221,7 +282,7 @@ export default function POSRegister() {
 
   const loadExistingCustomers = () => {
     try {
-      const currentWorkspace = localStorage.getItem('zervos_current_workspace') || 'default';
+      const currentWorkspace = selectedWorkspace?.id || 'default';
       const customers: any[] = [];
 
       // Load from customers database
@@ -491,7 +552,7 @@ export default function POSRegister() {
   const allProducts = useMemo(() => {
     const products: any[] = [];
     try {
-      const currentWorkspace = localStorage.getItem('zervos_current_workspace') || 'default';
+      const currentWorkspace = selectedWorkspace?.id || 'default';
       const productsKey = `zervos_products_${currentWorkspace}`;
       const productsRaw = localStorage.getItem(productsKey);
       if (productsRaw) {
@@ -511,7 +572,7 @@ export default function POSRegister() {
       }
     } catch (e) {}
     return products;
-  }, []);
+  }, [selectedWorkspace]);
 
   // Filtered appointments based on search
   const filteredAppointments = useMemo(() => {
@@ -644,7 +705,7 @@ export default function POSRegister() {
   useEffect(() => {
     const loadMembershipPlans = () => {
       try {
-        const currentWorkspace = localStorage.getItem('zervos_current_workspace') || 'default';
+        const currentWorkspace = selectedWorkspace?.id || 'default';
         const stored = localStorage.getItem(`membership_plans_${currentWorkspace}`);
         if (stored) {
           setMEMBERSHIP_PLANS(JSON.parse(stored));
@@ -712,7 +773,7 @@ export default function POSRegister() {
     return () => {
       window.removeEventListener('membership-plans-updated', handlePlansUpdate);
     };
-  }, []);
+  }, [selectedWorkspace]);
 
   // Load services and products from localStorage
   useEffect(() => {
@@ -724,7 +785,7 @@ export default function POSRegister() {
         const allServices: Service[] = [...INITIAL_SERVICES];
         
         // Get current workspace
-        const currentWorkspace = localStorage.getItem('currentWorkspace') || 'default';
+        const currentWorkspace = selectedWorkspace?.id || 'default';
         
         // Load Services from Services page
         const storedServices = localStorage.getItem(`zervos_services_${currentWorkspace}`);
@@ -899,7 +960,7 @@ export default function POSRegister() {
       window.removeEventListener('services-updated', handleServicesUpdate);
       window.removeEventListener('products-updated', handleProductsUpdate);
     };
-  }, []);
+  }, [selectedWorkspace]);
 
   const filteredServices = useMemo(() => {
     return services.filter(service => {
@@ -1134,7 +1195,7 @@ export default function POSRegister() {
     }
 
     try {
-      const workspaceId = localStorage.getItem('zervos_current_workspace') || 'default';
+      const workspaceId = selectedWorkspace?.id || 'default';
       const customersRaw = localStorage.getItem(`customers_${workspaceId}`);
       if (!customersRaw) return;
 
@@ -1169,6 +1230,27 @@ export default function POSRegister() {
   useEffect(() => {
     checkLoyaltyMember(customerPhone, customerName);
   }, [customerPhone, customerName, total]);
+
+  const handleTipDialogClose = () => {
+    setShowTipDialog(false);
+    setCompletedTransaction(null);
+    
+    // Reset form after tip dialog closes
+    setCart({});
+    setShowCheckout(false);
+    setCustomerName('');
+    setCustomerEmail('');
+    setCustomerPhone('');
+    setStaffName('');
+    setSalesAgent('');
+    setPaymentMethod('cash');
+    setLoyaltyMember(null);
+    setPointsToEarn(0);
+    setShowLoyaltyInfo(false);
+    setIsCustomerAutoFilled(false);
+    setDiscountValue('');
+    setDiscountAmount(0);
+  };
 
   const handleCompleteSale = () => {
     // Validate staff name
@@ -1237,7 +1319,7 @@ export default function POSRegister() {
     localStorage.setItem('pos_transactions', JSON.stringify(updatedTransactions));
 
     // Also save customer to existing customers for future auto-fill
-    const workspaceId = localStorage.getItem('zervos_current_workspace') || 'default';
+    const workspaceId = selectedWorkspace?.id || 'default';
     const customersKey = `customers_${workspaceId}`;
     const existingCustomersData = JSON.parse(localStorage.getItem(customersKey) || '[]');
     
@@ -1261,7 +1343,7 @@ export default function POSRegister() {
 
     // Handle Loyalty Membership
     if (customerPhone || customerName) {
-      const workspaceId = localStorage.getItem('zervos_current_workspace') || 'default';
+      const workspaceId = selectedWorkspace?.id || 'default';
       const customersRaw = localStorage.getItem(`customers_${workspaceId}`) || '[]';
       const customers = JSON.parse(customersRaw);
       
@@ -1400,21 +1482,19 @@ export default function POSRegister() {
       });
     }
     
-    // Reset form and handle tabs
-    setCart({});
-    setShowCheckout(false);
-    setCustomerName('');
-    setCustomerEmail('');
-    setCustomerPhone('');
-    setStaffName('');
-    setSalesAgent('');
-    setPaymentMethod('cash');
-    setLoyaltyMember(null);
-    setPointsToEarn(0);
-    setShowLoyaltyInfo(false);
-    setIsCustomerAutoFilled(false);
-    setDiscountValue('');
-    setDiscountAmount(0);
+    // Store transaction details for tip dialog
+    setCompletedTransaction({
+      transactionId: transaction.id,
+      billAmount: total / 100, // Convert to rupees
+      staffMember: staffName.trim(),
+      staffId: `staff-${Date.now()}`, // In production, use actual staff ID
+      customerName: customerName.trim(),
+    });
+    
+    // Show tip dialog
+    setShowTipDialog(true);
+    
+    // Reset form and handle tabs will be done after tip dialog closes
     
     // Reload customer list for future auto-fill
     loadExistingCustomers();
@@ -1736,7 +1816,7 @@ export default function POSRegister() {
 
                 <Button
                   onClick={() => {
-                    const currentWorkspace = localStorage.getItem('currentWorkspace') || 'default';
+                    const currentWorkspace = selectedWorkspace?.id || 'default';
                     
                     if (viewMode === 'services') {
                       // Load Services page to add recommended services
@@ -3424,6 +3504,20 @@ export default function POSRegister() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Tip Dialog */}
+      {completedTransaction && (
+        <TipDialog
+          isOpen={showTipDialog}
+          onClose={handleTipDialogClose}
+          billAmount={completedTransaction.billAmount}
+          staffMember={completedTransaction.staffMember}
+          staffId={completedTransaction.staffId}
+          transactionId={completedTransaction.transactionId}
+          customerName={completedTransaction.customerName}
+          branchId={selectedWorkspace?.id || 'default'}
+        />
+      )}
     </div>
   );
 }

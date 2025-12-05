@@ -11,6 +11,13 @@ interface Workspace {
   bookingLink: string;
   prefix: string;
   maxDigits: number;
+  // Branch-specific fields
+  type?: 'main' | 'branch';
+  branchCode?: string;
+  branchAddress?: string;
+  branchPhone?: string;
+  branchManager?: string;
+  parentBusinessId?: string;
 }
 
 interface WorkspaceContextType {
@@ -60,7 +67,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         status: 'Active',
         bookingLink: `${window.location.origin}/book/default`,
         prefix: 'BK',
-        maxDigits: 4
+        maxDigits: 4,
+        type: 'main',
+        branchCode: 'MAIN'
       };
       
       parsed = [defaultWorkspace];

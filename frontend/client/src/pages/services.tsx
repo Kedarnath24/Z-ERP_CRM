@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from '@/hooks/use-toast';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 interface Service {
   id: string;
@@ -86,6 +87,7 @@ export default function ServicesPage() {
   const [isCustomCategory, setIsCustomCategory] = useState(false);
   const [customCategoryName, setCustomCategoryName] = useState('');
   const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const { selectedWorkspace } = useWorkspace();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   
@@ -659,51 +661,140 @@ export default function ServicesPage() {
   };
 
   // Recommended service templates
-  const recommendedServices: Omit<Service, 'id' | 'createdAt'>[] = [
-    // Spa & Wellness
-    { name: 'Swedish Massage', duration: '60 mins', price: '2500', currency: 'INR', description: 'Full body relaxation massage with essential oils', category: 'Spa & Wellness', isEnabled: true },
-    { name: 'Deep Tissue Massage', duration: '90 mins', price: '3500', currency: 'INR', description: 'Therapeutic massage targeting deep muscle layers', category: 'Spa & Wellness', isEnabled: true },
-    { name: 'Hot Stone Therapy', duration: '75 mins', price: '3000', currency: 'INR', description: 'Relaxing massage using heated stones', category: 'Spa & Wellness', isEnabled: true },
-    { name: 'Aromatherapy Session', duration: '60 mins', price: '2800', currency: 'INR', description: 'Therapeutic massage with aromatic essential oils', category: 'Spa & Wellness', isEnabled: true },
-    { name: 'Body Scrub & Polish', duration: '45 mins', price: '2000', currency: 'INR', description: 'Exfoliating treatment for smooth, glowing skin', category: 'Spa & Wellness', isEnabled: true },
-    { name: 'Couples Spa Package', duration: '120 mins', price: '8000', currency: 'INR', description: 'Relaxing spa experience for two', category: 'Spa & Wellness', isEnabled: true },
-    
-    // Beauty & Salon
-    { name: 'Haircut & Styling', duration: '45 mins', price: '800', currency: 'INR', description: 'Professional haircut with styling', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Hair Coloring', duration: '120 mins', price: '4500', currency: 'INR', description: 'Full color treatment with conditioning', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Keratin Treatment', duration: '180 mins', price: '8500', currency: 'INR', description: 'Smoothing and straightening treatment', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Manicure & Pedicure', duration: '60 mins', price: '1200', currency: 'INR', description: 'Complete nail care and polish', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Gel Nails', duration: '45 mins', price: '1000', currency: 'INR', description: 'Long-lasting gel nail application', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Facial Treatment', duration: '60 mins', price: '2500', currency: 'INR', description: 'Deep cleansing and hydrating facial', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Makeup Application', duration: '60 mins', price: '2000', currency: 'INR', description: 'Professional makeup for special occasions', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Eyebrow Threading', duration: '15 mins', price: '100', currency: 'INR', description: 'Precise eyebrow shaping', category: 'Beauty & Salon', isEnabled: true },
-    { name: 'Waxing Service', duration: '30 mins', price: '500', currency: 'INR', description: 'Hair removal service', category: 'Beauty & Salon', isEnabled: true },
-    
-    // Fitness & Training
-    { name: 'Personal Training Session', duration: '60 mins', price: '1500', currency: 'INR', description: 'One-on-one fitness training', category: 'Fitness & Training', isEnabled: true },
-    { name: 'Group Fitness Class', duration: '45 mins', price: '500', currency: 'INR', description: 'High-energy group workout', category: 'Fitness & Training', isEnabled: true },
-    { name: 'Yoga Session', duration: '60 mins', price: '600', currency: 'INR', description: 'Mindful yoga practice for all levels', category: 'Fitness & Training', isEnabled: true },
-    { name: 'Pilates Class', duration: '55 mins', price: '800', currency: 'INR', description: 'Core-strengthening pilates workout', category: 'Fitness & Training', isEnabled: true },
-    { name: 'Spin Class', duration: '45 mins', price: '600', currency: 'INR', description: 'Indoor cycling workout', category: 'Fitness & Training', isEnabled: true },
-    { name: 'HIIT Training', duration: '45 mins', price: '900', currency: 'INR', description: 'High-intensity interval training', category: 'Fitness & Training', isEnabled: true },
-    { name: 'Nutrition Consultation', duration: '60 mins', price: '2000', currency: 'INR', description: 'Personalized nutrition planning', category: 'Consultation', isEnabled: true },
-    { name: 'Fitness Assessment', duration: '30 mins', price: '1000', currency: 'INR', description: 'Complete fitness evaluation', category: 'Consultation', isEnabled: true },
-  ];
+  const recommendedServices: Omit<Service, 'id' | 'createdAt'>[] = [];
 
   useEffect(() => {
     loadServices();
   }, []);
 
   const loadServices = () => {
-    const currentWorkspace = localStorage.getItem('currentWorkspace') || 'default';
+    const currentWorkspace = selectedWorkspace?.id || 'default';
     const stored = localStorage.getItem(`zervos_services_${currentWorkspace}`);
     if (stored) {
       setServices(JSON.parse(stored));
+    } else {
+      // Initialize with default reflexology services
+      const defaultServices: Service[] = [
+        {
+          id: 'reflex-45',
+          name: 'Foot Reflexology',
+          duration: '45 mins',
+          price: '1000',
+          actualPrice: '1000',
+          currency: 'INR',
+          description: 'Basic foot reflexology session',
+          category: 'Spa & Wellness',
+          isEnabled: true,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'reflex-60',
+          name: 'Foot Reflexology',
+          duration: '60 mins',
+          price: '1300',
+          actualPrice: '1300',
+          currency: 'INR',
+          description: 'Extended foot reflexology session',
+          category: 'Spa & Wellness',
+          isEnabled: true,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'reflex-back-shoulder',
+          name: 'Foot Reflexology (45 Mins) + Back & Shoulder (15 Mins)',
+          duration: '60 mins',
+          price: '1300',
+          actualPrice: '1300',
+          currency: 'INR',
+          description: 'Foot reflexology with back and shoulder treatment',
+          category: 'Spa & Wellness',
+          isEnabled: true,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'reflex-back-arm-shoulder',
+          name: 'Foot Reflexology (45 Mins) + Back, Arm & Shoulder (30 Mins)',
+          duration: '75 mins',
+          price: '1600',
+          actualPrice: '1600',
+          currency: 'INR',
+          description: 'Comprehensive foot reflexology with upper body treatment',
+          category: 'Spa & Wellness',
+          isEnabled: true,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'reflex-full-body',
+          name: 'Foot Reflexology (45 Mins) + Back, Arm, Shoulder, Neck, Hand & Head (45 Mins)',
+          duration: '90 mins',
+          price: '1900',
+          actualPrice: '1900',
+          currency: 'INR',
+          description: 'Complete full body reflexology session',
+          category: 'Spa & Wellness',
+          isEnabled: true,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'package-silver',
+          name: 'Silver Package',
+          duration: 'Package',
+          price: '10000',
+          actualPrice: '12000',
+          offerPrice: '10000',
+          currency: 'INR',
+          description: 'Pay Rs. 10,000 - Get services worth Rs. 12,000',
+          category: 'Spa & Wellness',
+          isEnabled: true,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'package-gold',
+          name: 'Gold Package',
+          duration: 'Package',
+          price: '20000',
+          actualPrice: '26000',
+          offerPrice: '20000',
+          currency: 'INR',
+          description: 'Pay Rs. 20,000 - Get services worth Rs. 26,000',
+          category: 'Spa & Wellness',
+          isEnabled: true,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'package-platinum',
+          name: 'Platinum Package',
+          duration: 'Package',
+          price: '30000',
+          actualPrice: '42000',
+          offerPrice: '30000',
+          currency: 'INR',
+          description: 'Pay Rs. 30,000 - Get services worth Rs. 42,000',
+          category: 'Spa & Wellness',
+          isEnabled: true,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'package-diamond',
+          name: 'Diamond Package',
+          duration: 'Package',
+          price: '40000',
+          actualPrice: '60000',
+          offerPrice: '40000',
+          currency: 'INR',
+          description: 'Pay Rs. 40,000 - Get services worth Rs. 60,000',
+          category: 'Spa & Wellness',
+          isEnabled: true,
+          createdAt: new Date().toISOString(),
+        },
+      ];
+      setServices(defaultServices);
+      localStorage.setItem(`zervos_services_${currentWorkspace}`, JSON.stringify(defaultServices));
     }
   };
 
   const saveServices = (updatedServices: Service[]) => {
-    const currentWorkspace = localStorage.getItem('currentWorkspace') || 'default';
+    const currentWorkspace = selectedWorkspace?.id || 'default';
     localStorage.setItem(`zervos_services_${currentWorkspace}`, JSON.stringify(updatedServices));
     setServices(updatedServices);
     // Dispatch event for other components to sync
@@ -916,7 +1007,7 @@ export default function ServicesPage() {
                 <Sparkles className="w-16 h-16 text-gray-300" />
               </div>
               <h3 className="text-xl font-semibold text-gray-700 mb-2">No services yet</h3>
-              <p className="text-gray-500 mb-6">Get started by adding your first service or load recommended templates</p>
+              <p className="text-gray-500 mb-6">Get started by adding your first service</p>
               <div className="flex gap-3 justify-center">
                 <Button
                   onClick={handleOpenNew}
@@ -924,25 +1015,6 @@ export default function ServicesPage() {
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Add Service
-                </Button>
-                <Button
-                  onClick={() => {
-                    const servicesToAdd = recommendedServices.map((service, index) => ({
-                      ...service,
-                      id: `rec-${Date.now()}-${index}`,
-                      createdAt: new Date().toISOString(),
-                    }));
-                    saveServices(servicesToAdd);
-                    toast({
-                      title: 'Recommended Services Loaded',
-                      description: `${servicesToAdd.length} service templates have been added to your catalog.`,
-                    });
-                  }}
-                  variant="outline"
-                  className="border-purple-300 text-purple-700 hover:bg-purple-50"
-                >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Load Recommended Services
                 </Button>
               </div>
             </motion.div>
@@ -959,7 +1031,7 @@ export default function ServicesPage() {
               <p className="text-gray-500">Try adjusting your search query</p>
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
               {filteredServices.map((service, index) => (
             <motion.div 
               key={service.id}
@@ -968,14 +1040,14 @@ export default function ServicesPage() {
               exit={{ opacity: 0, x: -100 }}
               transition={{ delay: index * 0.05 }}
               whileHover={{ scale: 1.02, y: -4 }}
-              className={`bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 p-6 ${
+              className={`bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 p-6 h-full flex flex-col ${
                 !service.isEnabled ? 'opacity-60' : ''
               }`}
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h3 className="text-lg font-bold text-gray-900">{service.name}</h3>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <h3 className="text-lg font-bold text-gray-900 break-words">{service.name}</h3>
                     {service.category === 'Package' && (
                       <span className="text-xs px-2 py-0.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full font-semibold shadow-sm">
                         ✨ Package
@@ -1021,7 +1093,7 @@ export default function ServicesPage() {
               </div>
 
               {service.description && (
-                <p className="text-sm text-gray-600 mb-4 line-clamp-2">{service.description}</p>
+                <p className="text-sm text-gray-600 mb-4 break-words">{service.description}</p>
               )}
 
               {service.barcode && (
@@ -1478,6 +1550,9 @@ export default function ServicesPage() {
                     name: '',
                     duration: '',
                     price: '',
+                    actualPrice: '',
+                    offerPrice: '',
+                    barcode: '',
                     currency: 'INR',
                     description: '',
                     category: '',
@@ -1538,6 +1613,9 @@ export default function ServicesPage() {
                     name: '',
                     duration: '',
                     price: '',
+                    actualPrice: '',
+                    offerPrice: '',
+                    barcode: '',
                     currency: 'INR',
                     description: '',
                     category: '',
@@ -1980,7 +2058,7 @@ export default function ServicesPage() {
                     </h3>
                     <div className="flex flex-wrap gap-3">
                       <Button
-                        onClick={() => downloadReport('csv')}
+                        onClick={downloadServicesCSV}
                         variant="outline"
                         className="gap-2 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
                       >
@@ -1988,7 +2066,7 @@ export default function ServicesPage() {
                         Download CSV
                       </Button>
                       <Button
-                        onClick={() => downloadReport('excel')}
+                        onClick={downloadServicesExcel}
                         variant="outline"
                         className="gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
                       >
@@ -1996,7 +2074,7 @@ export default function ServicesPage() {
                         Download Excel
                       </Button>
                       <Button
-                        onClick={() => downloadReport('pdf')}
+                        onClick={downloadServicesPDF}
                         variant="outline"
                         className="gap-2 border-red-300 text-red-700 hover:bg-red-50"
                       >

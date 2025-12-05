@@ -623,52 +623,7 @@ export default function ProductsPage() {
   };
 
   // Recommended product templates
-  const recommendedProducts: Omit<Product, 'id' | 'createdAt'>[] = [
-    // Spa Products
-    { name: 'Essential Oil Set', price: '1500', currency: 'INR', description: 'Premium aromatherapy essential oils collection', category: 'Spa Products', sku: 'SPA-001', stock: '50', isEnabled: true },
-    { name: 'Massage Oil', price: '800', currency: 'INR', description: 'Organic therapeutic massage oil', category: 'Spa Products', sku: 'SPA-002', stock: '100', isEnabled: true },
-    { name: 'Bath Bombs Set', price: '1000', currency: 'INR', description: 'Luxurious bath bombs with natural ingredients', category: 'Spa Products', sku: 'SPA-003', stock: '75', isEnabled: true },
-    { name: 'Body Scrub', price: '900', currency: 'INR', description: 'Exfoliating body scrub with sea salt', category: 'Spa Products', sku: 'SPA-004', stock: '60', isEnabled: true },
-    { name: 'Spa Gift Set', price: '3500', currency: 'INR', description: 'Complete spa experience gift package', category: 'Spa Products', sku: 'SPA-005', stock: '30', isEnabled: true },
-    
-    // Hair Care
-    { name: 'Professional Shampoo', price: '1200', currency: 'INR', description: 'Salon-grade nourishing shampoo', category: 'Hair Care', sku: 'HAIR-001', stock: '120', isEnabled: true },
-    { name: 'Deep Conditioning Mask', price: '1400', currency: 'INR', description: 'Intensive hair repair treatment', category: 'Hair Care', sku: 'HAIR-002', stock: '80', isEnabled: true },
-    { name: 'Hair Serum', price: '1100', currency: 'INR', description: 'Anti-frizz shine serum', category: 'Hair Care', sku: 'HAIR-003', stock: '90', isEnabled: true },
-    { name: 'Heat Protection Spray', price: '750', currency: 'INR', description: 'Thermal styling protectant', category: 'Hair Care', sku: 'HAIR-004', stock: '100', isEnabled: true },
-    { name: 'Hair Color Kit', price: '950', currency: 'INR', description: 'Professional at-home coloring system', category: 'Hair Care', sku: 'HAIR-005', stock: '45', isEnabled: true },
-    
-    // Skin Care
-    { name: 'Facial Cleanser', price: '850', currency: 'INR', description: 'Gentle daily face wash', category: 'Skin Care', sku: 'SKIN-001', stock: '150', isEnabled: true },
-    { name: 'Vitamin C Serum', price: '1600', currency: 'INR', description: 'Brightening anti-aging serum', category: 'Skin Care', sku: 'SKIN-002', stock: '70', isEnabled: true },
-    { name: 'Moisturizer SPF 30', price: '1300', currency: 'INR', description: 'Daily hydrating sunscreen', category: 'Skin Care', sku: 'SKIN-003', stock: '110', isEnabled: true },
-    { name: 'Eye Cream', price: '1400', currency: 'INR', description: 'Anti-wrinkle eye treatment', category: 'Skin Care', sku: 'SKIN-004', stock: '65', isEnabled: true },
-    { name: 'Face Mask Set', price: '1200', currency: 'INR', description: 'Variety pack of sheet masks', category: 'Skin Care', sku: 'SKIN-005', stock: '85', isEnabled: true },
-    
-    // Makeup
-    { name: 'Foundation', price: '1500', currency: 'INR', description: 'Full coverage liquid foundation', category: 'Makeup', sku: 'MAKE-001', stock: '95', isEnabled: true },
-    { name: 'Eyeshadow Palette', price: '1800', currency: 'INR', description: '12-shade professional palette', category: 'Makeup', sku: 'MAKE-002', stock: '60', isEnabled: true },
-    { name: 'Lipstick Set', price: '1300', currency: 'INR', description: 'Long-lasting matte lipsticks', category: 'Makeup', sku: 'MAKE-003', stock: '120', isEnabled: true },
-    { name: 'Makeup Brush Set', price: '2300', currency: 'INR', description: 'Professional 12-piece brush collection', category: 'Makeup', sku: 'MAKE-004', stock: '40', isEnabled: true },
-    
-    // Fitness Equipment
-    { name: 'Yoga Mat', price: '1200', currency: 'INR', description: 'Non-slip premium yoga mat', category: 'Fitness Equipment', sku: 'FIT-001', stock: '80', isEnabled: true },
-    { name: 'Resistance Bands Set', price: '850', currency: 'INR', description: '5-piece resistance training set', category: 'Fitness Equipment', sku: 'FIT-002', stock: '100', isEnabled: true },
-    { name: 'Dumbbells Pair', price: '1500', currency: 'INR', description: 'Adjustable weight dumbbells', category: 'Fitness Equipment', sku: 'FIT-003', stock: '50', isEnabled: true },
-    { name: 'Foam Roller', price: '950', currency: 'INR', description: 'Muscle recovery foam roller', category: 'Fitness Equipment', sku: 'FIT-004', stock: '70', isEnabled: true },
-    { name: 'Jump Rope', price: '500', currency: 'INR', description: 'Speed jump rope for cardio', category: 'Fitness Equipment', sku: 'FIT-005', stock: '120', isEnabled: true },
-    
-    // Supplements
-    { name: 'Protein Powder', price: '1900', currency: 'INR', description: 'Whey protein isolate', category: 'Supplements', sku: 'SUP-001', stock: '90', isEnabled: true },
-    { name: 'Pre-Workout', price: '1400', currency: 'INR', description: 'Energy and focus supplement', category: 'Supplements', sku: 'SUP-002', stock: '75', isEnabled: true },
-    { name: 'Multivitamin', price: '1100', currency: 'INR', description: 'Daily essential vitamins', category: 'Supplements', sku: 'SUP-003', stock: '150', isEnabled: true },
-    { name: 'BCAA Supplement', price: '1300', currency: 'INR', description: 'Muscle recovery amino acids', category: 'Supplements', sku: 'SUP-004', stock: '85', isEnabled: true },
-    
-    // Retail
-    { name: 'Water Bottle', price: '600', currency: 'INR', description: 'Insulated stainless steel bottle', category: 'Retail', sku: 'RET-001', stock: '200', isEnabled: true },
-    { name: 'Gym Bag', price: '1500', currency: 'INR', description: 'Spacious sports duffle bag', category: 'Retail', sku: 'RET-002', stock: '60', isEnabled: true },
-    { name: 'Towel Set', price: '850', currency: 'INR', description: 'Quick-dry microfiber towels', category: 'Retail', sku: 'RET-003', stock: '100', isEnabled: true },
-  ];
+  const recommendedProducts: Omit<Product, 'id' | 'createdAt'>[] = [];
 
   useEffect(() => {
     loadProducts();
@@ -876,7 +831,7 @@ export default function ProductsPage() {
                 <Package className="w-16 h-16 text-gray-300" />
               </div>
               <h3 className="text-xl font-semibold text-gray-700 mb-2">No products yet</h3>
-              <p className="text-gray-500 mb-6">Get started by adding your first product or load recommended templates</p>
+              <p className="text-gray-500 mb-6">Get started by adding your first product</p>
               <div className="flex gap-3 justify-center">
                 <Button
                   onClick={handleOpenNew}
@@ -884,25 +839,6 @@ export default function ProductsPage() {
                 >
                   <Plus className="w-5 h-5 mr-2" />
                   Add Product
-                </Button>
-                <Button
-                  onClick={() => {
-                    const productsToAdd = recommendedProducts.map((product, index) => ({
-                      ...product,
-                      id: `rec-${Date.now()}-${index}`,
-                      createdAt: new Date().toISOString(),
-                    }));
-                    saveProducts(productsToAdd);
-                    toast({
-                      title: 'Recommended Products Loaded',
-                      description: `${productsToAdd.length} product templates have been added to your inventory.`,
-                    });
-                  }}
-                  variant="outline"
-                  className="border-blue-300 text-blue-700 hover:bg-blue-50"
-                >
-                  <Package className="w-5 h-5 mr-2" />
-                  Load Recommended Products
                 </Button>
               </div>
             </motion.div>
