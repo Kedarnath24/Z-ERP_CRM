@@ -6,7 +6,7 @@ import {
   Coffee, Scissors, Heart, Dumbbell, Stethoscope, MoreHorizontal,
   User, CreditCard, Banknote, Smartphone, DollarSign, Receipt, ArrowLeft, Package,
   Award, Sparkles, Calendar, Clock, CheckCircle2, MapPin, Phone, Mail, FileText, Tag, Percent, IndianRupee,
-  ChevronDown, UserCheck, Users, Layers, PlusCircle, XCircle, AlertCircle
+  ChevronDown, UserCheck, Users, Layers, PlusCircle, XCircle, AlertCircle, MessageCircle, Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Switch } from '@/components/ui/switch';
 import StaffDropdown from '@/components/StaffDropdown';
 import TipDialog from '@/components/TipDialog';
+import { whatsappService } from '@/lib/whatsapp-service';
 
 type Service = {
   id: string;
@@ -70,35 +71,7 @@ type TeamMember = {
 };
 
 // Initial services for different categories
-const INITIAL_SERVICES: Service[] = [
-  // Beauty
-  { id: 'b1', name: 'Beard Design Session', price: 401500, description: 'Professional beard styling', duration: '30 min', category: 'Beauty' },
-  { id: 'b2', name: 'Facial Treatment', price: 79900, description: '60 min facial cleansing and mask', duration: '60 min', category: 'Beauty' },
-  { id: 'b3', name: 'Haircut', price: 59900, description: 'Standard haircut', duration: '45 min', category: 'Beauty' },
-  
-  // Salon
-  { id: 'sl1', name: 'Hair Color', price: 149900, description: 'Full hair coloring service', duration: '2 hr', category: 'Salon' },
-  { id: 'sl2', name: 'Hair Spa', price: 89900, description: 'Deep conditioning treatment', duration: '1 hr', category: 'Salon' },
-  { id: 'sl3', name: 'Manicure & Pedicure', price: 69900, description: 'Complete nail care', duration: '1 hr', category: 'Salon' },
-  
-  // Spa (Fashion related services)
-  { id: 'f1', name: 'Massage (30min)', price: 129900, description: 'Relaxing massage', duration: '30 min', category: 'Fashion' },
-  { id: 'f2', name: 'Body Scrub', price: 99900, description: 'Full body exfoliation', duration: '45 min', category: 'Fashion' },
-  
-  // Gym
-  { id: 'g1', name: 'Personal Training Session', price: 199900, description: 'One-on-one training', duration: '1 hr', category: 'Gym' },
-  { id: 'g2', name: 'Group Class', price: 49900, description: 'Group fitness class', duration: '45 min', category: 'Gym' },
-  { id: 'g3', name: 'Nutrition Consultation', price: 149900, description: 'Diet planning session', duration: '30 min', category: 'Gym' },
-  
-  // Clinic
-  { id: 'c1', name: 'General Consultation', price: 79900, description: 'Doctor consultation', duration: '20 min', category: 'Clinic' },
-  { id: 'c2', name: 'Physiotherapy Session', price: 119900, description: 'Physical therapy', duration: '45 min', category: 'Clinic' },
-  { id: 'c3', name: 'Diagnostic Tests', price: 299900, description: 'Basic health checkup', duration: '30 min', category: 'Clinic' },
-  
-  // Wellness/Other
-  { id: 'o1', name: 'Coffee Tasting Session', price: 39900, description: 'Guided coffee tasting', duration: '30 min', category: 'Other' },
-  { id: 'o2', name: 'Yoga Class', price: 59900, description: 'Group yoga session', duration: '1 hr', category: 'Other' },
-];
+const INITIAL_SERVICES: Service[] = [];
 
 const CATEGORY_ICONS = {
   Beauty: Scissors,
@@ -170,6 +143,10 @@ export default function POSRegister() {
     transactionId: string;
     serviceStaff: Array<{ id: string; name: string }>;
   } | null>(null);
+
+  // WhatsApp state
+  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+  const [lastCompletedTransaction, setLastCompletedTransaction] = useState<any>(null);
 
   // Load team members for dropdowns
   useEffect(() => {
@@ -1470,6 +1447,14 @@ export default function POSRegister() {
       }
     });
 
+    // Save last completed transaction for WhatsApp
+    setLastCompletedTransaction({
+      ...transaction,
+      customerName: customerName.trim(),
+      customerPhone: customerPhone.trim(),
+      items: cartItems
+    });
+
     // Show tip dialog after successful sale
     setTipTransactionData({
       billAmount: total / 100, // Convert cents to rupees
@@ -1519,6 +1504,70 @@ export default function POSRegister() {
       };
       setPosTabs([resetTab]);
       setActiveTabId(resetTab.id);
+    }
+  };
+
+  // Send E-Bill via WhatsApp
+  const sendWhatsAppBill = async () => {
+    if (!lastCompletedTransaction) {
+      toast({
+        title: 'No Transaction',
+        description: 'No recent transaction to send.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSendingWhatsApp(true);
+
+    try {
+      const workspaceId = localStorage.getItem('zervos_current_workspace') || 'default';
+      const company = JSON.parse(localStorage.getItem('zervos_company') || '{}');
+
+      const billData = {
+        invoiceNumber: lastCompletedTransaction.id,
+        customerName: lastCompletedTransaction.customerName,
+        customerPhone: lastCompletedTransaction.customerPhone,
+        date: new Date().toLocaleDateString('en-IN'),
+        time: new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }),
+        items: lastCompletedTransaction.items.map((item: any) => ({
+          name: item.name,
+          quantity: item.qty,
+          price: item.price
+        })),
+        subtotal: lastCompletedTransaction.amount / 100,
+        discount: 0,
+        tax: 0,
+        total: lastCompletedTransaction.amount / 100,
+        paymentMethod: lastCompletedTransaction.paymentMethod,
+        businessName: company.name || 'Business',
+        businessPhone: company.phone || '',
+        businessAddress: company.address || ''
+      };
+
+      const result = await whatsappService.sendBill(billData, workspaceId);
+
+      if (result.success) {
+        toast({
+          title: 'Bill Sent!',
+          description: `E-Bill sent to ${lastCompletedTransaction.customerPhone} via WhatsApp`,
+        });
+        setLastCompletedTransaction(null); // Clear after sending
+      } else {
+        toast({
+          title: 'Failed to Send',
+          description: result.message,
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to send bill via WhatsApp',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSendingWhatsApp(false);
     }
   };
 
@@ -1813,31 +1862,6 @@ export default function POSRegister() {
                 </Select>
 
                 <Button
-                  onClick={() => {
-                    const currentWorkspace = localStorage.getItem('currentWorkspace') || 'default';
-                    
-                    if (viewMode === 'services') {
-                      // Load Services page to add recommended services
-                      toast({
-                        title: 'Load Services',
-                        description: 'Go to Services page in sidebar to load 25 recommended services in ₹',
-                      });
-                    } else {
-                      // Load Products page to add recommended products
-                      toast({
-                        title: 'Load Products',
-                        description: 'Go to Products page in sidebar (under Items) to load 33 recommended products in ₹',
-                      });
-                    }
-                  }}
-                  variant="outline"
-                  className="border-purple-300 text-purple-700 hover:bg-purple-50"
-                >
-                  <Package className="mr-2 h-4 w-4" />
-                  Load Recommended
-                </Button>
-
-                <Button
                   onClick={() => viewMode === 'services' ? setShowCustomService(true) : setShowCustomProduct(true)}
                   variant="outline"
                   className="border-brand-300 text-brand-700 hover:bg-brand-50"
@@ -1987,33 +2011,27 @@ export default function POSRegister() {
                   No {viewMode === 'services' ? 'Services' : 'Products'} Available
                 </h3>
                 <p className="text-slate-600 mb-4">
-                  {viewMode === 'services' 
-                    ? 'Load 25 recommended services from the Services page'
-                    : 'Load 33 recommended products from the Products page'
-                  }
+                  Add {viewMode === 'services' ? 'services' : 'products'} to get started with your sales
                 </p>
-                <div className="flex flex-col gap-2 items-center">
-                  <p className="text-sm text-slate-500">Click "Load Recommended" button above or</p>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => window.open('/dashboard/services', '_blank')}
-                      variant="outline"
-                      className="border-purple-300 text-purple-700 hover:bg-purple-50"
-                      size="sm"
-                    >
-                      <Scissors className="mr-2 h-4 w-4" />
-                      Open Services Page
-                    </Button>
-                    <Button
-                      onClick={() => window.open('/dashboard/products', '_blank')}
-                      variant="outline"
-                      className="border-green-300 text-green-700 hover:bg-green-50"
-                      size="sm"
-                    >
-                      <Package className="mr-2 h-4 w-4" />
-                      Open Products Page
-                    </Button>
-                  </div>
+                <div className="flex gap-2 justify-center">
+                  <Button
+                    onClick={() => window.open('/dashboard/services', '_blank')}
+                    variant="outline"
+                    className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                    size="sm"
+                  >
+                    <Scissors className="mr-2 h-4 w-4" />
+                    Open Services Page
+                  </Button>
+                  <Button
+                    onClick={() => window.open('/dashboard/products', '_blank')}
+                    variant="outline"
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                    size="sm"
+                  >
+                    <Package className="mr-2 h-4 w-4" />
+                    Open Products Page
+                  </Button>
                 </div>
               </motion.div>
             )}
@@ -3480,6 +3498,35 @@ export default function POSRegister() {
           serviceStaff={tipTransactionData.serviceStaff}
           transactionId={tipTransactionData.transactionId}
         />
+      )}
+
+      {/* WhatsApp Send Button - Floating Action Button */}
+      {lastCompletedTransaction && !showCheckout && (
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0, opacity: 0 }}
+          className="fixed bottom-8 right-8 z-50"
+        >
+          <Button
+            onClick={sendWhatsAppBill}
+            disabled={isSendingWhatsApp}
+            size="lg"
+            className="bg-green-600 hover:bg-green-700 shadow-2xl h-16 px-6 rounded-full group"
+          >
+            {isSendingWhatsApp ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <MessageCircle className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
+                Send E-Bill via WhatsApp
+              </>
+            )}
+          </Button>
+        </motion.div>
       )}
     </div>
   );

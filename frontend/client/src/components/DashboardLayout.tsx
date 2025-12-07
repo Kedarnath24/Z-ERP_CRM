@@ -24,6 +24,7 @@ import {
   Award,
   TrendingDown,
   Calculator,
+  MessageCircle,
 } from 'lucide-react';
 import NotificationDropdown from './NotificationDropdown';
 import NotificationCenter from './NotificationCenter';
@@ -60,6 +61,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const [itemsExpanded, setItemsExpanded] = useState(false);
   const [accountsExpanded, setAccountsExpanded] = useState(false);
   const [loyaltyExpanded, setLoyaltyExpanded] = useState(false);
+  const [whatsappExpanded, setWhatsappExpanded] = useState(false);
   const { selectedWorkspace } = useWorkspace();
 
   useEffect(() => {
@@ -118,6 +120,11 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
 
   const loyaltySubNavigation = [
     { name: 'Memberships', icon: ShieldCheck, path: '/dashboard/memberships' },
+  ];
+
+  const whatsappSubNavigation = [
+    { name: 'Connect', icon: MessageCircle, path: '/dashboard/admin/whatsapp/connect' },
+    { name: 'Settings', icon: Settings, path: '/dashboard/admin/whatsapp' },
   ];
 
   const secondaryNavigation = [
@@ -434,6 +441,77 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
                         <motion.span
                           layoutId="nav-active"
                           className="absolute inset-0 rounded-xl bg-slate-700/60 shadow-lg"
+                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                        />
+                      )}
+                    </a>
+                  </Link>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* WhatsApp Section with Sub-navigation */}
+      <div key="whatsapp-section">
+        <motion.button
+          onClick={() => setWhatsappExpanded(!whatsappExpanded)}
+          className={`relative w-full flex items-center ${
+            expanded ? 'gap-3 px-4 py-3' : 'justify-center px-2 py-3'
+          } text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 rounded-xl`}
+        >
+          <motion.span className="relative z-10 flex items-center justify-center">
+            <MessageCircle size={20} className="text-green-400" />
+          </motion.span>
+
+          {expanded && (
+            <>
+              <span className="relative z-10 font-medium text-slate-200 flex-1 text-left">WhatsApp</span>
+              <motion.span
+                animate={{ rotate: whatsappExpanded ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="relative z-10"
+              >
+                <ChevronDown size={16} className="text-slate-400" />
+              </motion.span>
+            </>
+          )}
+        </motion.button>
+
+        <AnimatePresence>
+          {whatsappExpanded && expanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="overflow-hidden"
+            >
+              {whatsappSubNavigation.map((subItem) => {
+                const subActive = isActive(subItem.path);
+                return (
+                  <Link key={subItem.path} href={subItem.path}>
+                    <a
+                      className={`relative flex items-center gap-3 pl-12 pr-4 py-2.5 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 rounded-xl`}
+                    >
+                      <motion.span
+                        className="relative z-10 flex items-center justify-center"
+                        initial={false}
+                        animate={{ scale: subActive ? 1.05 : 1 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                      >
+                        <subItem.icon size={18} className={subActive ? 'text-white' : 'text-green-400'} />
+                      </motion.span>
+
+                      <span className={`relative z-10 font-medium ${subActive ? 'text-white' : 'text-slate-300'}`}>
+                        {subItem.name}
+                      </span>
+
+                      {subActive && (
+                        <motion.span
+                          layoutId="nav-active"
+                          className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-600 to-green-700 shadow-lg"
                           transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                         />
                       )}

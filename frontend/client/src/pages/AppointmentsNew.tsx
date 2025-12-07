@@ -254,8 +254,15 @@ export default function AppointmentsNew() {
   const loadServices = () => {
     try {
       const currentWorkspace = localStorage.getItem('currentWorkspace') || 'default';
-      // Force initialize with complete default services
-      const defaultServices = [
+      const stored = localStorage.getItem(`zervos_services_${currentWorkspace}`);
+      if (stored) {
+        const parsedServices = JSON.parse(stored);
+        // Filter only enabled services
+        const enabledServices = parsedServices.filter((s: any) => s.isEnabled);
+        setServices(enabledServices);
+      } else {
+        // Only initialize with defaults if no services exist
+        const defaultServices = [
           {
             id: 'reflex-45',
             name: 'Foot Reflexology',
@@ -280,97 +287,10 @@ export default function AppointmentsNew() {
             isEnabled: true,
             createdAt: new Date().toISOString(),
           },
-          {
-            id: 'reflex-back-shoulder',
-            name: 'Foot Reflexology (45 Mins) + Back & Shoulder (15 Mins)',
-            duration: '60 mins',
-            price: '1300',
-            actualPrice: '1300',
-            currency: 'INR',
-            description: 'Foot reflexology with back and shoulder treatment',
-            category: 'Spa & Wellness',
-            isEnabled: true,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: 'reflex-back-arm-shoulder',
-            name: 'Foot Reflexology (45 Mins) + Back, Arm & Shoulder (30 Mins)',
-            duration: '75 mins',
-            price: '1600',
-            actualPrice: '1600',
-            currency: 'INR',
-            description: 'Comprehensive foot reflexology with upper body treatment',
-            category: 'Spa & Wellness',
-            isEnabled: true,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: 'reflex-full-body',
-            name: 'Foot Reflexology (45 Mins) + Back, Arm, Shoulder, Neck, Hand & Head (45 Mins)',
-            duration: '90 mins',
-            price: '1900',
-            actualPrice: '1900',
-            currency: 'INR',
-            description: 'Complete full body reflexology session',
-            category: 'Spa & Wellness',
-            isEnabled: true,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: 'package-silver',
-            name: 'Silver Package',
-            duration: 'Package',
-            price: '10000',
-            actualPrice: '12000',
-            offerPrice: '10000',
-            currency: 'INR',
-            description: 'Pay Rs. 10,000 - Get services worth Rs. 12,000',
-            category: 'Spa & Wellness',
-            isEnabled: true,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: 'package-gold',
-            name: 'Gold Package',
-            duration: 'Package',
-            price: '20000',
-            actualPrice: '26000',
-            offerPrice: '20000',
-            currency: 'INR',
-            description: 'Pay Rs. 20,000 - Get services worth Rs. 26,000',
-            category: 'Spa & Wellness',
-            isEnabled: true,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: 'package-platinum',
-            name: 'Platinum Package',
-            duration: 'Package',
-            price: '30000',
-            actualPrice: '42000',
-            offerPrice: '30000',
-            currency: 'INR',
-            description: 'Pay Rs. 30,000 - Get services worth Rs. 42,000',
-            category: 'Spa & Wellness',
-            isEnabled: true,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: 'package-diamond',
-            name: 'Diamond Package',
-            duration: 'Package',
-            price: '40000',
-            actualPrice: '60000',
-            offerPrice: '40000',
-            currency: 'INR',
-            description: 'Pay Rs. 40,000 - Get services worth Rs. 60,000',
-            category: 'Spa & Wellness',
-            isEnabled: true,
-            createdAt: new Date().toISOString(),
-          },
-      ];
-      localStorage.setItem(`zervos_services_${currentWorkspace}`, JSON.stringify(defaultServices));
-      setServices(defaultServices);
+        ];
+        localStorage.setItem(`zervos_services_${currentWorkspace}`, JSON.stringify(defaultServices));
+        setServices(defaultServices);
+      }
     } catch (error) {
       console.error('Error loading services:', error);
     }
@@ -2339,7 +2259,7 @@ export default function AppointmentsNew() {
               {/* Service Selection */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Service *</Label>
+                  <Label>Service / Product *</Label>
                   <Select
                     value={isCustomService ? 'custom' : newAppointment.serviceName || undefined}
                     onValueChange={(v) => {
@@ -2354,18 +2274,33 @@ export default function AppointmentsNew() {
                     }}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select service" />
+                      <SelectValue placeholder="Select service or product" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {serviceOptions.length > 0 ? (
-                        serviceOptions.map((service) => (
-                          <SelectItem key={service.id} value={service.name}>
-                            {service.name} {service.currency === 'INR' ? `- ₹${service.price}` : `- ${service.currency}${service.price}`}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no-services-available" disabled>No services available</SelectItem>
+                    <SelectContent className="max-h-[300px]">
+                      {serviceOptions.length > 0 && (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">Services</div>
+                          {serviceOptions.map((service) => (
+                            <SelectItem key={`service-${service.id}`} value={service.name}>
+                              {service.name} {service.currency === 'INR' ? `- ₹${service.price}` : `- ${service.currency}${service.price}`}
+                            </SelectItem>
+                          ))}
+                        </>
                       )}
+                      {productOptions.length > 0 && (
+                        <>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 mt-1">Products</div>
+                          {productOptions.map((product) => (
+                            <SelectItem key={`product-${product.id}`} value={product.name}>
+                              {product.name} {product.currency === 'INR' ? `- ₹${product.price}` : `- ${product.currency || 'INR'}${product.price}`}
+                            </SelectItem>
+                          ))}
+                        </>
+                      )}
+                      {serviceOptions.length === 0 && productOptions.length === 0 && (
+                        <SelectItem value="no-items-available" disabled>No services or products available</SelectItem>
+                      )}
+                      <div className="border-t mt-1"></div>
                       <SelectItem value="custom">✏️ Custom Service</SelectItem>
                     </SelectContent>
                   </Select>

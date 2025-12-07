@@ -45,6 +45,8 @@ import Workspaces from '@/pages/admin/Workspaces';
 import WorkspaceView from "@/pages/admin/WorkspaceView";
 import BranchManagement from '@/pages/admin/branches';
 import CustomLabelsPage from '@/pages/admin/custom-labels';
+import WhatsAppSettings from '@/pages/admin/whatsapp';
+import WhatsAppConnect from '@/pages/admin/whatsapp-connect';
 import NotFound from "@/pages/not-found";
 import TopProgressBar from "@/components/TopProgressBar";
 import TeamLogin from "@/pages/team/TeamLogin";
@@ -115,6 +117,8 @@ function Router() {
       <Route path="/dashboard/admin-center/workspaces">{() => <ProtectedRoute component={Workspaces} />}</Route>
       <Route path="/dashboard/admin/branches">{() => <ProtectedRoute component={BranchManagement} />}</Route>
       <Route path="/dashboard/admin/custom-labels">{() => <ProtectedRoute component={CustomLabelsPage} />}</Route>
+      <Route path="/dashboard/admin/whatsapp">{() => <ProtectedRoute component={WhatsAppSettings} />}</Route>
+      <Route path="/dashboard/admin/whatsapp/connect">{() => <ProtectedRoute component={WhatsAppConnect} />}</Route>
       <Route path="/dashboard/workspace/:id">{() => <ProtectedRoute component={WorkspaceView} />}</Route>
       <Route path="/dashboard/salespersons">{() => <ProtectedRoute component={SalespersonsPage} />}</Route>
   <Route path="/dashboard/invoices">{() => <ProtectedRoute component={InvoicesPage} />}</Route>

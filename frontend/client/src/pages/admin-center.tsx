@@ -107,6 +107,11 @@ export default function AdminCenterPage() {
           icon: Receipt,
           title: 'Loyalty Programs',
           options: ['Points system', 'Membership tiers', 'Reward rules', 'Expiry settings']
+        },
+        {
+          icon: MessageSquare,
+          title: 'WhatsApp',
+          options: ['Waha API setup', 'E-Bill automation', 'Message templates', 'Send history', 'Test connection']
         }
       ]
     },
@@ -240,6 +245,8 @@ export default function AdminCenterPage() {
                         setLocation('/dashboard/admin/branches');
                       } else if (card.title === 'Custom Labels') {
                         setLocation('/dashboard/admin/custom-labels');
+                      } else if (card.title === 'WhatsApp') {
+                        setLocation('/dashboard/admin/whatsapp');
                       }
                     };
                     return (
