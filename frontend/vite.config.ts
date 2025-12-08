@@ -32,7 +32,7 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    port: 5175, // Change this to any port you want (e.g., 3000, 8080, 5175, etc.)
+    port: 5176, // Change this to any port you want (e.g., 3000, 8080, 5175, etc.)
     hmr: {
       overlay: false,
     },
