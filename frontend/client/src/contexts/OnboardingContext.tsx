@@ -87,7 +87,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const nextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, 4));
+    setCurrentStep((prev) => Math.min(prev + 1, 3));
   };
 
   const prevStep = () => {
@@ -95,7 +95,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const goToStep = (step: number) => {
-    setCurrentStep(Math.max(1, Math.min(step, 4)));
+    setCurrentStep(Math.max(1, Math.min(step, 3)));
   };
 
   return (

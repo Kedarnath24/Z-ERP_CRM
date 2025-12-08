@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { Sparkles, Loader2, Info } from 'lucide-react';
+import { Sparkles, Loader2, Info, Wand2 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 
 // Industry-specific label mappings
 const LABEL_SUGGESTIONS = {
@@ -213,61 +214,109 @@ export default function Step4CustomLabels() {
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground mb-2 flex items-center gap-2">
-          Custom Labels <Sparkles className="w-5 h-5 text-primary" />
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Customize how you refer to your services and team for <span className="font-medium">{selectedIndustry}</span>
-        </p>
+    <div className="h-full flex flex-col justify-between">
+      <div className="space-y-5">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative"
+        >
+          <motion.div
+            className="absolute -top-4 -right-4"
+            animate={{
+              rotate: [0, 360],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <Wand2 className="w-10 h-10 text-gray-300" />
+          </motion.div>
+          
+          <motion.h1 
+            className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 tracking-tight flex items-center gap-3"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            Custom Labels 
+            <motion.div
+              animate={{
+                rotate: [0, 15, 0, -15, 0],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <Sparkles className="w-6 h-6 text-gray-700" />
+            </motion.div>
+          </motion.h1>
+          
+          <motion.p 
+            className="text-gray-600 mt-2 font-medium"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            Customize how you refer to your team members
+          </motion.p>
+          
+          <motion.div 
+            className="h-1 w-24 bg-gradient-to-r from-gray-900 to-gray-600 rounded-full mt-3"
+            initial={{ width: 0 }}
+            animate={{ width: 96 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+          />
+        </motion.div>
+
+        <div className="space-y-4 pt-8">
+          <div className="space-y-2">
+            <Label htmlFor="teamMember" className="text-sm font-semibold text-gray-900">
+              How would you like to label your Team Members? <span className="text-red-600">*</span>
+            </Label>
+            <Input
+              id="teamMember"
+              placeholder="e.g., Team Members, Stylists, Therapists"
+              value={teamMemberLabel}
+              onChange={(e) => setTeamMemberLabel(e.target.value)}
+              data-testid="input-team-member-label"
+              className="h-12 border-gray-300 focus:border-gray-900 focus:ring-gray-900"
+            />
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="eventType" className="text-sm font-medium">
-            How would you like to label your Event Types? <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="eventType"
-            placeholder="e.g., Sessions, Bookings"
-            value={eventTypeLabel}
-            onChange={(e) => setEventTypeLabel(e.target.value)}
-            data-testid="input-event-type-label"
-            className="h-11"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="teamMember" className="text-sm font-medium">
-            How would you like to label your Team Members? <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="teamMember"
-            placeholder="e.g., Team Members, Stylists, Therapists"
-            value={teamMemberLabel}
-            onChange={(e) => setTeamMemberLabel(e.target.value)}
-            data-testid="input-team-member-label"
-            className="h-11"
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-between pt-4">
-        <Button
-          variant="outline"
-          onClick={handleBack}
-          data-testid="button-back"
-          className="min-w-32"
-        >
-          Back
-        </Button>
-        <Button
-          onClick={handleCreate}
-          disabled={!eventTypeLabel.trim() || !teamMemberLabel.trim() || isSubmitting}
-          data-testid="button-create"
-          className="min-w-32"
-        >
+      <motion.div 
+        className="flex justify-between pt-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            data-testid="button-back"
+            className="min-w-36 h-12 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 font-semibold rounded-xl transition-all duration-300"
+          >
+            Back
+          </Button>
+        </motion.div>
+        
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            onClick={handleCreate}
+            disabled={!teamMemberLabel.trim() || isSubmitting}
+            data-testid="button-create"
+            className="min-w-36 h-12 bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden group"
+          >
           {isSubmitting ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -277,7 +326,8 @@ export default function Step4CustomLabels() {
             'Create'
           )}
         </Button>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }

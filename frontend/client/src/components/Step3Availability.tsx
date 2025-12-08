@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -9,7 +9,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useOnboarding } from '@/contexts/OnboardingContext';
-import { Calendar } from '@/components/ui/calendar';
+import { motion } from 'framer-motion';
+import { Clock } from 'lucide-react';
 
 const timezones = [
   'Asia/Kolkata - IST (+05:30)',
@@ -43,24 +44,9 @@ export default function Step3Availability() {
   const [timezone, setTimezone] = useState(data.timezone);
   const [startTime, setStartTime] = useState(data.availableTimeStart);
   const [endTime, setEndTime] = useState(data.availableTimeEnd);
-  // Interpret existing availableDays as ISO date strings, if any
-  const initialDates = useMemo(
-    () => (data.availableDays || [])
-      .map((d) => new Date(d))
-      .filter((d) => !isNaN(d.getTime())),
-    [data.availableDays]
-  );
-  const [selectedDates, setSelectedDates] = useState<Date[]>(initialDates);
-  // Quick weekday toggles (0 = Sunday, 6 = Saturday)
-  const initialWeekdays = useMemo(() => {
-    const set = new Set<number>();
-    initialDates.forEach((d) => set.add(d.getDay()));
-    return Array.from(set);
-  }, [initialDates]);
-  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>(initialWeekdays);
-  const [showCalendar, setShowCalendar] = useState<boolean>(false);
+  const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([1, 2, 3, 4, 5]); // Default: Mon-Fri
 
-  const isFormValid = Boolean(timezone && startTime && endTime && (selectedDates.length > 0 || selectedWeekdays.length > 0));
+  const isFormValid = Boolean(timezone && startTime && endTime && selectedWeekdays.length > 0);
 
   const toggleWeekday = (dayIndex: number) => {
     setSelectedWeekdays((prev) => {
@@ -69,192 +55,257 @@ export default function Step3Availability() {
     });
   };
 
-  // When weekday toggles are used but no explicit dates are selected,
-  // we'll map weekdays to the next two weeks' dates when saving.
-  const mapWeekdaysToDates = (weekdays: number[]) => {
-    const daysToGenerate = 14; // two weeks
-    const out: Date[] = [];
-    const today = new Date();
-    for (let i = 0; i < daysToGenerate; i++) {
-      const d = new Date(today);
-      d.setDate(today.getDate() + i);
-      if (weekdays.includes(d.getDay())) out.push(d);
-    }
-    return out;
-  };
-
   const handleNext = () => {
-    const daysToStore = selectedDates.length > 0 ? selectedDates : mapWeekdaysToDates(selectedWeekdays);
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const availableDays = selectedWeekdays.map(idx => dayNames[idx]);
     updateData({
       timezone,
       availableTimeStart: startTime,
       availableTimeEnd: endTime,
-      // store as YYYY-MM-DD strings
-      availableDays: daysToStore.map((d) => d.toISOString().slice(0, 10)),
+      availableDays,
     });
     nextStep();
   };
 
   const handleBack = () => {
-    const daysToStore = selectedDates.length > 0 ? selectedDates : mapWeekdaysToDates(selectedWeekdays);
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const availableDays = selectedWeekdays.map(idx => dayNames[idx]);
     updateData({
       timezone,
       availableTimeStart: startTime,
       availableTimeEnd: endTime,
-      availableDays: daysToStore.map((d) => d.toISOString().slice(0, 10)),
+      availableDays,
     });
     prevStep();
   };
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground mb-2">
-          Your available times <span className="text-destructive">*</span>
-        </h1>
-      </div>
+    <div className="space-y-6">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="relative"
+      >
+        <motion.div
+          className="absolute -top-6 -left-6"
+          animate={{
+            rotate: [0, 360],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <Clock className="w-10 h-10 text-gray-300" />
+        </motion.div>
+        
+        <motion.h1 
+          className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 tracking-tight"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          Your available times <span className="text-red-600">*</span>
+        </motion.h1>
+        <motion.p 
+          className="text-gray-600 mt-3 font-medium"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
+          Set your working hours and available days
+        </motion.p>
+        
+        <motion.div 
+          className="h-1 w-24 bg-gradient-to-r from-gray-900 to-gray-600 rounded-full mt-4"
+          initial={{ width: 0 }}
+          animate={{ width: 96 }}
+          transition={{ delay: 0.5, duration: 0.8 }}
+        />
+      </motion.div>
 
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="timezone" className="text-sm font-medium">
-            Time zone
-          </Label>
-          <Select value={timezone} onValueChange={setTimezone}>
-            <SelectTrigger id="timezone" data-testid="select-timezone" className="h-11">
-              <SelectValue placeholder="Select timezone" />
-            </SelectTrigger>
-            <SelectContent>
-              {timezones.map((tz) => (
-                <SelectItem key={tz} value={tz}>
-                  {tz}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Your available times</Label>
-          <div className="flex gap-4">
-            <Select value={startTime} onValueChange={setStartTime}>
-              <SelectTrigger data-testid="select-start-time" className="h-11">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {timeSlots.map((time) => (
-                  <SelectItem key={time} value={time}>
-                    {time}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={endTime} onValueChange={setEndTime}>
-              <SelectTrigger data-testid="select-end-time" className="h-11">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {timeSlots.map((time) => (
-                  <SelectItem key={time} value={time}>
-                    {time}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Pick available dates</Label>
-
-          <div className="rounded-md border p-4 flex gap-6 items-start">
-            <div className="w-90">
-              <div className="grid grid-cols-4 gap-3 mb-4">
-                {daysOfWeek.map((d, idx) => (
-                  <button
-                    key={d.full}
-                    type="button"
-                    onClick={() => toggleWeekday(idx)}
-                    title={d.full}
-                    className={`px-4 py-2 border rounded text-sm bg-white hover:bg-gray-50 focus:outline-none text-center min-w-[72px] ${
-                      selectedWeekdays.includes(idx)
-                        ? 'bg-primary text-black border-primary border-2 font-bold'
-                        : 'text-foreground'
-                    }`}
-                  >
-                    {d.short}
-                  </button>
-                ))}
-              </div>
+      <motion.div 
+        className="space-y-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.4 }}
+      >
+        {/* Timezone Card */}
+        <motion.div
+          className="group relative"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          whileHover={{ y: -4 }}
+        >
+          <div className="relative bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white rounded-2xl pointer-events-none" />
+            <div className="relative z-10 space-y-3">
+              <Label htmlFor="timezone" className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Time zone
+              </Label>
+              <Select value={timezone} onValueChange={setTimezone}>
+                <SelectTrigger id="timezone" data-testid="select-timezone" className="h-14 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-gray-900 rounded-xl text-base font-medium">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timezones.map((tz) => (
+                    <SelectItem key={tz} value={tz}>
+                      {tz}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+        </motion.div>
 
-            <div className="flex-1 flex justify-end">
-              <div className="w-full max-w-[520px]">
-                <div className="flex items-start gap-4">
-                  <div className="flex-1" />
-                      <div className="relative">
-                        <div className="flex justify-end mb-2">
-                          <button
-                            type="button"
-                            onClick={() => setShowCalendar((s) => !s)}
-                            className="px-3 py-2 border rounded text-sm bg-white hover:bg-gray-50"
-                          >
-                            Calender
-                          </button>
-                        </div>
-
-                        {showCalendar && (
-                          <div className="absolute right-0 z-20">
-                            <div className="rounded-md shadow-lg bg-white p-3">
-                              <Calendar
-                                mode="multiple"
-                                selected={selectedDates}
-                                onSelect={(dates) => setSelectedDates(dates ?? [])}
-                                className="rounded-md w-80"
-                              />
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="mt-3 flex justify-end">
-                          <div className="border rounded-md p-3 w-44">
-                            <div className="flex items-center gap-2">
-                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.5" />
-                                <path d="M16 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                                <path d="M8 3V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                              </svg>
-                              <div className="text-sm">
-                                <div className="font-medium">{selectedDates.length > 0 ? `${selectedDates.length} date${selectedDates.length > 1 ? 's' : ''} selected` : selectedWeekdays.length > 0 ? `${selectedWeekdays.length} day${selectedWeekdays.length > 1 ? 's' : ''} selected` : 'No dates selected'}</div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+        {/* Working Hours Card */}
+        <motion.div
+          className="group relative"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          whileHover={{ y: -4 }}
+        >
+          <div className="relative bg-white border-2 border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white rounded-2xl pointer-events-none" />
+            <div className="relative z-10 space-y-3">
+              <Label className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-gray-600" />
+                Working Hours
+              </Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Start Time</span>
+                  <Select value={startTime} onValueChange={setStartTime}>
+                    <SelectTrigger data-testid="select-start-time" className="h-14 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-gray-900 rounded-xl text-base font-medium">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeSlots.map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">End Time</span>
+                  <Select value={endTime} onValueChange={setEndTime}>
+                    <SelectTrigger data-testid="select-end-time" className="h-14 border-0 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-gray-900 rounded-xl text-base font-medium">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeSlots.map((time) => (
+                        <SelectItem key={time} value={time}>
+                          {time}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
 
-      <div className="flex justify-between pt-4">
-        <Button
-          variant="outline"
-          onClick={handleBack}
-          data-testid="button-back"
-          className="min-w-32"
+        {/* Available Dates Card */}
+        <motion.div
+          className="group relative"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+          whileHover={{ y: -4 }}
         >
-          Back
-        </Button>
-        <Button
-          onClick={handleNext}
-          disabled={!isFormValid}
-          data-testid="button-next"
-          className="min-w-32"
-        >
-          Next
-        </Button>
-      </div>
+          <div className="relative bg-white border-2 border-gray-200 rounded-2xl p-4 shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-50/50 to-white rounded-2xl pointer-events-none" />
+            <div className="relative z-10 space-y-4">
+              <Label className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Available Days
+              </Label>
+
+          <div className="grid grid-cols-4 gap-3">
+                {daysOfWeek.map((d, idx) => (
+                  <motion.button
+                    key={d.full}
+                    type="button"
+                    onClick={() => toggleWeekday(idx)}
+                    title={d.full}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`relative px-5 py-3 border-2 rounded-xl text-sm font-bold focus:outline-none text-center min-w-[80px] transition-all overflow-hidden ${
+                      selectedWeekdays.includes(idx)
+                        ? 'bg-gradient-to-br from-gray-900 to-gray-700 text-white border-gray-900 shadow-lg'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    {selectedWeekdays.includes(idx) && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                        animate={{ x: ['-100%', '100%'] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      />
+                    )}
+                    <span className="relative z-10">{d.short}</span>
+                  </motion.button>
+                ))}
+              </div>
+              
+              <div className="pt-2">
+                <span className="text-xs text-gray-500 font-medium">
+                  {selectedWeekdays.length > 0 ? `${selectedWeekdays.length} day${selectedWeekdays.length > 1 ? 's' : ''} selected` : 'Select days above'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      <motion.div 
+        className="flex justify-between pt-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            variant="outline"
+            onClick={handleBack}
+            data-testid="button-back"
+            className="min-w-36 h-12 border-2 border-gray-300 hover:bg-gray-50 hover:border-gray-400 font-semibold rounded-xl transition-all duration-300"
+          >
+            Back
+          </Button>
+        </motion.div>
+        
+        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+          <Button
+            onClick={handleNext}
+            disabled={!isFormValid}
+            data-testid="button-next"
+            className="min-w-36 h-12 bg-gradient-to-r from-gray-900 to-gray-700 hover:from-gray-800 hover:to-gray-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 relative overflow-hidden group"
+          >
+            <span className="relative z-10">Next</span>
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+              initial={{ x: '-100%' }}
+              whileHover={{ x: '100%' }}
+              transition={{ duration: 0.5 }}
+            />
+          </Button>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
