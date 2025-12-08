@@ -101,7 +101,7 @@ export default function ServicesPage() {
     category: '',
   });
 
-  const defaultCategories = ['Spa & Wellness', 'Beauty & Salon', 'Fitness & Training', 'Consultation', 'Treatment', 'Workshop', 'Other'];
+  const defaultCategories = ['Beauty', 'Salon', 'Spa & Wellness', 'Fitness & Training', 'Consultation', 'Treatment', 'Workshop', 'Other'];
   
   // Combine default and custom categories
   const categories = [...defaultCategories, ...customCategories];
@@ -807,7 +807,7 @@ export default function ServicesPage() {
   };
 
   const handleOpenNew = () => {
-    setFormData({ name: '', duration: '', price: '', actualPrice: '', offerPrice: '', barcode: '', currency: 'INR', description: '', category: '' });
+    setFormData({ name: '', duration: '', price: '', actualPrice: '', offerPrice: '', barcode: '', currency: 'INR', description: '', category: 'Beauty' });
     setEditingService(null);
     setIsNewServiceOpen(true);
   };

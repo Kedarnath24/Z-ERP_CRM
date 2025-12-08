@@ -118,6 +118,163 @@ export default function InvoicesPage() {
   const [reportPeriod, setReportPeriod] = useState<'today' | 'week' | 'month' | 'year' | 'custom'>('month');
   const [customReportDates, setCustomReportDates] = useState({ from: '', to: '' });
 
+  // Initialize mock invoices if none exist
+  useEffect(() => {
+    const existing = getAllInvoices();
+    if (existing.length === 0) {
+      const mockInvoices: Invoice[] = [
+        {
+          invoiceId: 'INV-20241206-1001',
+          bookingId: 'BK-001',
+          customer: {
+            name: 'Rajesh Kumar',
+            email: 'rajesh.kumar@example.com',
+            phone: '+91 98765 43210'
+          },
+          service: {
+            name: 'Premium Haircut & Styling',
+            duration: '45 mins',
+            price: 120000
+          },
+          amount: 120000,
+          paymentMethod: 'Cash',
+          currency: 'INR',
+          dateIssued: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'Paid',
+          company: {
+            name: 'Tony & Guy Salon',
+            email: 'contact@tonyguy.com',
+            brandColor: '#7C3AED'
+          },
+          bookingDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          bookingTime: '10:00 AM',
+          subtotal: 100000,
+          taxAmount: 20000,
+          notes: 'Thank you for choosing our services!'
+        },
+        {
+          invoiceId: 'INV-20241205-1002',
+          bookingId: 'BK-002',
+          customer: {
+            name: 'Priya Sharma',
+            email: 'priya.sharma@example.com',
+            phone: '+91 98765 43211'
+          },
+          service: {
+            name: 'Hair Coloring & Treatment',
+            duration: '120 mins',
+            price: 350000
+          },
+          amount: 350000,
+          paymentMethod: 'Card',
+          currency: 'INR',
+          dateIssued: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'Paid',
+          company: {
+            name: 'Tony & Guy Salon',
+            email: 'contact@tonyguy.com',
+            brandColor: '#7C3AED'
+          },
+          bookingDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          bookingTime: '2:00 PM',
+          subtotal: 300000,
+          taxAmount: 50000,
+          notes: 'We appreciate your business!'
+        },
+        {
+          invoiceId: 'INV-20241204-1003',
+          bookingId: 'BK-003',
+          customer: {
+            name: 'Amit Patel',
+            email: 'amit.patel@example.com',
+            phone: '+91 98765 43212'
+          },
+          service: {
+            name: 'Beard Grooming & Facial',
+            duration: '60 mins',
+            price: 180000
+          },
+          amount: 180000,
+          paymentMethod: 'UPI',
+          currency: 'INR',
+          dateIssued: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'Paid',
+          company: {
+            name: 'Tony & Guy Salon',
+            email: 'contact@tonyguy.com',
+            brandColor: '#7C3AED'
+          },
+          bookingDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          bookingTime: '11:30 AM',
+          subtotal: 150000,
+          taxAmount: 30000,
+          notes: 'Looking forward to serving you again!'
+        },
+        {
+          invoiceId: 'INV-20241203-1004',
+          bookingId: 'BK-004',
+          customer: {
+            name: 'Sneha Reddy',
+            email: 'sneha.reddy@example.com',
+            phone: '+91 98765 43213'
+          },
+          service: {
+            name: 'Bridal Makeup Package',
+            duration: '180 mins',
+            price: 550000
+          },
+          amount: 550000,
+          paymentMethod: 'Card',
+          currency: 'INR',
+          dateIssued: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'Pending',
+          company: {
+            name: 'Tony & Guy Salon',
+            email: 'contact@tonyguy.com',
+            brandColor: '#7C3AED'
+          },
+          bookingDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          bookingTime: '9:00 AM',
+          subtotal: 500000,
+          taxAmount: 50000,
+          notes: 'Payment pending - reminder sent'
+        },
+        {
+          invoiceId: 'INV-20241202-1005',
+          bookingId: 'BK-005',
+          customer: {
+            name: 'Vikram Singh',
+            email: 'vikram.singh@example.com',
+            phone: '+91 98765 43214'
+          },
+          service: {
+            name: 'Hair Spa & Massage',
+            duration: '90 mins',
+            price: 250000
+          },
+          amount: 250000,
+          paymentMethod: 'Cash',
+          currency: 'INR',
+          dateIssued: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'Paid',
+          company: {
+            name: 'Tony & Guy Salon',
+            email: 'contact@tonyguy.com',
+            brandColor: '#7C3AED'
+          },
+          bookingDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          bookingTime: '3:30 PM',
+          subtotal: 220000,
+          taxAmount: 30000,
+          notes: 'Pleasure serving you!'
+        }
+      ];
+
+      localStorage.setItem('zervos_invoices', JSON.stringify(mockInvoices));
+      setInvoices(mockInvoices);
+    }
+  }, []);
+
   const stats = useMemo(() => getInvoiceStats(), [invoices]);
 
   // Analytics data

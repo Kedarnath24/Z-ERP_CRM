@@ -588,7 +588,11 @@ export default function PublicBookingPage() {
             phone: org.phone || org.contactPhone || org.phoneNumber || '',
             email: org.email || org.contactEmail || '',
             website: org.website || org.websiteUrl || '',
-            address: org.address || org.location || '',
+            address: typeof org.address === 'string' 
+              ? org.address 
+              : typeof org.address === 'object' && org.address
+                ? [org.address.street, org.address.city, org.address.state, org.address.pincode, org.address.country].filter(Boolean).join(', ')
+                : org.location || '',
             workingHours: org.workingHours || org.hours || 'Mon-Sat: 9AM - 7PM',
             rating: org.rating || 4.9,
             reviewCount: org.reviewCount || 500,
