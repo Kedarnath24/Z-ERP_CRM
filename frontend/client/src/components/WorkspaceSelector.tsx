@@ -8,7 +8,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { useLocation } from 'wouter';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
-import BranchLoginDialog from './BranchLoginDialog';
 
 interface WorkspaceSelectorProps {
   sidebarOpen: boolean;
@@ -19,63 +18,11 @@ export default function WorkspaceSelector({ sidebarOpen }: WorkspaceSelectorProp
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [, setLocation] = useLocation();
-  const [showLoginDialog, setShowLoginDialog] = useState(false);
-  const [pendingBranch, setPendingBranch] = useState<any>(null);
-
-  const checkBranchAccess = (branchCode: string): boolean => {
-    // Check if user has already logged into this branch in this session
-    const accessToken = sessionStorage.getItem(`branch_access_${branchCode}`);
-    if (accessToken) {
-      try {
-        const token = JSON.parse(accessToken);
-        // Token is valid for current session
-        return true;
-      } catch {
-        return false;
-      }
-    }
-    return false;
-  };
 
   const handleSelectWorkspace = (workspace: any) => {
-    // If it's the main branch, allow direct access
-    if (workspace.type === 'main') {
-      setSelectedWorkspace(workspace);
-      setIsOpen(false);
-      setSearchQuery('');
-      return;
-    }
-
-    // If switching to a different branch, check authentication
-    if (workspace.id !== selectedWorkspace?.id && workspace.branchCode) {
-      const hasAccess = checkBranchAccess(workspace.branchCode);
-      
-      if (!hasAccess) {
-        // Show login dialog
-        setPendingBranch(workspace);
-        setShowLoginDialog(true);
-        setIsOpen(false);
-        return;
-      }
-    }
-
-    // Access granted
     setSelectedWorkspace(workspace);
     setIsOpen(false);
     setSearchQuery('');
-  };
-
-  const handleLoginSuccess = () => {
-    if (pendingBranch) {
-      setSelectedWorkspace(pendingBranch);
-      setPendingBranch(null);
-    }
-    setShowLoginDialog(false);
-  };
-
-  const handleLoginClose = () => {
-    setPendingBranch(null);
-    setShowLoginDialog(false);
   };
 
   const handleMySpace = () => {
@@ -207,15 +154,6 @@ export default function WorkspaceSelector({ sidebarOpen }: WorkspaceSelectorProp
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* Branch Login Dialog */}
-      <BranchLoginDialog
-        isOpen={showLoginDialog}
-        onClose={handleLoginClose}
-        onSuccess={handleLoginSuccess}
-        branchName={pendingBranch?.name || ''}
-        branchCode={pendingBranch?.branchCode || ''}
-      />
     </div>
   );
 }

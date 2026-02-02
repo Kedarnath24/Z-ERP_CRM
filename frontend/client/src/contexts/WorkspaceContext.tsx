@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 
 const buildInitials = (name: string, fallback = 'MW') => {
   const trimmed = (name || '').trim();
@@ -150,16 +150,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const setSelectedWorkspace = (workspace: Workspace | null) => {
+  const setSelectedWorkspace = useCallback((workspace: Workspace | null) => {
     setSelectedWorkspaceState(workspace);
     if (workspace) {
       try { localStorage.setItem('selectedWorkspaceId', workspace.id); } catch {}
     } else {
       try { localStorage.removeItem('selectedWorkspaceId'); } catch {}
     }
-  };
+  }, []);
 
-  const setWorkspaces = (newWorkspaces: Workspace[]) => {
+  const setWorkspaces = useCallback((newWorkspaces: Workspace[]) => {
     const normalized = newWorkspaces.map(workspace => ({
       ...workspace,
       userCustomized: workspace.userCustomized ?? false,
@@ -169,22 +169,32 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem('workspaces', JSON.stringify(normalized)); } catch {}
     
     // Update selected workspace if it was modified
-    if (selectedWorkspace) {
-      const updated = normalized.find(w => w.id === selectedWorkspace.id);
-      if (updated) {
-        setSelectedWorkspaceState(updated);
-      } else {
-        setSelectedWorkspaceState(null);
-        try { localStorage.removeItem('selectedWorkspaceId'); } catch {}
+    setSelectedWorkspaceState(currentSelected => {
+      if (currentSelected) {
+        const updated = normalized.find(w => w.id === currentSelected.id);
+        if (updated) {
+          return updated;
+        } else {
+          try { localStorage.removeItem('selectedWorkspaceId'); } catch {}
+          return null;
+        }
       }
-    }
+      return currentSelected;
+    });
     
     // Notify other components about workspace changes
     window.dispatchEvent(new Event('localStorageChanged'));
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    selectedWorkspace,
+    setSelectedWorkspace,
+    workspaces,
+    setWorkspaces
+  }), [selectedWorkspace, setSelectedWorkspace, workspaces, setWorkspaces]);
 
   return (
-    <WorkspaceContext.Provider value={{ selectedWorkspace, setSelectedWorkspace, workspaces, setWorkspaces }}>
+    <WorkspaceContext.Provider value={contextValue}>
       {children}
     </WorkspaceContext.Provider>
   );
