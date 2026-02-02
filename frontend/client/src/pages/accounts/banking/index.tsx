@@ -5,29 +5,40 @@ import BankReconciliation from "./reconciliation";
 import ChequeManagement from "./cheques";
 import CashBankEntries from "./cash-bank";
 
-export default function Banking() {
+export default function Banking({ includeLayout = true }: any) {
   const [location] = useLocation();
 
   const renderSubModule = () => {
-    if (location.includes("/accounts/banking/accounts")) {
+    const loc = location.toLowerCase();
+    if (loc.includes("/accounts/banking/accounts")) {
       return <BankAccounts />;
     }
-    if (location.includes("/accounts/banking/reconciliation")) {
+    if (loc.includes("/accounts/banking/reconciliation")) {
       return <BankReconciliation />;
     }
-    if (location.includes("/accounts/banking/cheques")) {
+    if (loc.includes("/accounts/banking/cheques")) {
       return <ChequeManagement />;
     }
-    if (location.includes("/accounts/banking/cash-bank")) {
+    if (loc.includes("/accounts/banking/cash-bank")) {
       return <CashBankEntries />;
     }
     return <BankAccounts />;
   };
 
+  const content = (
+    <div className="space-y-4">
+      {renderSubModule()}
+    </div>
+  );
+
+  if (!includeLayout) {
+    return content;
+  }
+
   return (
     <DashboardLayout>
       <div className="p-6">
-        {renderSubModule()}
+        {content}
       </div>
     </DashboardLayout>
   );

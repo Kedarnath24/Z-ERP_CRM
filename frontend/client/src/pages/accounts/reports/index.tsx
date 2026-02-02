@@ -3,10 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileBarChart, Download } from 'lucide-react';
 
-export default function Reports() {
-  return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6">
+export default function Reports({ includeLayout = true }: any) {
+  const content = (
+    <div className="p-6 space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
           <FileBarChart className="h-6 w-6 text-blue-600" />
@@ -77,6 +76,13 @@ export default function Reports() {
         </Card>
       </div>
     </div>
+  );
+
+  if (!includeLayout) return content;
+
+  return (
+    <DashboardLayout>
+      {content}
     </DashboardLayout>
   );
 }

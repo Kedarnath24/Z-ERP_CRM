@@ -18,9 +18,22 @@ import {
   Star,
   Building2,
   CreditCard,
-  Landmark
+  Landmark,
+  FileSpreadsheet,
+  FileText as FilePdf,
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { exportToExcel, exportToPDF } from '@/lib/exportUtils';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
 type BankAccount = {
   id: string;
@@ -126,6 +139,42 @@ export default function BankAccounts() {
         : acc
     ));
   };
+
+  const handleExportExcel = () => {
+    const data = filteredAccounts.map(acc => ({
+      'Account ID': acc.id,
+      'Bank Name': acc.bankName,
+      'Account Type': acc.accountType,
+      'Account Number': acc.accountNumber,
+      'Routing Number': acc.routingNumber,
+      'Balance': acc.balance,
+      'Currency': acc.currency,
+      'Status': acc.status,
+      'Branch': acc.branch,
+      'Opening Date': acc.openingDate
+    }));
+    exportToExcel(data, 'bank_accounts');
+  };
+
+  const handleExportPDF = () => {
+    const headers = ['ID', 'Bank Name', 'Type', 'Number', 'Balance', 'Status'];
+    const data = filteredAccounts.map(acc => [
+      acc.id,
+      acc.bankName,
+      acc.accountType,
+      acc.accountNumber,
+      formatCurrency(acc.balance),
+      acc.status
+    ]);
+    exportToPDF('Bank Accounts List', headers, data, 'bank_accounts');
+  };
+
+  const chartData = accounts.map(acc => ({
+    name: acc.bankName,
+    value: Math.max(0, acc.balance)
+  }));
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
   return (
     <div className="space-y-6">
@@ -235,45 +284,77 @@ export default function BankAccounts() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-3">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="md:col-span-1">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">Total Balance</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-700">
               {formatCurrency(totalBalance)}
             </div>
-            <p className="text-xs text-slate-600 mt-1">
-              Across {accounts.length} accounts
-            </p>
+            <div className="flex items-center gap-1 text-xs text-green-600 font-medium mt-1">
+              <ArrowUpRight className="h-3 w-3" />
+              <span>+2.5% from last month</span>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
+        <Card className="md:col-span-1">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-slate-600">Active Accounts</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-700">{activeAccounts}</div>
-            <p className="text-xs text-slate-600 mt-1">
-              {accounts.length - activeAccounts} inactive
+            <div className="text-2xl font-bold text-slate-900">{activeAccounts}</div>
+            <p className="text-xs text-slate-500 mt-1">
+              {accounts.length - activeAccounts} inactive currently
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-600">Available Balance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-700">
-              {formatCurrency(accounts.filter(a => a.status === 'active' && a.balance > 0).reduce((sum, acc) => sum + acc.balance, 0))}
+        <Card className="md:col-span-2 row-span-1">
+          <div className="flex h-full items-center p-4">
+            <div className="flex-1">
+              <h4 className="text-sm font-medium text-slate-600 mb-1">Balance Distribution</h4>
+              <p className="text-xs text-slate-500 mb-2">Portfolio allocation across banks</p>
+              <div className="space-y-1">
+                {chartData.slice(0, 3).map((item, i) => (
+                  <div key={item.name} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                      <span className="truncate max-w-[80px]">{item.name}</span>
+                    </div>
+                    <span className="font-medium text-slate-700">
+                      {Math.round((item.value / totalBalance) * 100)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="text-xs text-slate-600 mt-1">
-              Liquid funds available
-            </p>
-          </CardContent>
+            <div className="w-28 h-28">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={25}
+                    outerRadius={40}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ fontSize: '12px', borderRadius: '8px' }}
+                    formatter={(value: number) => [formatCurrency(value), 'Balance']}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </Card>
       </div>
 
@@ -292,10 +373,24 @@ export default function BankAccounts() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportExcel} className="gap-2">
+                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                    Export to Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+                    <FilePdf className="h-4 w-4 text-red-600" />
+                    Export to PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>

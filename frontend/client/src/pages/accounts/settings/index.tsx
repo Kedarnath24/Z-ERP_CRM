@@ -6,10 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-export default function AccountSettings() {
-  return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6">
+export default function AccountSettings({ includeLayout = true }: any) {
+  const content = (
+    <div className="p-6 space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
           <SettingsIcon className="h-6 w-6 text-slate-600" />
@@ -19,6 +18,7 @@ export default function AccountSettings() {
       </div>
 
       <Tabs defaultValue="categories" className="space-y-4">
+        {/* ... (rest of the Tabs content) ... */}
         <TabsList>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="bank">Bank Configuration</TabsTrigger>
@@ -120,6 +120,13 @@ export default function AccountSettings() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+
+  if (!includeLayout) return content;
+
+  return (
+    <DashboardLayout>
+      {content}
     </DashboardLayout>
   );
 }

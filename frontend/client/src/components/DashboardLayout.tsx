@@ -72,7 +72,7 @@ interface Company {
 }
 
 const DashboardLayout = ({ children }: { children: ReactNode }) => {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
@@ -114,166 +114,8 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     submenu?: SubMenuItem[];
   }
 
-  // State for expandable menus
-  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
-    sales: false,
-    accounts: false,
-    banking: false,
-    'income-expense': false,
-    receivables: false,
-    payables: false,
-    purchases: false,
-    vendors: false,
-    flipbook: false,
-    fieldstaff: false,
-    whatsapp: false,
-    leads: false,
-    workflow: false,
-    superadmin: false,
-    admin: false,
-  });
-
-  const toggleMenu = (menuKey: string) => {
-    setExpandedMenus(prev => ({
-      ...prev,
-      [menuKey]: !prev[menuKey]
-    }));
-  };
-
-  useEffect(() => {
-    const savedCompany = safeGetItem<Company | null>('zervos_company', null);
-    if (savedCompany) {
-      setCompany(savedCompany);
-    }
-
-    // Load organization settings for logo
-    const loadOrgSettings = () => {
-      const settings = safeGetItem<any>('zervos_organization_settings', null);
-      if (settings && typeof settings === 'object' && settings.logo) {
-        setOrgLogo(settings.logo);
-      }
-    };
-
-    loadOrgSettings();
-
-    // Listen for organization settings updates
-    const handleSettingsUpdate = (event: CustomEvent) => {
-      if (event.detail?.logo) {
-        setOrgLogo(event.detail.logo);
-      }
-    };
-
-    window.addEventListener('organization-settings-updated', handleSettingsUpdate as EventListener);
-
-    // Keyboard shortcut for search (Ctrl+K or Cmd+K)
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setSearchOpen(true);
-      }
-      
-      // Handle arrow keys in search
-      if (searchOpen && searchResults.length > 0) {
-        if (e.key === 'ArrowDown') {
-          e.preventDefault();
-          setSelectedSearchIndex(prev => (prev + 1) % searchResults.length);
-        } else if (e.key === 'ArrowUp') {
-          e.preventDefault();
-          setSelectedSearchIndex(prev => (prev - 1 + searchResults.length) % searchResults.length);
-        } else if (e.key === 'Enter' && selectedSearchIndex >= 0) {
-          const selected = searchResults[selectedSearchIndex];
-          if (selected) {
-            window.location.href = selected.path;
-            setSearchOpen(false);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('organization-settings-updated', handleSettingsUpdate as EventListener);
-    };
-  }, [searchOpen, selectedSearchIndex]);
-
-  // Restore sidebar scroll position on route change
-  useEffect(() => {
-    const restoreScrollPosition = () => {
-      if (sidebarScrollRef.current) {
-        sidebarScrollRef.current.scrollTop = savedScrollPosition.current;
-      }
-      if (mobileSidebarScrollRef.current) {
-        mobileSidebarScrollRef.current.scrollTop = savedScrollPosition.current;
-      }
-    };
-
-    // Restore scroll position after navigation using requestAnimationFrame
-    requestAnimationFrame(() => {
-      requestAnimationFrame(restoreScrollPosition);
-    });
-  }, [location]); // Run when location changes
-
-  // Search data - all searchable pages (memoized outside component for better performance)
-  const allSearchPages = useMemo(() => [
-    { name: 'Dashboard', path: '/', category: 'Dashboard', keywords: 'home overview analytics' },
-    { name: 'Projects', path: '/projects', category: 'Projects', keywords: 'project management tasks' },
-    { name: 'HRM Dashboard', path: '/hrm', category: 'HR', keywords: 'human resources employees' },
-    { name: 'Employees', path: '/hrm/employees', category: 'HR', keywords: 'staff team members' },
-    { name: 'Attendance', path: '/hrm/attendance', category: 'HR', keywords: 'check-in timesheet' },
-    { name: 'Payroll', path: '/hrm/payroll', category: 'HR', keywords: 'salary wages compensation' },
-    { name: 'Sales Dashboard', path: '/sales', category: 'Sales', keywords: 'revenue deals' },
-    { name: 'Proposals', path: '/sales/proposals', category: 'Sales', keywords: 'quotes estimates' },
-    { name: 'Invoices', path: '/sales/invoices', category: 'Sales', keywords: 'billing payments' },
-    { name: 'Accounts', path: '/accounts', category: 'Accounts', keywords: 'finance accounting ledger' },
-    { name: 'Banking', path: '/accounts/banking', category: 'Accounts', keywords: 'bank transactions' },
-    { name: 'Customers', path: '/customers', category: 'Sales', keywords: 'clients contacts CRM' },
-    { name: 'Vendors', path: '/vendors', category: 'Purchases', keywords: 'suppliers vendors procurement' },
-    { name: 'Purchase Orders', path: '/purchases/orders', category: 'Purchases', keywords: 'PO procurement buying' },
-    { name: 'Products', path: '/products', category: 'Inventory', keywords: 'items stock catalog' },
-    { name: 'Flip Book', path: '/flipbook', category: 'Communication', keywords: 'documents PDF viewer' },
-    { name: 'Field Staff Tracking', path: '/fieldstaff', category: 'HR', keywords: 'GPS location tracking' },
-    { name: 'WhatsApp Integration', path: '/whatsapp', category: 'Communication', keywords: 'chat messaging WAHA WABA' },
-    { name: 'Subscriptions', path: '/subscriptions', category: 'Accounts', keywords: 'recurring billing plans' },
-    { name: 'Leads', path: '/leads', category: 'Sales', keywords: 'prospects opportunities pipeline' },
-    { name: 'Workflow Automation', path: '/workflow', category: 'System', keywords: 'automation rules triggers' },
-    { name: 'Super Admin', path: '/superadmin', category: 'Admin', keywords: 'organizations system settings' },
-    { name: 'Admin Setup', path: '/admin', category: 'Admin', keywords: 'configuration permissions users' },
-    { name: 'Profile', path: '/profile', category: 'Profile', keywords: 'account settings preferences' },
-  ], []);
-
-  // Filter search results (memoized for performance)
-  const searchResults = useMemo(() => {
-    if (searchQuery.trim() === '') return [];
-    const query = searchQuery.toLowerCase();
-    return allSearchPages.filter(page => 
-      page.name.toLowerCase().includes(query) ||
-      page.category.toLowerCase().includes(query) ||
-      page.keywords.toLowerCase().includes(query)
-    ).slice(0, 10);
-  }, [searchQuery, allSearchPages]);
-
-  // Category colors (memoized)
-  const getCategoryColor = useCallback((category: string) => {
-    const colors: Record<string, string> = {
-      'Dashboard': 'bg-indigo-100 text-indigo-700',
-      'Projects': 'bg-purple-100 text-purple-700',
-      'HR': 'bg-green-100 text-green-700',
-      'Sales': 'bg-blue-100 text-blue-700',
-      'Accounts': 'bg-amber-100 text-amber-700',
-      'Purchases': 'bg-orange-100 text-orange-700',
-      'Inventory': 'bg-teal-100 text-teal-700',
-      'Communication': 'bg-pink-100 text-pink-700',
-      'System': 'bg-gray-100 text-gray-700',
-      'Admin': 'bg-red-100 text-red-700',
-      'Profile': 'bg-cyan-100 text-cyan-700',
-    };
-    return colors[category] || 'bg-gray-100 text-gray-700';
-  }, []);
-
-  // Main navigation items
-  const navigation: NavItem[] = [
+  // Main navigation items (memoized)
+  const navigation: NavItem[] = useMemo(() => [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
     { name: 'Projects', icon: FolderKanban, path: '/projects' },
     { name: 'HRM', icon: UserCheck, path: '/hrm' },
@@ -425,6 +267,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
           name: 'Bot Automation', 
           path: '/dashboard/whatsapp/bot-flows',
           hasSubmenu: true,
+          submenuKey: 'whatsapp-bot', // Added key
           submenu: [
             { name: 'Bot Flows', path: '/dashboard/whatsapp/bot-flows' },
           ]
@@ -545,7 +388,222 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       ]
     },
     { name: 'Custom Links', icon: LinkIcon, path: '/dashboard/custom-links' },
-  ];
+  ], []);
+
+  // State for expandable menus
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+    sales: false,
+    accounts: false,
+    banking: false,
+    'income-expense': false,
+    receivables: false,
+    payables: false,
+    purchases: false,
+    vendors: false,
+    flipbook: false,
+    fieldstaff: false,
+    whatsapp: false,
+    'whatsapp-bot': false,
+    leads: false,
+    workflow: false,
+    superadmin: false,
+    admin: false,
+    finance: false,
+    setup: false,
+    email: false,
+    bookings: false,
+    contracts: false,
+    customers: false,
+    settings: false,
+  });
+
+  const toggleMenu = (menuKey: string) => {
+    setExpandedMenus(prev => {
+      const isOpening = !prev[menuKey];
+      if (!isOpening) return { ...prev, [menuKey]: false };
+
+      // Accordion behavior: close other top-level menus when opening a new one
+      const newState = { ...prev };
+      const topLevelKeys = navigation
+        .filter(item => item.hasSubmenu && item.submenuKey)
+        .map(item => item.submenuKey!);
+
+      // Only close top-level siblings if this is a top-level menu
+      if (topLevelKeys.includes(menuKey)) {
+        topLevelKeys.forEach(key => {
+          newState[key] = key === menuKey;
+        });
+      } else {
+        newState[menuKey] = true;
+      }
+
+      return newState;
+    });
+  };
+
+  // Auto-expand parent menu based on current location
+  useEffect(() => {
+    if (!location) return;
+
+    // Helper to check if a path matches or is a child of a menu item
+    const isPathActive = (item: any): boolean => {
+      if (location === item.path) return true;
+      if (item.submenu) {
+        return item.submenu.some((sub: any) => isPathActive(sub));
+      }
+      return false;
+    };
+
+    navigation.forEach(item => {
+      if (item.hasSubmenu && item.submenu && item.submenuKey) {
+        if (isPathActive(item)) {
+          // Expand the menu if it's not already expanded
+          setExpandedMenus(prev => (prev[item.submenuKey!] ? prev : { ...prev, [item.submenuKey!]: true }));
+        }
+
+        // Also check nested submenus (one level deeper for now as supported by UI)
+        item.submenu.forEach(subItem => {
+          if (subItem.hasSubmenu && subItem.submenu && subItem.submenuKey) {
+            if (isPathActive(subItem)) {
+              setExpandedMenus(prev => (prev[subItem.submenuKey!] ? prev : { ...prev, [subItem.submenuKey!]: true }));
+            }
+          }
+        });
+      }
+    });
+  }, [location, navigation]); // Removed expandedMenus from dependencies to prevent unintended overrides during interaction
+
+  useEffect(() => {
+    const savedCompany = safeGetItem<Company | null>('zervos_company', null);
+    if (savedCompany) {
+      setCompany(savedCompany);
+    }
+
+    // Load organization settings for logo
+    const loadOrgSettings = () => {
+      const settings = safeGetItem<any>('zervos_organization_settings', null);
+      if (settings && typeof settings === 'object' && settings.logo) {
+        setOrgLogo(settings.logo);
+      }
+    };
+
+    loadOrgSettings();
+
+    // Listen for organization settings updates
+    const handleSettingsUpdate = (event: CustomEvent) => {
+      if (event.detail?.logo) {
+        setOrgLogo(event.detail.logo);
+      }
+    };
+
+    window.addEventListener('organization-settings-updated', handleSettingsUpdate as EventListener);
+
+    // Keyboard shortcut for search (Ctrl+K or Cmd+K)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      
+      // Handle arrow keys in search
+      if (searchOpen && searchResults.length > 0) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          setSelectedSearchIndex(prev => (prev + 1) % searchResults.length);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          setSelectedSearchIndex(prev => (prev - 1 + searchResults.length) % searchResults.length);
+        } else if (e.key === 'Enter' && selectedSearchIndex >= 0) {
+          const selected = searchResults[selectedSearchIndex];
+          if (selected) {
+            window.location.href = selected.path;
+            setSearchOpen(false);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('organization-settings-updated', handleSettingsUpdate as EventListener);
+    };
+  }, [searchOpen, selectedSearchIndex]);
+
+  // Restore sidebar scroll position on route change
+  useEffect(() => {
+    const restoreScrollPosition = () => {
+      if (sidebarScrollRef.current) {
+        sidebarScrollRef.current.scrollTop = savedScrollPosition.current;
+      }
+      if (mobileSidebarScrollRef.current) {
+        mobileSidebarScrollRef.current.scrollTop = savedScrollPosition.current;
+      }
+    };
+
+    // Restore scroll position after navigation using requestAnimationFrame
+    requestAnimationFrame(() => {
+      requestAnimationFrame(restoreScrollPosition);
+    });
+  }, [location]); // Run when location changes
+
+  // Search data - all searchable pages (memoized outside component for better performance)
+  const allSearchPages = useMemo(() => [
+    { name: 'Dashboard', path: '/', category: 'Dashboard', keywords: 'home overview analytics' },
+    { name: 'Projects', path: '/projects', category: 'Projects', keywords: 'project management tasks' },
+    { name: 'HRM Dashboard', path: '/hrm', category: 'HR', keywords: 'human resources employees' },
+    { name: 'Employees', path: '/hrm/employees', category: 'HR', keywords: 'staff team members' },
+    { name: 'Attendance', path: '/hrm/attendance', category: 'HR', keywords: 'check-in timesheet' },
+    { name: 'Payroll', path: '/hrm/payroll', category: 'HR', keywords: 'salary wages compensation' },
+    { name: 'Sales Dashboard', path: '/sales', category: 'Sales', keywords: 'revenue deals' },
+    { name: 'Proposals', path: '/sales/proposals', category: 'Sales', keywords: 'quotes estimates' },
+    { name: 'Invoices', path: '/sales/invoices', category: 'Sales', keywords: 'billing payments' },
+    { name: 'Accounts', path: '/accounts', category: 'Accounts', keywords: 'finance accounting ledger' },
+    { name: 'Banking', path: '/accounts/banking', category: 'Accounts', keywords: 'bank transactions' },
+    { name: 'Customers', path: '/customers', category: 'Sales', keywords: 'clients contacts CRM' },
+    { name: 'Vendors', path: '/vendors', category: 'Purchases', keywords: 'suppliers vendors procurement' },
+    { name: 'Purchase Orders', path: '/purchases/orders', category: 'Purchases', keywords: 'PO procurement buying' },
+    { name: 'Products', path: '/products', category: 'Inventory', keywords: 'items stock catalog' },
+    { name: 'Flip Book', path: '/flipbook', category: 'Communication', keywords: 'documents PDF viewer' },
+    { name: 'Field Staff Tracking', path: '/fieldstaff', category: 'HR', keywords: 'GPS location tracking' },
+    { name: 'WhatsApp Integration', path: '/whatsapp', category: 'Communication', keywords: 'chat messaging WAHA WABA' },
+    { name: 'Subscriptions', path: '/subscriptions', category: 'Accounts', keywords: 'recurring billing plans' },
+    { name: 'Leads', path: '/leads', category: 'Sales', keywords: 'prospects opportunities pipeline' },
+    { name: 'Workflow Automation', path: '/workflow', category: 'System', keywords: 'automation rules triggers' },
+    { name: 'Super Admin', path: '/superadmin', category: 'Admin', keywords: 'organizations system settings' },
+    { name: 'Admin Setup', path: '/admin', category: 'Admin', keywords: 'configuration permissions users' },
+    { name: 'Profile', path: '/profile', category: 'Profile', keywords: 'account settings preferences' },
+  ], []);
+
+  // Filter search results (memoized for performance)
+  const searchResults = useMemo(() => {
+    if (searchQuery.trim() === '') return [];
+    const query = searchQuery.toLowerCase();
+    return allSearchPages.filter(page => 
+      page.name.toLowerCase().includes(query) ||
+      page.category.toLowerCase().includes(query) ||
+      page.keywords.toLowerCase().includes(query)
+    ).slice(0, 10);
+  }, [searchQuery, allSearchPages]);
+
+  // Category colors (memoized)
+  const getCategoryColor = useCallback((category: string) => {
+    const colors: Record<string, string> = {
+      'Dashboard': 'bg-indigo-100 text-indigo-700',
+      'Projects': 'bg-purple-100 text-purple-700',
+      'HR': 'bg-green-100 text-green-700',
+      'Sales': 'bg-blue-100 text-blue-700',
+      'Accounts': 'bg-amber-100 text-amber-700',
+      'Purchases': 'bg-orange-100 text-orange-700',
+      'Inventory': 'bg-teal-100 text-teal-700',
+      'Communication': 'bg-pink-100 text-pink-700',
+      'System': 'bg-gray-100 text-gray-700',
+      'Admin': 'bg-red-100 text-red-700',
+      'Profile': 'bg-cyan-100 text-cyan-700',
+    };
+    return colors[category] || 'bg-gray-100 text-gray-700';
+  }, []);
 
   const isActive = useCallback((path: string) => location === path, [location]);
 
@@ -579,7 +637,14 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
           return (
             <div key={item.path}>
               <motion.button
-                onClick={() => item.submenuKey && toggleMenu(item.submenuKey)}
+                onClick={() => {
+                  if (item.submenuKey) {
+                    toggleMenu(item.submenuKey);
+                  }
+                  if (item.path && location !== item.path) {
+                    navigate(item.path);
+                  }
+                }}
                 className={`relative w-full flex items-center ${
                   expanded ? 'gap-3 px-4 py-3' : 'justify-center px-2 py-3'
                 } text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 rounded-xl ${
@@ -947,7 +1012,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(148,163,184,0.15),transparent_65%)]" />
       </div>
 
-      <TopProgressBar />
+      {/* <TopProgressBar /> */}
 
       <SidebarShell expanded={sidebarExpanded} />
       <MobileSidebar />
@@ -1048,11 +1113,9 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         </header>
 
         <main className="relative flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8" style={{ overflowX: 'hidden' }}>
-          <PageTransition pathname={location}>
-            <div className="mx-auto w-full max-w-7xl">
-              {children}
-            </div>
-          </PageTransition>
+          <div className="mx-auto w-full max-w-7xl">
+            {children}
+          </div>
         </main>
       </div>
 

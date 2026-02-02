@@ -1,251 +1,248 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, Plus, MapPin, Briefcase, DollarSign, Users, Eye, Edit, X } from 'lucide-react';
+import { 
+  Search, 
+  MapPin, 
+  Clock, 
+  DollarSign, 
+  Users, 
+  MoreVertical,
+  Filter,
+  ArrowUpDown,
+  Building,
+  Calendar,
+  Eye,
+  Edit,
+  Trash
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const JOBS_DATA = [
+  {
+    id: 1,
+    title: 'Senior Full Stack Developer',
+    department: 'Engineering',
+    location: 'Remote',
+    type: 'Full-time',
+    salary: ' - ',
+    applicants: 45,
+    status: 'Active',
+    postedDate: '2 days ago'
+  },
+  {
+    id: 2,
+    title: 'Product Marketing Manager',
+    department: 'Marketing',
+    location: 'New York, NY',
+    type: 'Full-time',
+    salary: ' - ',
+    applicants: 28,
+    status: 'Active',
+    postedDate: '5 days ago'
+  },
+  {
+    id: 3,
+    title: 'UI/UX Designer',
+    department: 'Product',
+    location: 'Remote',
+    type: 'Contract',
+    salary: ' -  / hr',
+    applicants: 56,
+    status: 'Closing Soon',
+    postedDate: '1 week ago'
+  },
+  {
+    id: 4,
+    title: 'Sales Representative',
+    department: 'Sales',
+    location: 'Chicago, IL',
+    type: 'Full-time',
+    salary: ' + Commission',
+    applicants: 12,
+    status: 'Active',
+    postedDate: '1 day ago'
+  }
+];
 
 export default function JobDescriptionsModule() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [deptFilter, setDeptFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
 
-  const jobs = [
-    {
-      id: '1',
-      title: 'Senior Full Stack Developer',
-      department: 'Engineering',
-      location: 'Remote',
-      type: 'Full-time',
-      salaryRange: '$120K - $150K',
-      openings: 2,
-      applications: 45,
-      status: 'open',
-      postedDate: '2026-01-10'
-    },
-    {
-      id: '2',
-      title: 'Product Manager',
-      department: 'Product',
-      location: 'New York, NY',
-      type: 'Full-time',
-      salaryRange: '$130K - $160K',
-      openings: 1,
-      applications: 32,
-      status: 'open',
-      postedDate: '2026-01-08'
-    },
-    {
-      id: '3',
-      title: 'UX Designer',
-      department: 'Design',
-      location: 'San Francisco, CA',
-      type: 'Full-time',
-      salaryRange: '$100K - $130K',
-      openings: 1,
-      applications: 28,
-      status: 'open',
-      postedDate: '2026-01-12'
-    },
-    {
-      id: '4',
-      title: 'DevOps Engineer',
-      department: 'Engineering',
-      location: 'Remote',
-      type: 'Contract',
-      salaryRange: '$110K - $140K',
-      openings: 1,
-      applications: 19,
-      status: 'open',
-      postedDate: '2026-01-05'
-    },
-    {
-      id: '5',
-      title: 'Sales Manager',
-      department: 'Sales',
-      location: 'Chicago, IL',
-      type: 'Full-time',
-      salaryRange: '$90K - $120K',
-      openings: 1,
-      applications: 52,
-      status: 'closed',
-      postedDate: '2025-12-28'
-    }
-  ];
-
-  const statusConfig: Record<string, { label: string; class: string }> = {
-    open: { label: 'Open', class: 'bg-green-100 text-green-700 border-green-200' },
-    closed: { label: 'Closed', class: 'bg-slate-100 text-slate-700 border-slate-200' }
-  };
+  const filteredJobs = JOBS_DATA.filter(job => {
+    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                         job.department.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesDept = deptFilter === 'all' || job.department.toLowerCase() === deptFilter.toLowerCase();
+    const matchesType = typeFilter === 'all' || job.type.toLowerCase() === typeFilter.toLowerCase();
+    return matchesSearch && matchesDept && matchesType;
+  });
 
   return (
     <div className="space-y-6">
-      {/* Toolbar */}
       <Card>
-        <CardHeader>
-          <CardTitle>Job Openings</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input
-                placeholder="Search job titles, departments..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input 
+                placeholder="Search by job title or department..." 
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <div className="flex gap-2">
-              <Select defaultValue="all-dept">
-                <SelectTrigger className="w-40">
-                  <SelectValue />
+            
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={deptFilter} onValueChange={setDeptFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4 text-slate-400" />
+                    <SelectValue placeholder="All..." />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all-dept">All Departments</SelectItem>
+                  <SelectItem value="all">All Departments</SelectItem>
                   <SelectItem value="engineering">Engineering</SelectItem>
+                  <SelectItem value="marketing">Marketing</SelectItem>
                   <SelectItem value="product">Product</SelectItem>
-                  <SelectItem value="design">Design</SelectItem>
                   <SelectItem value="sales">Sales</SelectItem>
                 </SelectContent>
               </Select>
-              <Select defaultValue="all-type">
-                <SelectTrigger className="w-36">
-                  <SelectValue />
+
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-slate-400" />
+                    <SelectValue placeholder="All Types" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all-type">All Types</SelectItem>
-                  <SelectItem value="fulltime">Full-time</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="full-time">Full-time</SelectItem>
                   <SelectItem value="contract">Contract</SelectItem>
-                  <SelectItem value="parttime">Part-time</SelectItem>
+                  <SelectItem value="internship">Internship</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                More Filters
-              </Button>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Post New Job
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline">
+                    <Filter className="h-4 w-4 mr-2" />
+                    More Filters
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Advanced Filtering</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => { setSearchTerm(''); setDeptFilter('all'); setTypeFilter('all'); }}>
+                    Clear All Filters
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>Experience Level</DropdownMenuItem>
+                  <DropdownMenuItem>Salary Range</DropdownMenuItem>
+                  <DropdownMenuItem>Posting Date</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <Button variant="outline" size="icon">
+                <ArrowUpDown className="h-4 w-4" />
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Jobs Table */}
-      <Card>
-        <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Job Title</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Salary Range</TableHead>
-                <TableHead>Openings</TableHead>
-                <TableHead>Applications</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {jobs.map((job) => (
-                <TableRow key={job.id} className="hover:bg-slate-50">
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-purple-600" />
-                      <span className="font-medium">{job.title}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{job.department}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1 text-sm">
-                      <MapPin className="h-3 w-3 text-slate-500" />
-                      {job.location}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
-                      {job.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1 text-sm">
-                      <DollarSign className="h-3 w-3 text-slate-500" />
-                      {job.salaryRange}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-200">
-                      {job.openings} {job.openings === 1 ? 'opening' : 'openings'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3 text-slate-500" />
-                      <span className="font-medium">{job.applications}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={statusConfig[job.status].class}>
-                      {statusConfig[job.status].label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      {job.status === 'open' && (
-                        <Button variant="ghost" size="sm">
-                          <X className="h-4 w-4 text-red-600" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filteredJobs.length > 0 ? (
+          filteredJobs.map((job) => (
+            <Card key={job.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div className="space-y-1">
+                  <CardTitle className="text-xl font-bold">{job.title}</CardTitle>
+                  <p className="text-sm font-medium text-slate-500">{job.department}</p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem className="flex items-center">
+                      <Eye className="h-4 w-4 mr-2" /> View Listing
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center">
+                      <Edit className="h-4 w-4 mr-2" /> Edit Position
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center">
+                      <Users className="h-4 w-4 mr-2" /> View Applicants
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-red-600 flex items-center">
+                      <Trash className="h-4 w-4 mr-2" /> Close Position
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-y-3 gap-x-4 mb-4">
+                  <div className="flex items-center text-sm text-slate-600">
+                    <MapPin className="h-4 w-4 mr-2 text-slate-400" />
+                    {job.location}
+                  </div>
+                  <div className="flex items-center text-sm text-slate-600">
+                    <Clock className="h-4 w-4 mr-2 text-slate-400" />
+                    {job.type}
+                  </div>
+                  <div className="flex items-center text-sm text-slate-600">
+                    <DollarSign className="h-4 w-4 mr-2 text-slate-400" />
+                    {job.salary}
+                  </div>
+                  <div className="flex items-center text-sm text-slate-600">
+                    <Calendar className="h-4 w-4 mr-2 text-slate-400" />
+                    Posted {job.postedDate}
+                  </div>
+                </div>
 
-      {/* Job Statistics */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Job Openings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">24</div>
-            <p className="text-xs text-slate-600 mt-1">5 added this week</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-600">Total Applications</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-700">176</div>
-            <p className="text-xs text-blue-600 mt-1">+23% from last month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-slate-600">Avg Applications/Job</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-700">35</div>
-            <p className="text-xs text-slate-600 mt-1">Per job posting</p>
-          </CardContent>
-        </Card>
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={job.status === 'Active' ? 'default' : 'secondary'} className={job.status === 'Active' ? 'bg-green-100 text-green-700 hover:bg-green-200 border-0' : ''}>
+                      {job.status}
+                    </Badge>
+                    <div className="flex items-center text-sm text-slate-500">
+                      <Users className="h-4 w-4 mr-1 text-slate-400" />
+                      {job.applicants} applicants
+                    </div>
+                  </div>
+                  <Button variant="link" className="p-0 h-auto text-purple-600 font-semibold hover:no-underline">Details</Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full py-12 text-center border-2 border-dashed rounded-lg bg-slate-50/50">
+            <Building className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-slate-900">No jobs found</h3>
+            <p className="text-slate-500">Try adjusting your filters or search terms</p>
+          </div>
+        )}
       </div>
     </div>
   );

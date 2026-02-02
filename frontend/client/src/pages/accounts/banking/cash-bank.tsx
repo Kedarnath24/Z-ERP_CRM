@@ -16,9 +16,18 @@ import {
   ArrowDownCircle,
   ArrowUpCircle,
   Wallet,
-  FileText
+  FileText,
+  FileSpreadsheet,
+  FileText as FilePdf
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { exportToExcel, exportToPDF } from '@/lib/exportUtils';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 type CashBankEntry = {
   id: string;
@@ -135,6 +144,34 @@ export default function CashBankEntries() {
     entry.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
     entry.reference?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleExportExcel = () => {
+    const data = filteredEntries.map(e => ({
+      'ID': e.id,
+      'Date': e.date,
+      'Type': e.type,
+      'Category': e.category,
+      'Description': e.description,
+      'Amount': e.amount,
+      'Bank Account': e.bankAccount || '',
+      'Reference': e.reference || '',
+      'Payment Method': e.paymentMethod,
+      'Created By': e.createdBy
+    }));
+    exportToExcel(data, 'cash_bank_entries');
+  };
+
+  const handleExportPDF = () => {
+    const headers = ['Date', 'Type', 'Category', 'Description', 'Amount'];
+    const data = filteredEntries.map(e => [
+      e.date,
+      e.type,
+      e.category,
+      e.description,
+      new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(e.amount)
+    ]);
+    exportToPDF('Cash & Bank Entries', headers, data, 'cash_bank_entries');
+  };
 
   const depositEntries = entries.filter(e => e.type === 'deposit');
   const withdrawalEntries = entries.filter(e => e.type === 'withdrawal');
@@ -386,10 +423,24 @@ export default function CashBankEntries() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                 </div>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  Export
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Download className="h-4 w-4" />
+                      Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleExportExcel} className="gap-2">
+                      <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                      Export to Excel
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+                      <FilePdf className="h-4 w-4 text-red-600" />
+                      Export to PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </CardHeader>
