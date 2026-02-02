@@ -173,15 +173,15 @@ export default function AccountsDashboard() {
           </div>
 
           <TabsContent value="banking" className="space-y-4">
-            <BankingModule />
+            <BankingModule includeLayout={false} />
           </TabsContent>
 
-          <TabsContent value="receivables" className="space-y-4">
-            <ReceivablesModule />
+          <TabsContent value="receivables" className="mt-0">
+            <ReceivablesModule includeLayout={false} />
           </TabsContent>
 
-          <TabsContent value="payables" className="space-y-4">
-            <PayablesModule />
+          <TabsContent value="payables" className="mt-0">
+            <PayablesModule includeLayout={false} />
           </TabsContent>
 
           <TabsContent value="reconciliation" className="space-y-4">
@@ -193,7 +193,7 @@ export default function AccountsDashboard() {
           </TabsContent>
 
           <TabsContent value="income-expense" className="space-y-4">
-            <IncomeExpenseModule />
+            <IncomeExpenseModule includeLayout={false} />
           </TabsContent>
 
           <TabsContent value="recurring" className="space-y-4">

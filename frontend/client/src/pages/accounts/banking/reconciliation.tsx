@@ -14,9 +14,17 @@ import {
   AlertCircle,
   Download,
   RefreshCw,
-  FileSpreadsheet
+  FileSpreadsheet,
+  FileText as FilePdf
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { exportToExcel, exportToPDF } from '@/lib/exportUtils';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 type Transaction = {
   id: string;
@@ -76,6 +84,32 @@ export default function BankReconciliation() {
   const unmatchedCount = bankTransactions.filter(t => t.status === 'unmatched').length;
   const discrepancyCount = bankTransactions.filter(t => t.status === 'discrepancy').length;
 
+  const handleExportExcel = () => {
+    const data = bankTransactions.map(t => ({
+      'ID': t.id,
+      'Date': t.date,
+      'Description': t.description,
+      'Amount': t.amount,
+      'Type': t.type,
+      'Status': t.status,
+      'Bank Ref': t.bankRef || '',
+      'ERP Ref': t.erpRef || ''
+    }));
+    exportToExcel(data, 'bank_reconciliation');
+  };
+
+  const handleExportPDF = () => {
+    const headers = ['ID', 'Date', 'Description', 'Amount', 'Status'];
+    const data = bankTransactions.map(t => [
+      t.id,
+      t.date,
+      t.description,
+      formatCurrency(t.amount),
+      t.status
+    ]);
+    exportToPDF('Bank Reconciliation Report', headers, data, 'bank_reconciliation');
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -94,10 +128,24 @@ export default function BankReconciliation() {
             <Upload className="h-4 w-4" />
             Import Statement
           </Button>
-          <Button variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Export Report
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Download className="h-4 w-4" />
+                Export Report
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportExcel} className="gap-2">
+                <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                Export to Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+                <FilePdf className="h-4 w-4 text-red-600" />
+                Export to PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button className="gap-2">
             <RefreshCw className="h-4 w-4" />
             Auto Match

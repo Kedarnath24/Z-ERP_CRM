@@ -460,14 +460,14 @@ export default function DashboardOverview() {
                   <TableRow key={task.id} className="hover:bg-slate-50">
                     <TableCell className="font-medium">{task.name}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={statusConfig[task.status].class}>
-                        {statusConfig[task.status].label}
+                      <Badge variant="outline" className={statusConfig[task.status as keyof typeof statusConfig]?.class || "bg-slate-100"}>
+                        {statusConfig[task.status as keyof typeof statusConfig]?.label || task.status}
                       </Badge>
                     </TableCell>
                     <TableCell>{task.dueDate}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={priorityConfig[task.priority].class}>
-                        {priorityConfig[task.priority].label}
+                      <Badge variant="outline" className={priorityConfig[task.priority as keyof typeof priorityConfig]?.class || "bg-slate-100"}>
+                        {priorityConfig[task.priority as keyof typeof priorityConfig]?.label || task.priority}
                       </Badge>
                     </TableCell>
                     <TableCell>{task.assignee}</TableCell>

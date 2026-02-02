@@ -17,9 +17,18 @@ import {
   XCircle,
   CreditCard,
   AlertCircle,
-  Bell
+  Bell,
+  FileSpreadsheet,
+  FileText as FilePdf
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { exportToExcel, exportToPDF } from '@/lib/exportUtils';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 type Cheque = {
   id: string;
@@ -148,6 +157,35 @@ export default function ChequeManagement() {
 
     return matchesSearch && matchesStatus && matchesType;
   });
+
+  const handleExportExcel = () => {
+    const data = filteredCheques.map(c => ({
+      'ID': c.id,
+      'Number': c.chequeNumber,
+      'Date': c.date,
+      'Payee': c.payee,
+      'Amount': c.amount,
+      'Bank Account': c.bankAccount,
+      'Type': c.type,
+      'Status': c.status,
+      'Clearance Date': c.clearanceDate || '',
+      'Reference': c.reference || ''
+    }));
+    exportToExcel(data, 'cheques_report');
+  };
+
+  const handleExportPDF = () => {
+    const headers = ['Number', 'Date', 'Payee', 'Amount', 'Type', 'Status'];
+    const data = filteredCheques.map(c => [
+      c.chequeNumber,
+      c.date,
+      c.payee,
+      new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(c.amount),
+      c.type,
+      c.status
+    ]);
+    exportToPDF('Cheque Management Report', headers, data, 'cheques_report');
+  };
 
   const stats = {
     total: cheques.length,
@@ -346,10 +384,24 @@ export default function ChequeManagement() {
                   <SelectItem value="cancelled">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Download className="h-4 w-4" />
-                Export
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportExcel} className="gap-2">
+                    <FileSpreadsheet className="h-4 w-4 text-green-600" />
+                    Export to Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF} className="gap-2">
+                    <FilePdf className="h-4 w-4 text-red-600" />
+                    Export to PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>

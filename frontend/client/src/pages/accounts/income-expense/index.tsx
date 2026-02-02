@@ -5,13 +5,13 @@ import Expenses from './expenses';
 import RecurringExpenses from './recurring';
 import ExpenseAllocation from './allocation';
 
-export default function IncomeExpense() {
+export default function IncomeExpense({ includeLayout = true }: any) {
   const [location] = useLocation();
 
   const renderSubModule = () => {
-    if (location.includes('/accounts/income-expense/income')) {
+    if (location.includes('/accounts/income-expense/income') || location === '/accounts/income') {
       return <Income />;
-    } else if (location.includes('/accounts/income-expense/expenses')) {
+    } else if (location.includes('/accounts/income-expense/expenses') || location === '/accounts/expenses') {
       return <Expenses />;
     } else if (location.includes('/accounts/income-expense/recurring')) {
       return <RecurringExpenses />;
@@ -21,11 +21,17 @@ export default function IncomeExpense() {
     return <Income />;
   };
 
+  const content = (
+    <div className="p-6">
+      {renderSubModule()}
+    </div>
+  );
+
+  if (!includeLayout) return content;
+
   return (
     <DashboardLayout>
-      <div className="p-6">
-        {renderSubModule()}
-      </div>
+      {content}
     </DashboardLayout>
   );
 }
