@@ -283,12 +283,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       path: '/sales',
       hasSubmenu: true,
       submenuKey: 'sales',
-      submenu: [
-        { name: 'Proposals', path: '/sales/proposals' },
-        { name: 'Estimates', path: '/sales/estimates' },
-        { name: 'Invoices', path: '/sales/invoices' },
-        { name: 'Payment Slips', path: '/sales/payment-slips' },
-      ]
+      
     },
     { 
       name: 'Accounts', 

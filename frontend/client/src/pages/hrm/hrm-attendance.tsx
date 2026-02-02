@@ -26,12 +26,17 @@ import {
   ArrowLeft
 } from 'lucide-react';
 
+// AttendanceLeave: Page component for tracking attendance and managing leave requests.
+// - Shows today's attendance in a table
+// - Displays summary cards (present, absent, on leave, late)
+// - Provides tabs for monthly summary, leave requests and shift management
+// - Includes a dialog to apply for leave
 export default function AttendanceLeave() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('today');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mock data - Today's attendance
+  // Mock data - Today's attendance (placeholder data until connected to API)
   const attendance = [
     {
       id: 'EMP001',
@@ -85,7 +90,7 @@ export default function AttendanceLeave() {
     }
   ];
 
-  // Mock data - Leave requests
+  // Mock data - Leave requests (placeholder data until connected to API)
   const leaveRequests = [
     {
       id: 'LR001',
@@ -122,6 +127,7 @@ export default function AttendanceLeave() {
     }
   ];
 
+  // Mapping of attendance status to label, CSS classes and icon component
   const statusConfig: Record<string, { label: string; class: string; icon: any }> = {
     present: { label: 'Present', class: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle },
     absent: { label: 'Absent', class: 'bg-red-100 text-red-700 border-red-200', icon: XCircle },
@@ -129,12 +135,14 @@ export default function AttendanceLeave() {
     leave: { label: 'On Leave', class: 'bg-blue-100 text-blue-700 border-blue-200', icon: Coffee }
   };
 
+  // Mapping of leave request status to label and CSS classes
   const leaveStatusConfig: Record<string, { label: string; class: string }> = {
     pending: { label: 'Pending', class: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
     approved: { label: 'Approved', class: 'bg-green-100 text-green-700 border-green-200' },
     rejected: { label: 'Rejected', class: 'bg-red-100 text-red-700 border-red-200' }
   };
 
+  // Render page layout and UI
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -156,7 +164,7 @@ export default function AttendanceLeave() {
           </div>
         </div>
 
-        {/* Header Actions */}
+        {/* Header Actions: export and "Apply Leave" dialog trigger */}
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-end">
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm">
@@ -165,10 +173,12 @@ export default function AttendanceLeave() {
             </Button>
             <Dialog>
               <DialogTrigger asChild>
+                {/* Trigger Button for the Apply Leave dialog 
                 <Button size="sm">
                   <Coffee className="h-4 w-4 mr-2" />
                   Apply Leave
                 </Button>
+                */}
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -214,7 +224,7 @@ export default function AttendanceLeave() {
           </div>
         </div>
 
-        {/* Summary Cards */}
+        {/* Summary Cards: quick stats for today's attendance */}
         <div className="grid gap-4 md:grid-cols-4">
           <Card>
             <CardContent className="p-6">
@@ -273,7 +283,7 @@ export default function AttendanceLeave() {
           </Card>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs: Today's Attendance, Monthly Summary, Leave Requests, Shift Management */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="today">Today's Attendance</TabsTrigger>

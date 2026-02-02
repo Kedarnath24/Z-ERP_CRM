@@ -173,14 +173,37 @@ export default function ProductsDashboard() {
     },
   ];
 
-  const categories: Category[] = [
+  const initialCategories: Category[] = [
     { id: '1', name: 'Electronics', productCount: 2, status: 'Active', description: 'Electronic devices and gadgets' },
     { id: '2', name: 'Furniture', productCount: 1, status: 'Active', description: 'Office and home furniture' },
     { id: '3', name: 'Accessories', productCount: 1, status: 'Active', description: 'Computer and office accessories' },
     { id: '4', name: 'Stationery', productCount: 1, status: 'Active', description: 'Office stationery supplies' },
   ];
 
-  const inventoryRecords: InventoryRecord[] = [
+  // Make categories editable in UI
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [showViewCategoryModal, setShowViewCategoryModal] = useState(false);
+  const [viewCategory, setViewCategory] = useState<Category | null>(null);
+
+  const openEditCategory = (cat: Category) => {
+    setSelectedCategory(cat);
+    setShowEditCategoryModal(true);
+  };
+
+  const openViewCategory = (cat: Category) => {
+    setViewCategory(cat);
+    setShowViewCategoryModal(true);
+  };
+
+  const saveCategory = (updated: Category) => {
+    setCategories(prev => prev.map(c => c.id === updated.id ? updated : c));
+    setShowEditCategoryModal(false);
+    setSelectedCategory(null);
+  };
+
+  const initialInventoryRecords: InventoryRecord[] = [
     {
       id: '1',
       productName: 'Wireless Mouse Pro',
@@ -213,7 +236,10 @@ export default function ProductsDashboard() {
     },
   ];
 
-  const pricingRecords: PricingRecord[] = [
+  // Make inventory records editable in UI
+  const [inventoryRecords, setInventoryRecords] = useState<InventoryRecord[]>(initialInventoryRecords);
+
+  const initialPricingRecords: PricingRecord[] = [
     {
       id: '1',
       productName: 'Wireless Mouse Pro',
@@ -242,6 +268,17 @@ export default function ProductsDashboard() {
       lastUpdated: '2026-01-05',
     },
   ];
+
+  // Make pricing records editable in UI (allow changing Price Type inline)
+  const [pricingRecords, setPricingRecords] = useState<PricingRecord[]>(initialPricingRecords);
+
+  const updatePricingType = (id: string, type: PricingRecord['priceType']) => {
+    setPricingRecords(prev => prev.map(r => r.id === id ? { ...r, priceType: type } : r));
+  };
+
+  // selected/editing pricing record for Actions -> Edit
+  const [selectedPricingRecord, setSelectedPricingRecord] = useState<PricingRecord | null>(null);
+  const [editingPricing, setEditingPricing] = useState<PricingRecord | null>(null);
 
   // Computed values
   const filteredProducts = products.filter(p => {
@@ -276,6 +313,11 @@ export default function ProductsDashboard() {
       default:
         return 'default';
     }
+  };
+
+  // Update inventory record status handler
+  const updateInventoryStatus = (id: string, status: InventoryRecord['status']) => {
+    setInventoryRecords(prev => prev.map(r => r.id === id ? { ...r, status } : r));
   };
 
   const ProductFormModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => (
@@ -829,9 +871,23 @@ export default function ProductsDashboard() {
                       <TableCell className="font-semibold text-lg">{record.available}</TableCell>
                       <TableCell className="text-orange-600 font-medium">{record.reorderLevel}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusBadgeVariant(record.status)}>
-                          {record.status}
-                        </Badge>
+                        {/* Editable status badge: click to change status */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <div>
+                              <Badge variant={getStatusBadgeVariant(record.status)} className="cursor-pointer">
+                                {record.status}
+                              </Badge>
+                            </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            {(['In Stock', 'Low Stock', 'Out of Stock'] as InventoryRecord['status'][]).map((s) => (
+                              <DropdownMenuItem key={s} onClick={() => updateInventoryStatus(record.id, s)}>
+                                {s}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button 
@@ -879,14 +935,19 @@ export default function ProductsDashboard() {
                         <p className="text-xs text-muted-foreground pt-2">{category.description}</p>
                       )}
                       <div className="flex gap-2 pt-3">
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <Edit className="w-3 h-3 mr-1" />
-                          Edit
-                        </Button>
-                        <Button variant="outline" size="sm" className="flex-1">
-                          <Eye className="w-3 h-3 mr-1" />
-                          View
-                        </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => openEditCategory(category)}
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1" onClick={() => openViewCategory(category)}>
+                            <Eye className="w-3 h-3 mr-1" />
+                            View
+                          </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -983,6 +1044,7 @@ export default function ProductsDashboard() {
                         </span>
                       </TableCell>
                       <TableCell>
+                        {/* Price Type is now read-only in the table; editable via Actions -> Edit */}
                         <Badge variant={record.priceType === 'Standard' ? 'default' : 'secondary'}>
                           {record.priceType}
                         </Badge>
@@ -992,7 +1054,11 @@ export default function ProductsDashboard() {
                         <Button 
                           variant="ghost" 
                           size="sm"
-                          onClick={() => setShowPricingEditModal(true)}
+                          onClick={() => {
+                            setSelectedPricingRecord(record);
+                            setEditingPricing(record);
+                            setShowPricingEditModal(true);
+                          }}
                         >
                           <Edit className="w-4 h-4 mr-2" />
                           Edit
@@ -1009,6 +1075,99 @@ export default function ProductsDashboard() {
 
       {/* Modals */}
       <ProductFormModal open={showAddProductModal} onClose={() => setShowAddProductModal(false)} />
+      {/* Edit Category Modal */}
+      <Dialog open={showEditCategoryModal} onOpenChange={setShowEditCategoryModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+            <DialogDescription>Update category details</DialogDescription>
+          </DialogHeader>
+          {selectedCategory && (
+            <div className="space-y-4">
+              <div>
+                <Label>Category Name *</Label>
+                <Input
+                  value={selectedCategory.name}
+                  onChange={(e) => setSelectedCategory({ ...selectedCategory, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={selectedCategory.description || ''}
+                  onChange={(e) => setSelectedCategory({ ...selectedCategory, description: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Parent Category</Label>
+                {/* Use a non-empty value for the 'None' option to avoid empty string values */}
+                <Select value={selectedCategory.parentCategory ?? 'none'} onValueChange={(v) => setSelectedCategory({ ...selectedCategory, parentCategory: v === 'none' ? undefined : v })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None (Top Level)</SelectItem>
+                    {categories.filter(c => c.id !== selectedCategory.id).map(c => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <input
+                  id="catStatus"
+                  type="checkbox"
+                  checked={selectedCategory.status === 'Active'}
+                  onChange={(e) => setSelectedCategory({ ...selectedCategory, status: e.target.checked ? 'Active' : 'Inactive' })}
+                />
+                <Label htmlFor="catStatus">Active</Label>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setShowEditCategoryModal(false); setSelectedCategory(null); }}>Cancel</Button>
+                <Button onClick={() => saveCategory(selectedCategory)}>Save</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      {/* View Category Modal (read-only) */}
+      <Dialog open={showViewCategoryModal} onOpenChange={setShowViewCategoryModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Category Details</DialogTitle>
+            <DialogDescription>View category information</DialogDescription>
+          </DialogHeader>
+          {viewCategory && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Name</p>
+                <p className="font-medium">{viewCategory.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Parent Category</p>
+                <p className="font-medium">{viewCategory.parentCategory ? (categories.find(c => c.id === viewCategory.parentCategory)?.name ?? 'Unknown') : 'Top Level'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Products</p>
+                <p className="font-medium">{viewCategory.productCount}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <Badge variant={viewCategory.status === 'Active' ? 'default' : 'secondary'}>{viewCategory.status}</Badge>
+              </div>
+              {viewCategory.description && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Description</p>
+                  <p className="font-medium">{viewCategory.description}</p>
+                </div>
+              )}
+              <div className="flex justify-end">
+                <Button variant="outline" onClick={() => { setShowViewCategoryModal(false); setViewCategory(null); }}>Close</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
       
       {/* Product Details Modal */}
       {selectedProduct && (
@@ -1201,38 +1360,66 @@ export default function ProductsDashboard() {
       </Dialog>
       
       {/* Pricing Edit Modal */}
-      <Dialog open={showPricingEditModal} onOpenChange={setShowPricingEditModal}>
+      <Dialog open={showPricingEditModal} onOpenChange={(open) => { if (!open) { setShowPricingEditModal(false); setSelectedPricingRecord(null); setEditingPricing(null); } }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Pricing</DialogTitle>
             <DialogDescription>Update product pricing information</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Cost Price *</Label>
-              <Input type="number" placeholder="0.00" step="0.01" />
+          {editingPricing ? (
+            <div className="space-y-4">
+              <div>
+                <Label>Cost Price *</Label>
+                <Input type="number" value={editingPricing.costPrice} onChange={(e) => setEditingPricing({ ...editingPricing, costPrice: Number(e.target.value) })} step="0.01" />
+              </div>
+              <div>
+                <Label>Selling Price *</Label>
+                <Input type="number" value={editingPricing.sellingPrice} onChange={(e) => setEditingPricing({ ...editingPricing, sellingPrice: Number(e.target.value) })} step="0.01" />
+              </div>
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">Profit Margin</p>
+                <p className="text-2xl font-bold text-green-600">{editingPricing.marginPercent.toFixed(2)}%</p>
+              </div>
+              <div>
+                <Label>Price Type</Label>
+                <Select value={editingPricing.priceType} onValueChange={(v) => setEditingPricing({ ...editingPricing, priceType: v as PricingRecord['priceType'] })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Standard">Standard</SelectItem>
+                    <SelectItem value="Promotional">Promotional</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Effective Date</Label>
+                <Input type="date" value={editingPricing.lastUpdated} onChange={(e) => setEditingPricing({ ...editingPricing, lastUpdated: e.target.value })} />
+              </div>
+              <div>
+                <Label>Notes</Label>
+                <Input placeholder="Pricing notes (optional)" />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => { setShowPricingEditModal(false); setSelectedPricingRecord(null); setEditingPricing(null); }}>
+                  Cancel
+                </Button>
+                <Button className="flex-1" onClick={() => {
+                  if (editingPricing) {
+                    setPricingRecords(prev => prev.map(r => r.id === editingPricing.id ? editingPricing : r));
+                    setShowPricingEditModal(false);
+                    setSelectedPricingRecord(null);
+                    setEditingPricing(null);
+                  }
+                }}>
+                  <Save className="mr-2 h-4 w-4" />
+                  Update Pricing
+                </Button>
+              </div>
             </div>
-            <div>
-              <Label>Selling Price *</Label>
-              <Input type="number" placeholder="0.00" step="0.01" />
-            </div>
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground">Profit Margin</p>
-              <p className="text-2xl font-bold text-green-600">45.5%</p>
-            </div>
-            <div>
-              <Label>Effective Date</Label>
-              <Input type="date" />
-            </div>
-            <div>
-              <Label>Notes</Label>
-              <Input placeholder="Pricing notes (optional)" />
-            </div>
-            <Button className="w-full">
-              <Save className="mr-2 h-4 w-4" />
-              Update Pricing
-            </Button>
-          </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground">No pricing selected</div>
+          )}
         </DialogContent>
       </Dialog>
       </div>
