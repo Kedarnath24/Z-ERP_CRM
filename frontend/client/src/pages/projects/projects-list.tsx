@@ -9,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,12 +32,84 @@ import {
   Users,
   Clock,
   CheckCircle,
+  Tag,
   XCircle,
   PauseCircle,
-  Circle
+  Circle,
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  Undo2,
+  Redo2,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  ChevronDown,
+  Type,
+  AlignCenter,
+  AlignLeft,
+  AlignRight,
+  AlignJustify
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
+
+const RichTextEditor = ({ value, onChange }: { value: string; onChange: (val: string) => void }) => {
+  return (
+    <div className="border border-slate-200 rounded-lg overflow-hidden shadow-sm bg-white focus-within:ring-2 focus-within:ring-blue-100/50 transition-all">
+      <div className="bg-slate-50 border-b border-slate-200 p-1.5 flex flex-wrap gap-1 items-center">
+        <div className="flex bg-white rounded border border-slate-200 p-0.5 shadow-sm">
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-600 hover:text-blue-600"><Bold className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-600 hover:text-blue-600"><Italic className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-600 hover:text-blue-600"><List className="h-3.5 w-3.5" /></Button>
+        </div>
+        <div className="flex bg-white rounded border border-slate-200 p-0.5 shadow-sm">
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-600 hover:text-blue-600"><AlignLeft className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-600 hover:text-blue-600"><AlignCenter className="h-3.5 w-3.5" /></Button>
+        </div>
+        <div className="ml-auto flex items-center gap-1.5">
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-blue-600 bg-white border border-slate-200 rounded shadow-sm"><ImageIcon className="h-3.5 w-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-blue-600 bg-white border border-slate-200 rounded shadow-sm"><LinkIcon className="h-3.5 w-3.5" /></Button>
+        </div>
+      </div>
+      <textarea
+        className="w-full min-h-[100px] p-3 text-sm text-slate-700 bg-white placeholder:text-slate-400 focus:outline-none resize-none leading-relaxed"
+        placeholder="Enter project description..."
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+      />
+      <div className="bg-slate-50 border-t border-slate-100 px-3 py-1 flex justify-between items-center">
+        <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest italic">Mock Editor</span>
+        <span className="text-[9px] text-slate-500 font-bold">{value.length} CHARS</span>
+      </div>
+    </div>
+  );
+};
+          <div className="h-6 w-[1px] bg-slate-200 mx-1" />
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"><List className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"><ListOrdered className="h-4 w-4" /></Button>
+          <div className="h-6 w-[1px] bg-slate-200 mx-1" />
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"><Undo2 className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"><Redo2 className="h-4 w-4" /></Button>
+        </div>
+
+        {/* Editor Area */}
+        <textarea
+          className="w-full h-40 p-4 text-sm focus:outline-none resize-none bg-slate-50/30 placeholder:text-slate-400"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Start typing your description here..."
+        />
+        
+        {/* Footer info line */}
+        <div className="bg-slate-50 h-6 flex justify-between items-center px-3 border-t text-[10px] text-slate-400">
+          <span>Words: {value.trim() ? value.trim().split(/\s+/).length : 0}</span>
+          <div className="w-2 h-2 border-r border-b border-slate-300 rotate-45 transform cursor-se-resize hover:border-slate-500" />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function ProjectsList() {
   const [, setLocation] = useLocation();
@@ -52,11 +127,17 @@ export default function ProjectsList() {
     name: '',
     customer: '',
     description: '',
-    startDate: '',
+    startDate: new Date().toISOString().split('T')[0],
     deadline: '',
     budget: '',
-    status: 'not-started',
-    tags: ''
+    status: 'in-progress',
+    tags: '',
+    calculateProgress: true,
+    billingType: 'fixed-rate',
+    totalRate: '',
+    estimatedHours: '',
+    members: 'Zedunix ERP Admin',
+    sendEmail: false
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -200,11 +281,17 @@ export default function ProjectsList() {
       name: '',
       customer: '',
       description: '',
-      startDate: '',
+      startDate: new Date().toISOString().split('T')[0],
       deadline: '',
       budget: '',
-      status: 'not-started',
-      tags: ''
+      status: 'in-progress',
+      tags: '',
+      calculateProgress: true,
+      billingType: 'fixed-rate',
+      totalRate: '',
+      estimatedHours: '',
+      members: 'Zedunix ERP Admin',
+      sendEmail: false
     });
     setFormErrors({});
   };
@@ -225,12 +312,18 @@ export default function ProjectsList() {
     setProjectForm({
       name: project.name,
       customer: project.customer,
-      description: '',
+      description: project.description || '',
       startDate: project.startDate,
       deadline: project.deadline,
-      budget: '',
+      budget: project.budget || '',
       status: project.status,
-      tags: project.tags.join(', ')
+      tags: Array.isArray(project.tags) ? project.tags.join(', ') : (project.tags || ''),
+      calculateProgress: project.calculateProgress ?? true,
+      billingType: project.billingType || 'fixed-rate',
+      totalRate: project.totalRate || '',
+      estimatedHours: project.estimatedHours || '',
+      members: project.members_name || 'Zedunix ERP Admin',
+      sendEmail: project.sendEmail || false
     });
     setShowEditDialog(true);
   };
@@ -454,227 +547,425 @@ export default function ProjectsList() {
 
       {/* New Project Dialog */}
       <Dialog open={showNewProjectDialog} onOpenChange={setShowNewProjectDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
-            <DialogDescription>Fill in the project details to create a new project.</DialogDescription>
+        <DialogContent className="max-w-2xl w-[95vw] h-[85vh] max-h-[800px] flex flex-col p-0 overflow-hidden shadow-2xl border-none sm:rounded-2xl bg-white">
+          <DialogHeader className="px-6 py-4 bg-white border-b shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-100">
+                <Plus className="h-6 w-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-slate-800">Create New Project</DialogTitle>
+                <DialogDescription className="text-slate-500 text-xs">Enter the project details below to get started.</DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Project Name *</Label>
-                <Input
-                  id="name"
-                  value={projectForm.name}
-                  onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-                  placeholder="Enter project name"
-                  className={formErrors.name ? 'border-red-500' : ''}
-                />
-                {formErrors.name && <p className="text-xs text-red-500">{formErrors.name}</p>}
+          
+          <ScrollArea className="flex-1 min-h-0 px-6 py-4">
+            <div className="grid gap-6">
+              {/* Basic Information Section */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="name" className="text-xs font-bold text-slate-600 uppercase tracking-tight">Project Name <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="name"
+                    value={projectForm.name}
+                    onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
+                    placeholder="e.g. Website Redesign"
+                    className={`h-10 ${formErrors.name ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-blue-100'}`}
+                  />
+                  {formErrors.name && <p className="text-[10px] font-medium text-red-500 leading-none mt-1">{formErrors.name}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="customer" className="text-xs font-bold text-slate-600 uppercase tracking-tight">Customer <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="customer"
+                    value={projectForm.customer}
+                    onChange={(e) => setProjectForm({ ...projectForm, customer: e.target.value })}
+                    placeholder="e.g. Acme Corp"
+                    className={`h-10 ${formErrors.customer ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-blue-100'}`}
+                  />
+                  {formErrors.customer && <p className="text-[10px] font-medium text-red-500 leading-none mt-1">{formErrors.customer}</p>}
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="customer">Customer *</Label>
+
+              {/* Progress & Billing Section */}
+              <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-1.5 rounded-lg ${projectForm.calculateProgress ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-400'}`}>
+                      <CheckCircle className="h-4 w-4" />
+                    </div>
+                    <Label htmlFor="calculateProgress" className="text-sm font-semibold text-slate-700 cursor-pointer">
+                      Calculate progress through tasks
+                    </Label>
+                  </div>
+                  <Checkbox 
+                    id="calculateProgress" 
+                    checked={projectForm.calculateProgress}
+                    onCheckedChange={(checked) => setProjectForm({ ...projectForm, calculateProgress: !!checked })}
+                    className="h-5 w-5 rounded-md border-slate-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span>Project Progress</span>
+                    <span>0%</span>
+                  </div>
+                  <Progress value={0} className="h-2 bg-slate-200" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="billingType" className="text-xs font-bold text-slate-600 uppercase">Billing Type <span className="text-red-500">*</span></Label>
+                    <Select 
+                      value={projectForm.billingType} 
+                      onValueChange={(value) => setProjectForm({ ...projectForm, billingType: value })}
+                    >
+                      <SelectTrigger id="billingType" className="h-10 border-slate-200 bg-white shadow-sm">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed-rate">Fixed Rate</SelectItem>
+                        <SelectItem value="project-hours">Project Hours</SelectItem>
+                        <SelectItem value="task-hours">Task Hours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="status" className="text-xs font-bold text-slate-600 uppercase">Status</Label>
+                    <Select 
+                      value={projectForm.status} 
+                      onValueChange={(value) => setProjectForm({ ...projectForm, status: value })}
+                    >
+                      <SelectTrigger id="status" className="h-10 border-slate-200 bg-white shadow-sm">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="not-started">Not Started</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="on-hold">On Hold</SelectItem>
+                        <SelectItem value="finished">Finished</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial & Team Section */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="totalRate" className="text-xs font-bold text-slate-600 uppercase">Total Rate</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">$</span>
+                    <Input
+                      id="totalRate"
+                      value={projectForm.totalRate}
+                      onChange={(e) => setProjectForm({ ...projectForm, totalRate: e.target.value })}
+                      placeholder="0.00"
+                      className="pl-7 h-10 border-slate-200 shadow-sm"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="estimatedHours" className="text-xs font-bold text-slate-600 uppercase">Est. Hours</Label>
+                  <Input
+                    id="estimatedHours"
+                    value={projectForm.estimatedHours}
+                    onChange={(e) => setProjectForm({ ...projectForm, estimatedHours: e.target.value })}
+                    placeholder="0"
+                    className="h-10 border-slate-200 shadow-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="members" className="text-xs font-bold text-slate-600 uppercase">Assignee</Label>
+                  <Select 
+                    value={projectForm.members} 
+                    onValueChange={(value) => setProjectForm({ ...projectForm, members: value })}
+                  >
+                    <SelectTrigger id="members" className="h-10 border-slate-200 bg-white shadow-sm font-medium">
+                      <SelectValue placeholder="Select member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Zedunix ERP Admin">Zedunix ERP Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Timeline Section */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="startDate" className="text-xs font-bold text-slate-600 uppercase">Start Date <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="startDate"
+                    type="date"
+                    value={projectForm.startDate}
+                    onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
+                    className={`h-10 border-slate-200 ${formErrors.startDate ? 'border-red-500' : ''}`}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="deadline" className="text-xs font-bold text-slate-600 uppercase">Deadline</Label>
+                  <Input
+                    id="deadline"
+                    type="date"
+                    value={projectForm.deadline}
+                    onChange={(e) => setProjectForm({ ...projectForm, deadline: e.target.value })}
+                    className={`h-10 border-slate-200 ${formErrors.deadline ? 'border-red-500' : ''}`}
+                  />
+                </div>
+              </div>
+
+              {/* Tags Section */}
+              <div className="space-y-1.5">
+                <Label htmlFor="tags" className="text-xs font-bold text-slate-600 uppercase flex items-center gap-1.5">
+                  <Tag className="h-3 w-3 text-blue-500" /> Tags
+                </Label>
                 <Input
-                  id="customer"
-                  value={projectForm.customer}
-                  onChange={(e) => setProjectForm({ ...projectForm, customer: e.target.value })}
-                  placeholder="Enter customer name"
-                  className={formErrors.customer ? 'border-red-500' : ''}
+                  id="tags"
+                  value={projectForm.tags}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Comma separated tags..."
+                  className="border-dashed border border-slate-300 h-10 bg-slate-50 font-medium"
                 />
-                {formErrors.customer && <p className="text-xs text-red-500">{formErrors.customer}</p>}
+              </div>
+
+              {/* Description Section */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-slate-600 uppercase">Description</Label>
+                <RichTextEditor 
+                  value={projectForm.description} 
+                  onChange={(val) => setProjectForm({ ...projectForm, description: val })} 
+                />
+              </div>
+
+              {/* Email Notification */}
+              <div className="flex items-center space-x-2.5 p-3 rounded-xl bg-blue-50/40 border border-blue-100 shadow-sm">
+                <Checkbox 
+                  id="sendEmail" 
+                  checked={projectForm.sendEmail}
+                  onCheckedChange={(checked) => setProjectForm({ ...projectForm, sendEmail: !!checked })}
+                  className="h-4 w-4 border-blue-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 shadow-none"
+                />
+                <label
+                  htmlFor="sendEmail"
+                  className="text-xs font-semibold text-blue-800 cursor-pointer flex flex-col"
+                >
+                  Send Email Notification
+                  <span className="text-[10px] font-normal text-blue-600">Notify team members about the new project.</span>
+                </label>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={projectForm.description}
-                onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                placeholder="Enter project description"
-                rows={3}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date *</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={projectForm.startDate}
-                  onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                  className={formErrors.startDate ? 'border-red-500' : ''}
-                />
-                {formErrors.startDate && <p className="text-xs text-red-500">{formErrors.startDate}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="deadline">Deadline *</Label>
-                <Input
-                  id="deadline"
-                  type="date"
-                  value={projectForm.deadline}
-                  onChange={(e) => setProjectForm({ ...projectForm, deadline: e.target.value })}
-                  className={formErrors.deadline ? 'border-red-500' : ''}
-                />
-                {formErrors.deadline && <p className="text-xs text-red-500">{formErrors.deadline}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="budget">Budget ($)</Label>
-                <Input
-                  id="budget"
-                  type="number"
-                  value={projectForm.budget}
-                  onChange={(e) => setProjectForm({ ...projectForm, budget: e.target.value })}
-                  placeholder="Enter budget amount"
-                  className={formErrors.budget ? 'border-red-500' : ''}
-                />
-                {formErrors.budget && <p className="text-xs text-red-500">{formErrors.budget}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select value={projectForm.status} onValueChange={(value) => setProjectForm({ ...projectForm, status: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="not-started">Not Started</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="on-hold">On Hold</SelectItem>
-                    <SelectItem value="finished">Finished</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tags">Tags (comma separated)</Label>
-              <Input
-                id="tags"
-                value={projectForm.tags}
-                onChange={(e) => setProjectForm({ ...projectForm, tags: e.target.value })}
-                placeholder="e.g., Web, UI/UX, Mobile"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowNewProjectDialog(false); resetProjectForm(); }}>
+          </ScrollArea>
+          
+          <DialogFooter className="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+            <Button variant="outline" onClick={() => { setShowNewProjectDialog(false); resetProjectForm(); }} className="h-10 px-6 border-slate-200 text-slate-600 font-bold hover:bg-slate-100">
               Cancel
             </Button>
-            <Button onClick={handleCreateProject}>Create Project</Button>
+            <Button onClick={handleCreateProject} className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100 h-10 px-8 font-bold transition-all transform active:scale-95">
+              Create Project
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Edit Project Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-            <DialogDescription>Update the project details.</DialogDescription>
+        <DialogContent className="max-w-2xl w-[95vw] h-[85vh] max-h-[800px] flex flex-col p-0 overflow-hidden shadow-2xl border-none sm:rounded-2xl bg-white">
+          <DialogHeader className="px-6 py-4 bg-white border-b shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-100">
+                <CheckCircle className="h-6 w-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-slate-800">Edit Project</DialogTitle>
+                <DialogDescription className="text-slate-500 text-xs">Modify the existing project details.</DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Project Name *</Label>
-                <Input
-                  id="edit-name"
-                  value={projectForm.name}
-                  onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-                  placeholder="Enter project name"
-                  className={formErrors.name ? 'border-red-500' : ''}
-                />
-                {formErrors.name && <p className="text-xs text-red-500">{formErrors.name}</p>}
+
+          <ScrollArea className="flex-1 min-h-0 px-6 py-4">
+            <div className="grid gap-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-name" className="text-xs font-bold text-slate-600 uppercase tracking-tight">Project Name <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="edit-name"
+                    value={projectForm.name}
+                    onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
+                    className={`h-10 ${formErrors.name ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-indigo-100'}`}
+                  />
+                  {formErrors.name && <p className="text-[10px] font-medium text-red-500 leading-none mt-1">{formErrors.name}</p>}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-customer" className="text-xs font-bold text-slate-600 uppercase tracking-tight">Customer <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="edit-customer"
+                    value={projectForm.customer}
+                    onChange={(e) => setProjectForm({ ...projectForm, customer: e.target.value })}
+                    className={`h-10 ${formErrors.customer ? 'border-red-500 bg-red-50/30' : 'border-slate-200 focus:ring-2 focus:ring-indigo-100'}`}
+                  />
+                  {formErrors.customer && <p className="text-[10px] font-medium text-red-500 leading-none mt-1">{formErrors.customer}</p>}
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-customer">Customer *</Label>
+
+              <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`p-1.5 rounded-lg ${projectForm.calculateProgress ? 'bg-green-100 text-green-600' : 'bg-slate-200 text-slate-400'}`}>
+                      <CheckCircle className="h-4 w-4" />
+                    </div>
+                    <Label htmlFor="edit-calculateProgress" className="text-sm font-semibold text-slate-700 cursor-pointer">
+                      Calculate progress through tasks
+                    </Label>
+                  </div>
+                  <Checkbox 
+                    id="edit-calculateProgress" 
+                    checked={projectForm.calculateProgress}
+                    onCheckedChange={(checked) => setProjectForm({ ...projectForm, calculateProgress: !!checked })}
+                    className="h-5 w-5 rounded-md border-slate-300 data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    <span className="flex items-center gap-1">CURRENT STATUS</span>
+                    <span>{selectedProject?.progress || 0}%</span>
+                  </div>
+                  <Progress value={selectedProject?.progress || 0} className="h-2 bg-slate-200" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="edit-billingType" className="text-xs font-bold text-slate-600 uppercase">Billing Type <span className="text-red-500">*</span></Label>
+                    <Select 
+                      value={projectForm.billingType} 
+                      onValueChange={(value) => setProjectForm({ ...projectForm, billingType: value })}
+                    >
+                      <SelectTrigger id="edit-billingType" className="h-10 border-slate-200 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fixed-rate">Fixed Rate</SelectItem>
+                        <SelectItem value="project-hours">Project Hours</SelectItem>
+                        <SelectItem value="task-hours">Task Hours</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="edit-status" className="text-xs font-bold text-slate-600 uppercase">Project Status</Label>
+                    <Select 
+                      value={projectForm.status} 
+                      onValueChange={(value) => setProjectForm({ ...projectForm, status: value })}
+                    >
+                      <SelectTrigger id="edit-status" className="h-10 border-slate-200 bg-white">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="not-started">Not Started</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="on-hold">On Hold</SelectItem>
+                        <SelectItem value="finished">Finished</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-totalRate" className="text-xs font-bold text-slate-600 uppercase">Total Rate</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">$</span>
+                    <Input
+                      id="edit-totalRate"
+                      value={projectForm.totalRate}
+                      onChange={(e) => setProjectForm({ ...projectForm, totalRate: e.target.value })}
+                      className="pl-7 h-10 border-slate-200 shadow-sm"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-estimatedHours" className="text-xs font-bold text-slate-600 uppercase">Est. Hours</Label>
+                  <Input
+                    id="edit-estimatedHours"
+                    value={projectForm.estimatedHours}
+                    onChange={(e) => setProjectForm({ ...projectForm, estimatedHours: e.target.value })}
+                    className="h-10 border-slate-200 shadow-sm"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-members" className="text-xs font-bold text-slate-600 uppercase">Assignee</Label>
+                  <Select 
+                    value={projectForm.members} 
+                    onValueChange={(value) => setProjectForm({ ...projectForm, members: value })}
+                  >
+                    <SelectTrigger id="edit-members" className="h-10 border-slate-200 bg-white shadow-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Zedunix ERP Admin">Zedunix ERP Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-startDate" className="text-xs font-bold text-slate-600 uppercase">Start Date <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="edit-startDate"
+                    type="date"
+                    value={projectForm.startDate}
+                    onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
+                    className="h-10 border-slate-200"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-deadline" className="text-xs font-bold text-slate-600 uppercase">Deadline</Label>
+                  <Input
+                    id="edit-deadline"
+                    type="date"
+                    value={projectForm.deadline}
+                    onChange={(e) => setProjectForm({ ...projectForm, deadline: e.target.value })}
+                    className="h-10 border-slate-200"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="edit-tags" className="text-xs font-bold text-slate-600 uppercase flex items-center gap-1.5">
+                  <Tag className="h-3 w-3 text-indigo-400" /> Tags
+                </Label>
                 <Input
-                  id="edit-customer"
-                  value={projectForm.customer}
-                  onChange={(e) => setProjectForm({ ...projectForm, customer: e.target.value })}
-                  placeholder="Enter customer name"
-                  className={formErrors.customer ? 'border-red-500' : ''}
+                  id="edit-tags"
+                  value={projectForm.tags}
+                  onChange={(e) => setProjectForm({ ...projectForm, tags: e.target.value })}
+                  placeholder="e.g. Design, Frontend"
+                  className="border-dashed border border-slate-300 h-10 bg-slate-50"
                 />
-                {formErrors.customer && <p className="text-xs text-red-500">{formErrors.customer}</p>}
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-slate-600 uppercase">Description</Label>
+                <RichTextEditor 
+                  value={projectForm.description} 
+                  onChange={(val) => setProjectForm({ ...projectForm, description: val })} 
+                />
               </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-description">Description</Label>
-              <Textarea
-                id="edit-description"
-                value={projectForm.description}
-                onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                placeholder="Enter project description"
-                rows={3}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-startDate">Start Date *</Label>
-                <Input
-                  id="edit-startDate"
-                  type="date"
-                  value={projectForm.startDate}
-                  onChange={(e) => setProjectForm({ ...projectForm, startDate: e.target.value })}
-                  className={formErrors.startDate ? 'border-red-500' : ''}
-                />
-                {formErrors.startDate && <p className="text-xs text-red-500">{formErrors.startDate}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-deadline">Deadline *</Label>
-                <Input
-                  id="edit-deadline"
-                  type="date"
-                  value={projectForm.deadline}
-                  onChange={(e) => setProjectForm({ ...projectForm, deadline: e.target.value })}
-                  className={formErrors.deadline ? 'border-red-500' : ''}
-                />
-                {formErrors.deadline && <p className="text-xs text-red-500">{formErrors.deadline}</p>}
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-budget">Budget ($)</Label>
-                <Input
-                  id="edit-budget"
-                  type="number"
-                  value={projectForm.budget}
-                  onChange={(e) => setProjectForm({ ...projectForm, budget: e.target.value })}
-                  placeholder="Enter budget amount"
-                  className={formErrors.budget ? 'border-red-500' : ''}
-                />
-                {formErrors.budget && <p className="text-xs text-red-500">{formErrors.budget}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-status">Status</Label>
-                <Select value={projectForm.status} onValueChange={(value) => setProjectForm({ ...projectForm, status: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="not-started">Not Started</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="on-hold">On Hold</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                    <SelectItem value="finished">Finished</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-tags">Tags (comma separated)</Label>
-              <Input
-                id="edit-tags"
-                value={projectForm.tags}
-                onChange={(e) => setProjectForm({ ...projectForm, tags: e.target.value })}
-                placeholder="e.g., Web, UI/UX, Mobile"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowEditDialog(false); resetProjectForm(); setSelectedProject(null); }}>
-              Cancel
+          </ScrollArea>
+          
+          <DialogFooter className="px-6 py-4 bg-slate-50 border-t flex justify-end gap-3">
+            <Button variant="outline" onClick={() => { setShowEditDialog(false); resetProjectForm(); setSelectedProject(null); }} className="h-10 px-6 border-slate-200 text-slate-600 font-bold hover:bg-slate-100">
+              Cancel Updates
             </Button>
-            <Button onClick={handleUpdateProject}>Update Project</Button>
+            <Button onClick={handleUpdateProject} className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 h-10 px-8 font-bold transition-all transform active:scale-95">
+              Update Project
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

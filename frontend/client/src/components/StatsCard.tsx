@@ -11,6 +11,7 @@ interface StatsCardProps {
   iconColor?: string;
   iconBg?: string;
   delay?: number;
+  description?: string;
 }
 
 export default function StatsCard({
@@ -22,6 +23,7 @@ export default function StatsCard({
   iconColor = 'text-indigo-600',
   iconBg = 'bg-indigo-100 dark:bg-indigo-900',
   delay = 0,
+  description,
 }: StatsCardProps) {
   const changeColors = {
     positive: 'text-green-600 dark:text-green-400',
@@ -70,6 +72,9 @@ export default function StatsCard({
           {changeType === 'negative' && '↘'}
           {change}
         </motion.p>
+      )}
+      {description && (
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">{description}</p>
       )}
     </motion.div>
   );

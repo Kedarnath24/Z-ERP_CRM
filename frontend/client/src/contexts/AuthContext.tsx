@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 
 type AuthContextType = {

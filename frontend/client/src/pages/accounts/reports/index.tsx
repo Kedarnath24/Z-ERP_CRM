@@ -1,80 +1,249 @@
+import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileBarChart, Download } from 'lucide-react';
+import { 
+  FileBarChart, Download, Calendar, Filter, 
+  TrendingUp, TrendingDown, DollarSign, PieChart,
+  Target, Zap, ShieldCheck, ArrowRight, FileText,
+  Activity, Briefcase, Globe, Layers, BarChart3,
+  Search, ChevronRight, Settings2, Share2, Printer, Plus
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export default function Reports({ includeLayout = true }: any) {
+  const { toast } = useToast();
+  const [period, setPeriod] = useState("q4-2025");
+  const [isGenerating, setIsGenerating] = useState<string | null>(null);
+
+  const handleGenerate = (name: string) => {
+    setIsGenerating(name);
+    setTimeout(() => {
+      setIsGenerating(null);
+      toast({
+        title: "Report Generated",
+        description: `${name} has been compiled and is ready for download.`,
+      });
+    }, 1500);
+  };
+
+  const reportModules = [
+    { title: "Profit & Loss", icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-50", desc: "Consolidated revenue vs. expenditure analytics." },
+    { title: "Balance Sheet", icon: Layers, color: "text-blue-500", bg: "bg-blue-50", desc: "Equity, assets, and liability status." },
+    { title: "Cash Flow", icon: Activity, color: "text-amber-500", bg: "bg-amber-50", desc: "Liquidity and cash movement tracking." },
+    { title: "Tax Summary", icon: ShieldCheck, color: "text-purple-500", bg: "bg-purple-50", desc: "VAT and corporate tax liability estimates." },
+    { title: "Vendor Spend", icon: Briefcase, color: "text-red-500", bg: "bg-red-50", desc: "Procurement trends and vendor efficiency." },
+    { title: "Aging Receivables", icon: Zap, color: "text-orange-500", bg: "bg-orange-50", desc: "Invoice collection performance metrics." },
+  ];
+
   const content = (
-    <div className="p-6 space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-          <FileBarChart className="h-6 w-6 text-blue-600" />
-          Reports
-        </h2>
-        <p className="text-sm text-slate-600 mt-1">Financial statements and accounting reports</p>
+    <div className="p-6 space-y-8 bg-slate-50/50 min-h-screen">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <div className="h-10 w-10 rounded-xl bg-slate-900 flex items-center justify-center text-white shadow-lg shadow-slate-200">
+               <FileBarChart className="h-6 w-6" />
+            </div>
+            <h2 className="text-3xl font-black text-slate-800 tracking-tight">Financial Intelligence</h2>
+          </div>
+          <p className="text-slate-500 font-medium ml-12">Actionable insights and comprehensive statements</p>
+        </div>
+
+        <div className="flex items-center gap-3 bg-white p-1.5 rounded-2xl border shadow-sm self-start">
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[180px] border-none shadow-none focus:ring-0 font-bold text-slate-600">
+              <Calendar className="h-4 w-4 mr-2 text-slate-400" />
+              <SelectValue placeholder="Period" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+               <SelectItem value="q4-2025">Q4 2025 (Active)</SelectItem>
+               <SelectItem value="q3-2025">Q3 2025</SelectItem>
+               <SelectItem value="ytd-2025">Year to Date 2025</SelectItem>
+               <SelectItem value="fy-2024">Fiscal Year 2024</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="w-[1px] h-6 bg-slate-100" />
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-slate-50 text-slate-400">
+            <Settings2 className="h-4 w-4" />
+          </Button>
+          <Button className="h-9 px-5 bg-slate-900 hover:bg-slate-800 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl shadow-slate-200">
+            Refresh Data
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="text-base">Profit & Loss Statement</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-600 mb-4">
-              View revenue, expenses, and net profit/loss for any period
-            </p>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Download className="h-4 w-4" />
-              Generate Report
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="text-base">Balance Sheet</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-600 mb-4">
-              Assets, liabilities, and equity snapshot
-            </p>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Download className="h-4 w-4" />
-              Generate Report
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="text-base">Cash Flow Statement</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-600 mb-4">
-              Track cash inflows and outflows
-            </p>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Download className="h-4 w-4" />
-              Generate Report
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="text-base">Daily/Weekly/Monthly Reports</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-slate-600 mb-4">
-              Summary reports for different time periods
-            </p>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Download className="h-4 w-4" />
-              Generate Report
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: "Gross Revenue", value: "$2.4M", trend: "+12.5%", positive: true },
+          { label: "Net Margin", value: "32.4%", trend: "+2.1%", positive: true },
+          { label: "Operating Exp", value: "$840K", trend: "-4.2%", positive: true },
+          { label: "Tax Liability", value: "$412K", trend: "+0.8%", positive: false },
+        ].map((kpi, i) => (
+          <Card key={i} className="border-none shadow-sm hover:shadow-md transition-all group cursor-default overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-500" />
+            <CardContent className="p-6 relative">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{kpi.label}</p>
+              <div className="flex items-end justify-between">
+                <span className="text-3xl font-black text-slate-800">{kpi.value}</span>
+                <Badge className={cn(
+                  "font-black text-[10px] border-none",
+                  kpi.positive ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
+                )}>
+                  {kpi.trend}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+         <Card className="lg:col-span-2 border-none shadow-sm bg-white overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-slate-50 px-8 py-6">
+               <div>
+                  <CardTitle className="text-xl font-black text-slate-800">Revenue Performance</CardTitle>
+                  <CardDescription className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Rolling 6-Month Comparison</CardDescription>
+               </div>
+               <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full">
+                     <div className="h-2 w-2 rounded-full bg-slate-900" />
+                     <span className="text-[10px] font-black text-slate-600">Actual</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-50 rounded-full">
+                     <div className="h-2 w-2 rounded-full bg-slate-300" />
+                     <span className="text-[10px] font-black text-slate-600">Budget</span>
+                  </div>
+               </div>
+            </CardHeader>
+            <CardContent className="p-8">
+               <div className="h-[300px] w-full flex items-end justify-between gap-4 px-4 pb-4 border-b border-slate-100">
+                  {[65, 45, 80, 55, 90, 75].map((h, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group cursor-pointer">
+                      <div className="w-full flex justify-center gap-1 items-end h-full">
+                        <div 
+                          className="w-4 rounded-t-lg bg-slate-200 group-hover:bg-slate-300 transition-all"
+                          style={{ height: `${h-10}%` }}
+                        />
+                        <div 
+                          className="w-4 rounded-t-lg bg-slate-900 group-hover:bg-slate-800 transition-all shadow-lg group-hover:shadow-slate-200"
+                          style={{ height: `${h}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase">{['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]}</span>
+                    </div>
+                  ))}
+               </div>
+            </CardContent>
+         </Card>
+
+         <Card className="border-none shadow-sm bg-slate-900 text-white overflow-hidden flex flex-col">
+            <CardHeader className="px-8 py-8">
+               <CardTitle className="text-xl font-black">Asset Allocations</CardTitle>
+               <CardDescription className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Current Resource Distribution</CardDescription>
+            </CardHeader>
+            <CardContent className="px-8 flex-1 flex flex-col justify-center">
+               <div className="relative h-48 w-48 mx-auto mb-8 flex items-center justify-center">
+                  <svg className="h-full w-full rotate-[-90deg]">
+                     <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="24" fill="transparent" className="text-slate-800" />
+                     <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="24" fill="transparent" strokeDasharray="502.4" strokeDashoffset="120" className="text-emerald-500" />
+                     <circle cx="96" cy="96" r="80" stroke="currentColor" strokeWidth="24" fill="transparent" strokeDasharray="502.4" strokeDashoffset="350" className="text-blue-500" />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                     <span className="text-3xl font-black">74%</span>
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Liquid</span>
+                  </div>
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                     <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                        <span className="text-xs font-black uppercase text-slate-300">Operations</span>
+                     </div>
+                     <p className="text-lg font-black ml-4">$1.2M</p>
+                  </div>
+                  <div className="space-y-1">
+                     <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-blue-500" />
+                        <span className="text-xs font-black uppercase text-slate-300">Investments</span>
+                     </div>
+                     <p className="text-lg font-black ml-4">$450K</p>
+                  </div>
+               </div>
+            </CardContent>
+         </Card>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {reportModules.map((report, i) => (
+          <Card key={i} className="border-none shadow-sm bg-white hover:shadow-xl hover:-translate-y-1 transition-all group overflow-hidden">
+            <CardHeader className="p-6">
+              <div className="flex items-start justify-between">
+                <div className={cn("p-3 rounded-2xl shadow-sm", report.bg)}>
+                  <report.icon className={cn("h-6 w-6", report.color)} />
+                </div>
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-slate-50 border border-slate-100">
+                    <Printer className="h-3.5 w-3.5 text-slate-400" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-slate-50 border border-slate-100">
+                    <Share2 className="h-3.5 w-3.5 text-slate-400" />
+                  </Button>
+                </div>
+              </div>
+              <div className="mt-4">
+                <CardTitle className="text-lg font-black text-slate-800">{report.title}</CardTitle>
+                <CardDescription className="text-sm font-medium text-slate-500 mt-1">{report.desc}</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="px-6 pb-6 pt-0 border-t border-slate-50 mt-4 pt-4">
+              <Button 
+                variant="ghost" 
+                className="w-full justify-between h-10 px-0 group-hover:px-4 rounded-xl group-hover:bg-slate-50 transition-all font-bold text-slate-700"
+                onClick={() => handleGenerate(report.title)}
+                disabled={isGenerating === report.title}
+              >
+                <span className="flex items-center gap-2">
+                   {isGenerating === report.title ? (
+                     <div className="h-4 w-4 border-2 border-slate-300 border-t-slate-800 rounded-full animate-spin" />
+                   ) : (
+                     <Download className="h-4 w-4 text-slate-400" />
+                   )}
+                   {isGenerating === report.title ? "Generating..." : "Download Report"}
+                </span>
+                <ChevronRight className="h-4 w-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="border-none shadow-xl bg-gradient-to-r from-slate-900 to-indigo-950 text-white overflow-hidden relative">
+         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30 pointer-events-none" />
+         <div className="absolute top-0 right-0 p-12 opacity-5">
+            <Settings2 className="h-48 w-48 rotate-12" />
+         </div>
+         <CardContent className="p-10 relative z-10">
+            <div className="max-w-2xl space-y-4">
+               <Badge className="bg-indigo-500/20 text-indigo-200 border-none font-black text-[10px] uppercase tracking-widest px-3 py-1">Enterprise Labs</Badge>
+               <h3 className="text-3xl font-black tracking-tight">Custom Analytics Builder</h3>
+               <p className="text-slate-400 font-medium leading-relaxed">
+                  Generate hyper-specific datasets by combining multiple fiscal variables. Export into PowerBI, Excel, or high-fidelity PDF formats with customized branding.
+               </p>
+               <div className="flex flex-wrap gap-4 pt-4">
+                  <Button className="h-12 px-8 rounded-2xl bg-white text-slate-950 hover:bg-slate-100 font-black shadow-lg shadow-black/20 gap-2">
+                     <Plus className="h-5 w-5" /> Launch Builder
+                  </Button>
+                  <Button variant="outline" className="h-12 px-8 rounded-2xl border-white/20 hover:bg-white/10 text-white font-black gap-2">
+                     <FileText className="h-5 w-5" /> Explore Templates
+                  </Button>
+               </div>
+            </div>
+         </CardContent>
+      </Card>
     </div>
   );
 
@@ -86,3 +255,4 @@ export default function Reports({ includeLayout = true }: any) {
     </DashboardLayout>
   );
 }
+
