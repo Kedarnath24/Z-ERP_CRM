@@ -44,19 +44,108 @@ export default function ProjectDetail() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Mock project data
-  const project = {
-    id: params?.id,
-    name: 'E-Commerce Platform Redesign',
-    customer: 'TechCorp Solutions',
-    status: 'in-progress',
-    progress: 65,
-    budget: 150000,
-    spent: 97500,
-    teamMembers: 8,
-    startDate: '2026-01-10',
-    deadline: '2026-03-15'
-  };
+  // Mock project data (synchronized with projects-list.tsx)
+  const projects = [
+    {
+      id: "1",
+      name: 'E-Commerce Platform Redesign',
+      customer: 'TechCorp Solutions',
+      status: 'in-progress',
+      progress: 65,
+      budget: 150000,
+      spent: 97500,
+      teamMembers: 8,
+      startDate: '2026-01-10',
+      deadline: '2026-03-15'
+    },
+    {
+      id: "2",
+      name: 'Mobile Banking App',
+      customer: 'FirstBank Ltd',
+      status: 'in-progress',
+      progress: 78,
+      budget: 220000,
+      spent: 165000,
+      teamMembers: 12,
+      startDate: '2025-12-01',
+      deadline: '2026-02-28'
+    },
+    {
+      id: "3",
+      name: 'CRM System Integration',
+      customer: 'SalesForce Pro',
+      status: 'not-started',
+      progress: 0,
+      budget: 85000,
+      spent: 0,
+      teamMembers: 6,
+      startDate: '2026-01-05',
+      deadline: '2026-04-20'
+    },
+    {
+      id: "4",
+      name: 'Data Analytics Dashboard',
+      customer: 'Analytics Inc',
+      status: 'finished',
+      progress: 100,
+      budget: 110000,
+      spent: 105000,
+      teamMembers: 5,
+      startDate: '2025-11-15',
+      deadline: '2026-01-30'
+    },
+    {
+      id: "5",
+      name: 'Supply Chain Management',
+      customer: 'LogiTech Corp',
+      status: 'on-hold',
+      progress: 45,
+      budget: 195000,
+      spent: 88000,
+      teamMembers: 10,
+      startDate: '2025-10-20',
+      deadline: '2026-02-10'
+    },
+    {
+      id: "6",
+      name: 'Cloud Migration Project',
+      customer: 'CloudFirst Systems',
+      status: 'finished',
+      progress: 100,
+      budget: 300000,
+      spent: 295000,
+      teamMembers: 7,
+      startDate: '2025-09-01',
+      deadline: '2025-12-31'
+    },
+    {
+      id: "7",
+      name: 'AI Chatbot Development',
+      customer: 'AI Innovations',
+      status: 'in-progress',
+      progress: 25,
+      budget: 175000,
+      spent: 45000,
+      teamMembers: 9,
+      startDate: '2026-01-15',
+      deadline: '2026-05-30'
+    },
+    {
+      id: "8",
+      name: 'Security Audit Platform',
+      customer: 'SecureNet Ltd',
+      status: 'cancelled',
+      progress: 30,
+      budget: 95000,
+      spent: 35000,
+      teamMembers: 4,
+      startDate: '2025-12-10',
+      deadline: '2026-03-01'
+    }
+  ];
+
+  // Find project by ID or use default
+  const project = projects.find(p => p.id === params?.id) || projects[0];
 
   const statusConfig: Record<string, { label: string; class: string }> = {
     'not-started': { label: 'Not Started', class: 'bg-slate-100 text-slate-700 border-slate-200' },

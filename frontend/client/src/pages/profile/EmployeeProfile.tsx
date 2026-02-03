@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Download, Edit, Camera, Calendar as CalendarIcon, Clock, CheckCircle, XCircle, FileText, Shield, Briefcase } from 'lucide-react';
+import { Download, Edit, Camera, Calendar as CalendarIcon, Clock, CheckCircle, XCircle, FileText, Shield, Briefcase, Activity, CheckSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -324,7 +324,7 @@ export default function EmployeeProfile() {
                 <div className="flex items-center gap-4 text-sm">
                   <span className="flex items-center gap-1">
                     <Briefcase className="w-4 h-4" />
-                    {employee.employeeId}
+                    {employee.id}
                   </span>
                   <span>{employee.department}</span>
                   <Badge variant="default">{employee.status}</Badge>
@@ -641,21 +641,25 @@ export default function EmployeeProfile() {
               title="Total Leaves"
               value={leaveBalance.total.toString()}
               description="Annual allocation"
+              icon={CalendarIcon}
             />
             <StatsCard
               title="Used"
               value={leaveBalance.used.toString()}
               description="Days taken"
+              icon={CheckSquare}
             />
             <StatsCard
               title="Balance"
               value={(leaveBalance.total - leaveBalance.used).toString()}
               description="Days remaining"
+              icon={Activity}
             />
             <StatsCard
               title="Pending Requests"
               value={leaveBalance.pending.toString()}
               description="Awaiting approval"
+              icon={Clock}
             />
           </div>
 

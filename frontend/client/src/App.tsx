@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import DashboardOverview from "@/pages/dashboard-overview";
 import NotFound from "@/pages/not-found";
 
@@ -151,7 +152,7 @@ function AppRouter() {
       <Route path="/accounts" component={AccountsModule} />
 
       {/* Main Module Routes */}
-      <Route path="/projects/*" component={ProjectsList} />
+      <Route path="/projects/:id" component={ProjectDetail} />
       <Route path="/projects" component={ProjectsList} />
       
       {/* HRM Module Routes */}
@@ -297,12 +298,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <WorkspaceProvider>
+          <NotificationProvider>
             <TooltipProvider>
               <ErrorBoundary>
                 <Toaster />
                 <AppRouter />
               </ErrorBoundary>
             </TooltipProvider>
+          </NotificationProvider>
         </WorkspaceProvider>
       </AuthProvider>
     </QueryClientProvider>
