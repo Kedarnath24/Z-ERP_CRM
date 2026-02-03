@@ -85,31 +85,6 @@ const RichTextEditor = ({ value, onChange }: { value: string; onChange: (val: st
     </div>
   );
 };
-          <div className="h-6 w-[1px] bg-slate-200 mx-1" />
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"><List className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"><ListOrdered className="h-4 w-4" /></Button>
-          <div className="h-6 w-[1px] bg-slate-200 mx-1" />
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"><Undo2 className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all"><Redo2 className="h-4 w-4" /></Button>
-        </div>
-
-        {/* Editor Area */}
-        <textarea
-          className="w-full h-40 p-4 text-sm focus:outline-none resize-none bg-slate-50/30 placeholder:text-slate-400"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Start typing your description here..."
-        />
-        
-        {/* Footer info line */}
-        <div className="bg-slate-50 h-6 flex justify-between items-center px-3 border-t text-[10px] text-slate-400">
-          <span>Words: {value.trim() ? value.trim().split(/\s+/).length : 0}</span>
-          <div className="w-2 h-2 border-r border-b border-slate-300 rotate-45 transform cursor-se-resize hover:border-slate-500" />
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default function ProjectsList() {
   const [, setLocation] = useLocation();

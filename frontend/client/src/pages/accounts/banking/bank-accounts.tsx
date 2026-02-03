@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Plus, 
   Search,
@@ -295,6 +296,24 @@ export default function BankAccounts() {
     exportToExcel(data, 'bank_accounts');
   };
 
+  const handleExportPDF = () => {
+    const headers = ['Account ID', 'Bank Name', 'Account Holder', 'Account Type', 'Account Number', 'Routing Number', 'Balance', 'Currency', 'Status', 'Branch', 'Last Reconciled'];
+    const data = filteredAccounts.map(acc => [
+      acc.id,
+      acc.bankName,
+      acc.accountHolderName,
+      acc.accountType,
+      acc.accountNumber,
+      acc.routingNumber,
+      acc.balance.toString(),
+      acc.currency,
+      acc.status,
+      acc.branch,
+      acc.lastReconciledDate || ''
+    ]);
+    exportToPDF('Bank Accounts Report', headers, data, 'bank_accounts');
+  };
+
   // ... rest of logic stays similar
 
   const chartData = accounts.map(acc => ({
@@ -579,6 +598,7 @@ export default function BankAccounts() {
                 </Button>
               </DialogFooter>
             </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -1037,7 +1057,7 @@ export default function BankAccounts() {
                              <p className="text-white/60 text-[10px] font-medium max-w-[200px]">Last synchronized with core ledger on {selectedAccount?.lastReconciledDate || 'N/A'}</p>
                           </div>
                           <Button 
-                            onClick={handleReconcile}
+                            onClick={() => selectedAccount && handleReconcile(selectedAccount.id)}
                             className="bg-white text-slate-900 hover:bg-blue-50 font-black text-[10px] uppercase tracking-widest h-8 px-5 transition-all active:scale-95"
                           >
                             Reconcile Now
