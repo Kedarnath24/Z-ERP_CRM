@@ -879,25 +879,21 @@ export default function VendorsLanding() {
         <StatsCard
           title="Total Vendors"
           value={totalVendors.toString()}
-          description="All registered vendors"
           icon={Users}
         />
         <StatsCard
           title="Active Vendors"
           value={activeVendors.toString()}
-          description="Currently active"
           icon={TrendingUp}
         />
         <StatsCard
           title="Total Outstanding"
           value={`$${totalOutstanding.toLocaleString()}`}
-          description="Pending payments"
           icon={AlertCircle}
         />
         <StatsCard
           title="Total Paid"
           value={`$${totalPaid.toLocaleString()}`}
-          description="This period"
           icon={DollarSign}
         />
       </div>
@@ -1093,13 +1089,11 @@ export default function VendorsLanding() {
             <StatsCard
               title="Total Paid"
               value={`$${totalPaid.toLocaleString()}`}
-              description="Completed payments"
               icon={DollarSign}
             />
             <StatsCard
               title="Total Bills"
               value={bills.length.toString()}
-              description="All bills"
               icon={FileText}
             />
           </div>

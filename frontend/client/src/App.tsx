@@ -154,6 +154,15 @@ function AppRouter() {
       <Route path="/projects/*" component={ProjectsList} />
       <Route path="/projects" component={ProjectsList} />
       
+      {/* HRM Module Routes */}
+      <Route path="/hrm/employees" component={HRMEmployees} />
+      <Route path="/hrm/attendance" component={HRMAttendance} />
+      <Route path="/hrm/payroll" component={HRMPayroll} />
+      <Route path="/hrm/insurance" component={HRMInsurance} />
+      <Route path="/hrm/performance" component={HRMPerformance} />
+      <Route path="/hrm/letters" component={HRMLetters} />
+      <Route path="/hrm/travel-expense" component={HRMTravelExpense} />
+      <Route path="/hrm/automation" component={HRMAutomation} />
       <Route path="/hrm/*" component={HRMDashboard} />
       <Route path="/hrm" component={HRMDashboard} />
       
@@ -228,6 +237,8 @@ function AppRouter() {
       <Route path="/subscriptions" component={SubscriptionManagement} />
       
       {/* Leads & Workflow Module */}
+      <Route path="/leads/sources" component={LeadSources} />
+      <Route path="/leads/status" component={LeadStatus} />
       <Route path="/leads/*" component={LeadsWorkflow} />
       <Route path="/leads" component={LeadsWorkflow} />
       

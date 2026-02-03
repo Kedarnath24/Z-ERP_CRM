@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Target, Users, TrendingUp, Award, Plus, Search, Filter,
   Star, Phone, Mail, Calendar, MessageCircle, Send, Clock,
-  CheckCircle, XCircle, AlertCircle, BarChart3, Zap, User, Settings, GitBranch, Flag
+  CheckCircle, XCircle, AlertCircle, BarChart3, Zap, User, Settings, GitBranch, Flag, MapPin
 } from "lucide-react";
 import {
   Dialog,
