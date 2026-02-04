@@ -8,16 +8,16 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Plus, Search, Download, TrendingUp, DollarSign, 
+import { Plus, Search, Download, TrendingUp, DollarSign, 
   ArrowUpRight, Filter, MoreHorizontal, Eye, 
   Edit, Trash2, Calendar, Landmark, User, 
   Layers, Package, ChevronRight, CheckCircle2,
   Clock, AlertCircle, FileText, ArrowRight,
-  TrendingDown, Info
+  TrendingDown, Info, FileSpreadsheet, FileText as FilePdf
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { exportToExcel, exportToPDF } from '@/lib/exportUtils';
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -49,7 +49,12 @@ export default function Income() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
+  const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [viewedIncome, setViewedIncome] = useState<IncomeEntry | null>(null);
+
+  // Filter state
+  const [filterCategory, setFilterCategory] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
 
   // Form State
   const [incomeForm, setIncomeForm] = useState<Partial<IncomeEntry>>({
@@ -75,6 +80,35 @@ export default function Income() {
     { id: 'INC-004', date: '2026-01-12', category: 'Product Sales', description: 'Enterprise Software Licenses', amount: 32000, paymentMethod: 'Credit Card', reference: 'INV-2026-004', customer: 'StartupCo', status: 'partially_paid', tags: ['subscription'] },
     { id: 'INC-005', date: '2026-01-10', category: 'Sales Revenue', description: 'Bulk Hardware Supply', amount: 89000, paymentMethod: 'Bank Transfer', reference: 'INV-2026-005', customer: 'Metro Systems', status: 'received' },
   ]);
+
+  const handleExportExcel = () => {
+    const data = filteredIncomes.map(inc => ({
+      ID: inc.id,
+      Date: inc.date,
+      Category: inc.category,
+      Description: inc.description,
+      Amount: inc.amount,
+      Payer: inc.customer || 'N/A',
+      Status: inc.status,
+      Method: inc.paymentMethod
+    }));
+    exportToExcel(data, 'income_records');
+    toast({ title: "Export Success", description: "Excel report downloaded." });
+  };
+
+  const handleExportPDF = () => {
+    const headers = ['ID', 'Date', 'Category', 'Amount', 'Customer', 'Status'];
+    const data = filteredIncomes.map(inc => [
+      inc.id,
+      inc.date,
+      inc.category,
+      inc.amount.toString(),
+      inc.customer || '-',
+      inc.status
+    ]);
+    exportToPDF('Revenue Report', headers, data, 'income_report');
+    toast({ title: "Export Success", description: "PDF report downloaded." });
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
@@ -140,12 +174,17 @@ export default function Income() {
     return { total, confirmed, pending };
   }, [incomes]);
 
-  const filteredIncomes = incomes.filter(inc =>
-    inc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    inc.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    inc.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    inc.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredIncomes = incomes.filter(inc => {
+    const matchesSearch = inc.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      inc.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      inc.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      inc.id.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory = filterCategory === 'all' || inc.category === filterCategory;
+    const matchesStatus = filterStatus === 'all' || inc.status === filterStatus;
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
   return (
     <div className="p-6 space-y-8 bg-slate-50/30 min-h-screen">
@@ -386,18 +425,78 @@ export default function Income() {
                   onChange={(e) => setSearchQuery(e.target.value)} 
                 />
               </div>
-              <Button variant="outline" className="h-10 gap-2 border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50">
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
-              <Button 
-                variant="outline" 
-                className="h-10 gap-2 border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50"
-                onClick={() => toast({ title: "Export Scheduled", description: "CSV report is being generated..."})}
-              >
-                <Download className="h-4 w-4" />
-                Export
-              </Button>
+              <Dialog open={isFilterDialogOpen} onOpenChange={setIsFilterDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="h-10 gap-2 border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50">
+                    <Filter className="h-4 w-4" />
+                    Filter
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Filter Records</DialogTitle>
+                    <DialogDescription>
+                      Narrow down the income records by category or status.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label>Category</Label>
+                      <Select value={filterCategory} onValueChange={setFilterCategory}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All Categories" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {categories.map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Status</Label>
+                      <Select value={filterStatus} onValueChange={setFilterStatus}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="All Statuses" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Statuses</SelectItem>
+                          <SelectItem value="received">Received</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="partially_paid">Partially Paid</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => { setFilterCategory('all'); setFilterStatus('all'); }}>Reset</Button>
+                    <Button onClick={() => setIsFilterDialogOpen(false)}>Apply Filters</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="h-10 gap-2 border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={handleExportExcel} className="gap-2 py-2 cursor-pointer font-medium">
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
+                    Export to Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPDF} className="gap-2 py-2 cursor-pointer font-medium">
+                    <FilePdf className="h-3.5 w-3.5 text-red-600" />
+                    Export to PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>

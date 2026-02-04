@@ -9,7 +9,7 @@ import {
   Clock, AlertCircle, TrendingUp, DollarSign,
   FileText, Calendar, User, ArrowRight, Trash2,
   ChevronRight, Landmark, Building2, CreditCard,
-  Briefcase
+  Briefcase, FileSpreadsheet, FileText as FilePdf
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,7 +21,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { cn } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
+import { exportToExcel, exportToPDF } from "@/lib/exportUtils";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -109,6 +110,36 @@ export default function Receivables({ includeLayout = true }: any) {
     toast({ title: "Status Updated", description: `Invoice ${id} marked as ${newStatus}` });
   };
 
+  const handleExportAudit = (format: 'excel' | 'pdf') => {
+    if (format === 'excel') {
+      const data = filteredInvoices.map(inv => ({
+        'Invoice ID': inv.id,
+        Customer: inv.customer,
+        Date: inv.date,
+        'Due Date': inv.due,
+        Amount: inv.amount,
+        Status: inv.status,
+        Email: inv.email
+      }));
+      exportToExcel(data, 'accounts_receivable_audit');
+    } else {
+      const headers = ['ID', 'Customer', 'Date', 'Due Date', 'Amount', 'Status'];
+      const data = filteredInvoices.map(inv => [
+        inv.id,
+        inv.customer,
+        inv.date,
+        inv.due,
+        inv.amount.toString(),
+        inv.status
+      ]);
+      exportToPDF('Receivables Audit Report', headers, data, 'receivables_audit');
+    }
+    toast({
+      title: "Audit Exported",
+      description: `Successfully generated ${format.toUpperCase()} audit report.`
+    });
+  };
+
   const content = (
     <div className="p-6 space-y-8 bg-slate-50/30 min-h-screen">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -123,10 +154,24 @@ export default function Receivables({ includeLayout = true }: any) {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="h-11 border-slate-200 bg-white hover:bg-slate-50 font-bold gap-2 px-5 text-slate-600 shadow-sm">
-            <Download className="h-4 w-4" />
-            Export Audit
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="h-11 border-slate-200 bg-white hover:bg-slate-50 font-bold gap-2 px-5 text-slate-600 shadow-sm">
+                <Download className="h-4 w-4" />
+                Export Audit
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => handleExportAudit('excel')} className="gap-2 py-2 cursor-pointer font-medium">
+                <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
+                Export as Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExportAudit('pdf')} className="gap-2 py-2 cursor-pointer font-medium">
+                <FilePdf className="h-3.5 w-3.5 text-red-600" />
+                Export as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
             <DialogTrigger asChild>

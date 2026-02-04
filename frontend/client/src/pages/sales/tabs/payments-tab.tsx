@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,15 +17,40 @@ import {
   Edit,
   Printer,
   CheckCircle,
-  CreditCard
+  CreditCard,
+  MoreVertical,
+  Trash2,
+  FileCheck,
+  Building2,
+  Calendar,
+  DollarSign,
+  FileSpreadsheet,
+  FileText
 } from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { cn } from "@/lib/utils";
 
 export default function PaymentsTab() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [isExporting, setIsExporting] = useState(false);
   const [showReceiptView, setShowReceiptView] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<any>(null);
+  const { toast } = useToast();
 
   // Mock data
-  const payments = [
+  const [payments, setPayments] = useState([
     {
       id: 'PAY-001',
       invoice: 'INV-001',
@@ -66,40 +91,110 @@ export default function PaymentsTab() {
       date: '2026-01-18',
       status: 'completed'
     }
-  ];
+  ]);
+
+  const filteredPayments = useMemo(() => {
+    return payments.filter(pay => {
+      const matchesSearch = 
+        pay.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        pay.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        pay.invoice.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || pay.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchQuery, statusFilter, payments]);
+
+  const handleExport = (type: 'excel' | 'pdf') => {
+    setIsExporting(true);
+    toast({ title: "Exporting...", description: `Preparing payment records in ${type.toUpperCase()}.` });
+
+    setTimeout(() => {
+      if (type === 'excel') {
+        const ws = XLSX.utils.json_to_sheet(filteredPayments);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Payments");
+        XLSX.writeFile(wb, `Payments_${new Date().toISOString().split('T')[0]}.xlsx`);
+      } else {
+        const doc = new jsPDF();
+        doc.text("Payments Report", 14, 15);
+        autoTable(doc, {
+          startY: 25,
+          head: [['ID', 'Invoice', 'Customer', 'Amount', 'Date', 'Status']],
+          body: filteredPayments.map(p => [p.id, p.invoice, p.customer, p.amount, p.date, p.status]),
+        });
+        doc.save(`Payments_${new Date().toISOString().split('T')[0]}.pdf`);
+      }
+      setIsExporting(false);
+      toast({ title: "Export Ready", description: "Download started." });
+    }, 1200);
+  };
 
   const statusConfig: Record<string, { label: string; class: string }> = {
-    completed: { label: 'Completed', class: 'bg-green-100 text-green-700 border-green-200' },
-    pending: { label: 'Pending', class: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-    failed: { label: 'Failed', class: 'bg-red-100 text-red-700 border-red-200' }
+    completed: { label: 'Completed', class: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
+    pending: { label: 'Pending', class: 'bg-amber-100 text-amber-700 border-amber-200' },
+    failed: { label: 'Failed', class: 'bg-rose-100 text-rose-700 border-rose-200' }
   };
 
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg">Payments</CardTitle>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <CardHeader className="flex flex-row items-center justify-between border-b bg-slate-50/50">
+          <div className="flex flex-col gap-1">
+            <CardTitle className="text-xl font-bold text-slate-900">Payments</CardTitle>
+            <p className="text-sm text-slate-500">Record and track customer payments</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
               <Input
                 placeholder="Search payments..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 w-48"
+                className="pl-10 w-64 bg-white border-slate-200 focus:border-blue-400 transition-all"
               />
             </div>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("h-9 gap-2", statusFilter !== 'all' && "border-blue-500 bg-blue-50 text-blue-700")}>
+                  <Filter className="h-4 w-4" />
+                  {statusFilter === 'all' ? 'Status' : `Status: ${statusFilter}`}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setStatusFilter('all')}>All Payments</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('completed')}>Completed</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('pending')}>Pending</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('failed')}>Failed</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 gap-2" disabled={isExporting}>
+                  <Download className="h-4 w-4" />
+                  {isExporting ? 'Exporting...' : 'Export'}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Export Formats</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleExport('excel')}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" /> Excel (.xlsx)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                  <FileText className="mr-2 h-4 w-4 text-rose-600" /> PDF (.pdf)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Dialog>
               <DialogTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" className="h-9 bg-blue-600 hover:bg-blue-700 shadow-sm">
                   <Plus className="h-4 w-4 mr-2" />
                   Record Payment
                 </Button>
@@ -227,8 +322,8 @@ export default function PaymentsTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {payments.map((payment) => (
-                <TableRow key={payment.id} className="hover:bg-slate-50">
+              {filteredPayments.map((payment) => (
+                <TableRow key={payment.id} className="hover:bg-slate-50 transition-colors group">
                   <TableCell className="font-mono text-sm font-semibold">{payment.id}</TableCell>
                   <TableCell className="font-medium text-blue-600 cursor-pointer hover:underline">
                     {payment.invoice}
@@ -236,36 +331,63 @@ export default function PaymentsTab() {
                   <TableCell className="font-medium">{payment.customer}</TableCell>
                   <TableCell className="font-semibold text-green-700">{payment.amount}</TableCell>
                   <TableCell className="text-sm">
-                    <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-200">
+                    <Badge variant="outline" className="bg-slate-100/50 text-slate-700 border-slate-200">
                       {payment.mode}
                     </Badge>
                   </TableCell>
                   <TableCell className="font-mono text-xs">{payment.transactionId}</TableCell>
                   <TableCell className="text-sm">{payment.date}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className={statusConfig[payment.status].class}>
+                    <Badge variant="outline" className={cn("capitalize font-medium shadow-sm", statusConfig[payment.status].class)}>
                       {statusConfig[payment.status].label}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button 
                         variant="ghost" 
-                        size="sm" 
-                        className="text-blue-600"
-                        onClick={() => setShowReceiptView(true)}
+                        size="icon" 
+                        className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                        onClick={() => {
+                          setSelectedPayment(payment);
+                          setShowReceiptView(true);
+                        }}
                       >
-                        <Eye className="h-3 w-3 mr-1" />
-                        View
+                        <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-slate-600">
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-slate-600 hover:bg-slate-100"
+                        onClick={() => toast({ title: "Edit Payment", description: `Loading ${payment.id}...` })}
+                      >
+                        <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" className="text-purple-600">
-                        <Download className="h-3 w-3 mr-1" />
-                        Receipt
-                      </Button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuLabel>Payment Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                            <Download className="mr-2 h-4 w-4 text-purple-600" /> Download Receipt
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => toast({ title: "Emailed", description: "Receipt sent to customer." })}>
+                            <FileCheck className="mr-2 h-4 w-4 text-blue-500" /> Email Receipt
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem className="text-red-600" onClick={() => {
+                            setPayments(payments.filter(p => p.id !== payment.id));
+                            toast({ title: "Deleted", description: "Payment record removed.", variant: "destructive" });
+                          }}>
+                            <Trash2 className="mr-2 h-4 w-4" /> Delete Record
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </TableCell>
                 </TableRow>

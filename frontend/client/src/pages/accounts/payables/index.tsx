@@ -51,6 +51,7 @@ export default function Payables({ includeLayout = true }: any) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isBillDialogOpen, setIsBillDialogOpen] = useState(false);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
+  const [selectedBills, setSelectedBills] = useState<string[]>([]);
 
   const [bills, setBills] = useState<Bill[]>([
     { id: 'BILL-1025', vendor: 'Azure Cloud Services', date: '2026-01-20', due: '2026-02-20', amount: 4200.50, category: 'Infrastructure', status: 'unpaid', priority: 'high' },
@@ -107,6 +108,41 @@ export default function Payables({ includeLayout = true }: any) {
     toast({ title: "Bill Recorded", description: `Financial liability added for ${newBill.vendor}` });
   };
 
+  const handleBatchCheck = () => {
+    if (selectedBills.length === 0) {
+      toast({
+        title: "No Bills Selected",
+        description: "Please select at least one bill to perform a batch check.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    toast({
+      title: "Batch Check Initiated",
+      description: `Verifying ${selectedBills.length} obligations...`
+    });
+
+    setTimeout(() => {
+      setBills(bills.map(b => 
+        selectedBills.includes(b.id) && b.status === "unpaid" 
+          ? { ...b, status: "scheduled" } 
+          : b
+      ));
+      setSelectedBills([]);
+      toast({
+        title: "Batch Check Complete",
+        description: "Selected bills have been verified and scheduled for payment."
+      });
+    }, 1500);
+  };
+
+  const toggleBillSelection = (id: string) => {
+    setSelectedBills(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
   const content = (
     <div className="p-6 space-y-8 bg-slate-50/30 min-h-screen">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -121,9 +157,16 @@ export default function Payables({ includeLayout = true }: any) {
         </div>
         
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="h-11 border-slate-200 bg-white hover:bg-slate-50 font-bold gap-2 px-5 text-slate-600 shadow-sm">
+          <Button 
+            variant="outline" 
+            className={cn(
+              "h-11 border-slate-200 bg-white hover:bg-slate-50 font-bold gap-2 px-5 shadow-sm transition-all",
+              selectedBills.length > 0 ? "text-red-600 border-red-200 bg-red-50 hover:bg-red-100" : "text-slate-600"
+            )}
+            onClick={handleBatchCheck}
+          >
             <Download className="h-4 w-4" />
-            Batch Check
+            {selectedBills.length > 0 ? `Batch Check (${selectedBills.length})` : 'Batch Check'}
           </Button>
           
           <Dialog open={isBillDialogOpen} onOpenChange={setIsBillDialogOpen}>
@@ -314,7 +357,18 @@ export default function Payables({ includeLayout = true }: any) {
            <Table>
               <TableHeader className="bg-slate-50/70">
                  <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="w-[140px] pl-6 font-black uppercase text-[10px] tracking-widest text-slate-400">Reference</TableHead>
+                    <TableHead className="w-[40px] pl-6">
+                      <input 
+                        type="checkbox" 
+                        className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-600"
+                        onChange={(e) => {
+                          if (e.target.checked) setSelectedBills(filteredBills.map(b => b.id));
+                          else setSelectedBills([]);
+                        }}
+                        checked={selectedBills.length === filteredBills.length && filteredBills.length > 0}
+                      />
+                    </TableHead>
+                    <TableHead className="w-[140px] font-black uppercase text-[10px] tracking-widest text-slate-400">Reference</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest text-slate-400">Vendor Entity</TableHead>
                     <TableHead className="font-black uppercase text-[10px] tracking-widest text-slate-400">Category</TableHead>
                     <TableHead className="text-right font-black uppercase text-[10px] tracking-widest text-slate-400">Obligation</TableHead>
@@ -325,8 +379,19 @@ export default function Payables({ includeLayout = true }: any) {
               </TableHeader>
               <TableBody>
                  {filteredBills.map((bill) => (
-                    <TableRow key={bill.id} className="group hover:bg-slate-50/50 transition-colors border-slate-50 cursor-default">
-                       <TableCell className="pl-6 py-4">
+                    <TableRow key={bill.id} className={cn(
+                        "group hover:bg-slate-50/50 transition-colors border-slate-50 cursor-default",
+                        selectedBills.includes(bill.id) && "bg-red-50/30"
+                      )}>
+                       <TableCell className="pl-6">
+                          <input 
+                            type="checkbox" 
+                            className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-600"
+                            checked={selectedBills.includes(bill.id)}
+                            onChange={() => toggleBillSelection(bill.id)}
+                          />
+                       </TableCell>
+                       <TableCell className="py-4">
                           <span className="text-xs font-black text-red-600 tracking-tighter">{bill.id}</span>
                           <p className="text-[10px] font-bold text-slate-400 mt-0.5">{bill.date}</p>
                        </TableCell>

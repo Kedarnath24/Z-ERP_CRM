@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
@@ -15,14 +15,35 @@ import {
   Eye,
   Edit,
   FileText,
-  ArrowRight
+  ArrowRight,
+  MoreVertical,
+  X,
+  Trash2,
+  CheckCircle,
+  FileCheck
 } from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu';
+import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { cn } from '@/lib/utils';
 
 export default function EstimatesTab() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isExporting, setIsExporting] = useState(false);
+  const { toast } = useToast();
 
   // Mock data
-  const estimates = [
+  const [estimates, setEstimates] = useState([
     {
       id: 'EST-001',
       customer: 'Acme Corporation',
@@ -71,7 +92,44 @@ export default function EstimatesTab() {
       status: 'expired',
       invoiced: false
     }
-  ];
+  ]);
+
+  const filteredEstimates = useMemo(() => {
+    return estimates.filter(est => {
+      const matchesSearch = 
+        est.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        est.customer.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesStatus = statusFilter === 'all' || est.status === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchQuery, statusFilter, estimates]);
+
+  const handleExport = (type: 'excel' | 'pdf') => {
+    setIsExporting(true);
+    toast({ title: "Exporting...", description: `Preparing estimate list in ${type.toUpperCase()}.` });
+
+    setTimeout(() => {
+      if (type === 'excel') {
+        const ws = XLSX.utils.json_to_sheet(filteredEstimates);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Estimates");
+        XLSX.writeFile(wb, `Estimates_${new Date().toISOString().split('T')[0]}.xlsx`);
+      } else {
+        const doc = new jsPDF();
+        doc.text("Sales Estimates Report", 14, 15);
+        autoTable(doc, {
+          startY: 25,
+          head: [['ID', 'Customer', 'Amount', 'Tax', 'Expiry Date', 'Status']],
+          body: filteredEstimates.map(e => [e.id, e.customer, e.amount, e.tax, e.expiryDate, e.status]),
+        });
+        doc.save(`Estimates_${new Date().toISOString().split('T')[0]}.pdf`);
+      }
+      setIsExporting(false);
+      toast({ title: "Export Ready", description: "Download started." });
+    }, 1200);
+  };
 
   const statusConfig: Record<string, { label: string; class: string }> = {
     draft: { label: 'Draft', class: 'bg-slate-100 text-slate-700 border-slate-200' },
@@ -95,14 +153,48 @@ export default function EstimatesTab() {
               className="pl-10 w-48"
             />
           </div>
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className={cn(statusFilter !== 'all' && "border-indigo-500 bg-indigo-50")}>
+                <Filter className="h-4 w-4 mr-2" />
+                {statusFilter === 'all' ? 'Filters' : `Status: ${statusFilter}`}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setStatusFilter('all')}>All Statuses</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('draft')}>Draft</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('sent')}>Sent</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('accepted')}>Accepted</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter('expired')}>Expired</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2 border-slate-200 hover:bg-slate-50" disabled={isExporting}>
+                <Download className="h-4 w-4" />
+                {isExporting ? 'Exporting...' : 'Export'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel>Export Options</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleExport('excel')}>
+                <FileSpreadsheet className="mr-2 h-4 w-4 text-emerald-600" /> Export Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                <FileText className="mr-2 h-4 w-4 text-red-600" /> Export PDF
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => window.print()}>
+                <Printer className="mr-2 h-4 w-4 text-blue-600" /> Print Table
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <Dialog>
             <DialogTrigger asChild>
               <Button size="sm">
@@ -233,8 +325,8 @@ export default function EstimatesTab() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {estimates.map((estimate) => (
-              <TableRow key={estimate.id} className="hover:bg-slate-50">
+            {filteredEstimates.map((estimate) => (
+              <TableRow key={estimate.id} className="hover:bg-slate-50 transition-colors">
                 <TableCell className="font-mono text-sm font-semibold">{estimate.id}</TableCell>
                 <TableCell className="font-medium">{estimate.customer}</TableCell>
                 <TableCell className="font-semibold text-green-700">{estimate.amount}</TableCell>
@@ -250,31 +342,49 @@ export default function EstimatesTab() {
                 </TableCell>
                 <TableCell>
                   {estimate.invoiced ? (
-                    <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">
+                    <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-100">
                       Yes
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="bg-slate-100 text-slate-600 border-slate-200">
+                    <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200">
                       No
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" className="text-blue-600">
-                      <Eye className="h-3 w-3 mr-1" />
-                      View
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50" onClick={() => toast({ title: "View Estimate", description: `Loading ${estimate.id}...` })}>
+                      <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-slate-600">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:bg-slate-100" onClick={() => toast({ title: "Edit Estimate", description: `Opening editor for ${estimate.id}...` })}>
+                      <Edit className="h-4 w-4" />
                     </Button>
-                    {!estimate.invoiced && estimate.status === 'accepted' && (
-                      <Button variant="ghost" size="sm" className="text-green-600">
-                        <ArrowRight className="h-3 w-3 mr-1" />
-                        Convert
-                      </Button>
-                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Estimate Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                          <Download className="mr-2 h-4 w-4" /> Download PDF
+                        </DropdownMenuItem>
+                        {!estimate.invoiced && (
+                          <DropdownMenuItem onClick={() => toast({ title: "Converting", description: "Generating invoice from estimate..." })}>
+                            <FileCheck className="mr-2 h-4 w-4 text-emerald-600" /> Convert to Invoice
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-600" onClick={() => {
+                          setEstimates(estimates.filter(e => e.id !== estimate.id));
+                          toast({ title: "Deleted", description: "Estimate removed successfully.", variant: "destructive" });
+                        }}>
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete Estimate
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </TableCell>
               </TableRow>

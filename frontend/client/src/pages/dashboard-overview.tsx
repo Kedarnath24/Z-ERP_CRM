@@ -152,55 +152,56 @@ export default function DashboardOverview() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* 1️⃣ HEADER SECTION */}
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Dashboard Overview</h1>
-            <p className="text-sm text-slate-600 mt-1">Monitor your business performance and key metrics</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">Week</SelectItem>
-                <SelectItem value="month">Month</SelectItem>
-                <SelectItem value="year">Year</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon">
-              <Settings className="h-4 w-4" />
-            </Button>
+      <div className="flex flex-col h-full bg-slate-50/30">
+        {/* Modern Sticky Header */}
+        <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 px-6 py-4 mx-[-24px] mb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 max-w-7xl mx-auto px-6">
+             <div className="flex items-center gap-4">
+               <div className="p-2.5 bg-blue-600 rounded-2xl shadow-lg shadow-blue-100">
+                 <LayoutDashboard className="h-6 w-6 text-white" />
+               </div>
+               <div>
+                 <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Enterprise Overview</h1>
+                 <p className="text-sm text-slate-500 font-medium">Real-time business intelligence and performance metrics</p>
+               </div>
+             </div>
+             <div className="flex items-center gap-2">
+               <Select value={dateRange} onValueChange={setDateRange}>
+                 <SelectTrigger className="w-32 bg-white/50 border-slate-200">
+                   <SelectValue />
+                 </SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value="week">Week</SelectItem>
+                   <SelectItem value="month">Month</SelectItem>
+                   <SelectItem value="year">Year</SelectItem>
+                 </SelectContent>
+               </Select>
+               <Button variant="outline" size="sm" className="bg-white/50 border-slate-200">
+                 <Activity className="h-4 w-4 mr-2 text-blue-600" />
+                 Analytics
+               </Button>
+               <Button variant="outline" size="icon" className="bg-white/50 border-slate-200">
+                 <Settings className="h-4 w-4" />
+               </Button>
+             </div>
           </div>
         </div>
 
-        {/* 2️⃣ KPI SUMMARY CARDS */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {kpiStats.map((stat, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">{stat.title}</CardTitle>
-                <stat.icon className="h-4 w-4 text-slate-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-                <p className="text-xs text-slate-600 mt-1 flex items-center gap-1">
-                  {stat.trend === 'up' ? (
-                    <ArrowUp className="h-3 w-3 text-green-600" />
-                  ) : (
-                    <ArrowDown className="h-3 w-3 text-red-600" />
-                  )}
-                  <span className={stat.trend === 'up' ? 'text-green-600' : 'text-red-600'}>
-                    {stat.change}
-                  </span>
-                  <span className="text-slate-500">{stat.subtitle}</span>
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <div className="space-y-6 max-w-7xl mx-auto">
+          {/* KPI SUMMARY CARDS */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {kpiStats.map((stat, index) => (
+              <Card key={index} className="hover:shadow-md transition-all duration-300">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stat.value}</div>
+                  <p className="text-xs text-slate-500">{stat.change} {stat.subtitle}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
         {/* 3️⃣ PERFORMANCE HIGHLIGHT CARDS */}
         <div className="grid gap-4 md:grid-cols-3">
@@ -553,6 +554,7 @@ export default function DashboardOverview() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </DashboardLayout>
   );

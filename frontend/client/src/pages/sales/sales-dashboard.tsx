@@ -20,7 +20,11 @@ import {
   Wallet,
   Receipt,
   Search,
-  MoreVertical
+  MoreVertical,
+  ChevronDown,
+  FileCheck,
+  Calculator,
+  RotateCcw
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -30,10 +34,24 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
+  LineChart,
+  Line,
   BarChart,
   Bar
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from '@/components/ui/dropdown-menu';
+import { useToast } from '@/hooks/use-toast';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // Tab components
 import ProposalsTab from './tabs/proposals-tab';
@@ -66,6 +84,8 @@ const salesData = [
 export default function SalesDashboard() {
   const [location, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState('proposals');
+  const { toast } = useToast();
+  const [isExporting, setIsExporting] = useState(false);
 
   // Sync tab with URL
   useEffect(() => {
@@ -86,6 +106,38 @@ export default function SalesDashboard() {
     else if (value === 'payments') navigate('/sales/payments');
     else if (value === 'credit-notes') navigate('/sales/credit-notes');
     else if (value === 'batch-payments') navigate('/sales/batch-payments');
+  };
+
+  const handleExportData = (type: 'excel' | 'pdf') => {
+    setIsExporting(true);
+    toast({
+      title: "Preparing Export",
+      description: `Generating ${type.toUpperCase()} file for current sales data...`,
+    });
+
+    setTimeout(() => {
+      if (type === 'excel') {
+        const ws = XLSX.utils.json_to_sheet(revenueData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sales Dashboard");
+        XLSX.writeFile(wb, `Sales_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+      } else {
+        const doc = new jsPDF();
+        doc.text("Sales Dashboard Revenue Report", 14, 15);
+        autoTable(doc, {
+          startY: 25,
+          head: [['Month', 'Revenue ($)', 'Target ($)']],
+          body: revenueData.map(d => [d.name, d.revenue, d.target]),
+        });
+        doc.save(`Sales_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+      }
+      
+      setIsExporting(false);
+      toast({
+        title: "Export Success",
+        description: `Your ${type.toUpperCase()} file is ready for download.`,
+      });
+    }, 1500);
   };
 
   return (
@@ -109,14 +161,55 @@ export default function SalesDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="h-11 border-slate-200 shadow-sm px-5">
-              <Download className="h-4 w-4 mr-2" />
-              Export Data
-            </Button>
-            <Button className="h-11 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 px-5 text-white">
-              <Plus className="h-4 w-4 mr-2" />
-              New Transaction
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-11 border-slate-200 shadow-sm px-5" disabled={isExporting}>
+                  <Download className="h-4 w-4 mr-2" />
+                  {isExporting ? 'Exporting...' : 'Export Data'}
+                  <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Export Options</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleExportData('excel')}>
+                  Export as Excel (.xlsx)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExportData('pdf')}>
+                  Export as PDF (.pdf)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="h-11 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 px-5 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Transaction
+                  <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => { setActiveTab('proposals'); navigate('/sales/proposals'); }}>
+                  <FileText className="mr-2 h-4 w-4" /> Create Proposal
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setActiveTab('estimates'); navigate('/sales/estimates'); }}>
+                  <Calculator className="mr-2 h-4 w-4" /> New Estimate
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setActiveTab('invoices'); navigate('/sales/invoices'); }}>
+                  <Receipt className="mr-2 h-4 w-4" /> Generate Invoice
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => { setActiveTab('payments'); navigate('/sales/payments'); }}>
+                  <DollarSign className="mr-2 h-4 w-4 text-emerald-600" /> Record Payment
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setActiveTab('credit-notes'); navigate('/sales/credit-notes'); }}>
+                  <RotateCcw className="mr-2 h-4 w-4 text-amber-600" /> Issue Credit Note
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </motion.div>
 

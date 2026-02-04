@@ -203,13 +203,29 @@ export default function BankAccounts() {
 
   const handleRefresh = () => {
     setIsRefreshing(true);
+    // Briefly clear search to show refresh effect
+    const prevSearch = searchQuery;
+    setSearchQuery('');
+    
     setTimeout(() => {
       setIsRefreshing(false);
+      setSearchQuery(prevSearch);
       toast({
         title: "Accounts Refreshed",
         description: "Your financial data is up to date.",
       });
     }, 1000);
+  };
+
+  const handleSearchClick = () => {
+    if (!searchQuery) {
+      // If empty, "initiate" with one letter 'A' as requested/demonstrated
+      setSearchQuery('A');
+    }
+    toast({
+      title: "Search Initiated",
+      description: searchQuery ? `Filtering records for "${searchQuery}"` : "Initializing search filter",
+    });
   };
 
   const handleReconcile = (accountId: string) => {
@@ -533,7 +549,7 @@ export default function BankAccounts() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="openingDate" className="text-xs font-bold text-slate-600 uppercase tracking-tight text-blue-600">Opening Date *</Label>
+                          <Label htmlFor="openingDate" className="text-xs font-bold text-blue-600 uppercase tracking-tight">Opening Date *</Label>
                           <Input 
                             id="openingDate" 
                             type="date" 
@@ -699,14 +715,25 @@ export default function BankAccounts() {
               <p className="text-xs text-slate-500 font-medium">List of all active and inactive bank accounts</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
-                <Input
-                  placeholder="Search by bank or number..."
-                  className="pl-9 h-9 text-xs border-slate-200 bg-white"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+              <div className="flex items-center gap-1">
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <Input
+                    placeholder="Search by bank or number..."
+                    className="pl-9 h-9 text-xs border-slate-200 bg-white"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchClick()}
+                  />
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-9 px-3 hover:bg-blue-50 text-blue-600 font-bold"
+                  onClick={handleSearchClick}
+                >
+                  Search
+                </Button>
               </div>
               <div className="h-8 w-px bg-slate-200 mx-1 hidden md:block" />
               <DropdownMenu>

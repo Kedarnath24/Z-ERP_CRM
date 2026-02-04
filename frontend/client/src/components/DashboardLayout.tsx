@@ -744,10 +744,8 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
                                           </span>
 
                                           {subSubActive && (
-                                            <motion.span
-                                              layoutId="nav-active"
+                                            <span
                                               className="absolute inset-0 rounded-xl bg-slate-700/60 shadow-lg"
-                                              transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                                             />
                                           )}
                                         </a>
@@ -788,10 +786,8 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
                             </span>
 
                             {subActive && (
-                              <motion.span
-                                layoutId="nav-active"
+                              <span
                                 className="absolute inset-0 rounded-xl bg-slate-700/60 shadow-lg"
-                                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                               />
                             )}
                           </a>
@@ -843,10 +839,8 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
             {expanded && <span className={`relative z-10 font-medium ${active ? 'text-white' : 'text-slate-200'}`}>{item.name}</span>}
 
             {active && (
-              <motion.span
-                layoutId="nav-active"
+              <span
                 className="absolute inset-0 rounded-xl bg-slate-700 shadow-lg"
-                transition={{ type: 'spring', stiffness: 500, damping: 35 }}
               />
             )}
 
@@ -906,7 +900,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       {/* Scrollable Navigation Area */}
       <div 
         ref={sidebarScrollRef}
-        className="flex-1 overflow-y-auto px-4 pb-6 scroll-smooth"
+        className="flex-1 overflow-y-auto px-4 pb-6"
         onScroll={(e) => {
           // Save scroll position
           savedScrollPosition.current = e.currentTarget.scrollTop;
@@ -974,7 +968,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
             {/* Scrollable Navigation Area for Mobile */}
             <div 
               ref={mobileSidebarScrollRef}
-              className="flex-1 overflow-y-auto px-4 pb-6 mt-2 scroll-smooth"
+              className="flex-1 overflow-y-auto px-4 pb-6 mt-2"
               onScroll={(e) => {
                 // Save scroll position for mobile
                 savedScrollPosition.current = e.currentTarget.scrollTop;
