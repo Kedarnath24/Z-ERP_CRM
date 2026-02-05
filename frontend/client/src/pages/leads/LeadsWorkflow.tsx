@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Target, Users, TrendingUp, Award, Plus, Search, Filter,
-  Star, Phone, Mail, Calendar, MessageCircle, Send, Clock,
+  Star, Phone, Mail, Calendar, MessageCircle, Send, Clock, Edit,
   CheckCircle, XCircle, AlertCircle, BarChart3, Zap, User, Settings, GitBranch, Flag, MapPin
 } from "lucide-react";
 import {
@@ -57,7 +57,7 @@ export default function LeadsWorkflow() {
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   const [sequenceModalOpen, setSequenceModalOpen] = useState(false);
 
-  const leads: Lead[] = [
+  const [leads, setLeads] = useState<Lead[]>([
     {
       id: "1",
       name: "John Doe",
@@ -114,7 +114,29 @@ export default function LeadsWorkflow() {
       createdDate: "Jan 10, 2026",
       lastContact: "3 days ago"
     }
-  ];
+  ]);
+
+  const [confirmConvertOpen, setConfirmConvertOpen] = useState(false);
+  const [leadToConvert, setLeadToConvert] = useState<Lead | null>(null);
+
+  const convertLead = (id: string) => {
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, status: 'converted' } : l));
+    if (selectedLead?.id === id) {
+      setSelectedLead({ ...(selectedLead as Lead), status: 'converted' });
+    }
+  };
+
+  const requestConvert = (lead: Lead) => {
+    setLeadToConvert(lead);
+    setConfirmConvertOpen(true);
+  };
+
+  const confirmConvert = () => {
+    if (!leadToConvert) return;
+    convertLead(leadToConvert.id);
+    setConfirmConvertOpen(false);
+    setLeadToConvert(null);
+  };
 
   const sequences: NurtureSequence[] = [
     {
@@ -367,14 +389,16 @@ export default function LeadsWorkflow() {
                             <span>Source: {lead.source}</span>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="sm">
-                              <Phone className="w-4 h-4" />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => { e.stopPropagation(); requestConvert(lead); }}
+                            >
+                              <Zap className="w-4 h-4 mr-2" />
+                              Convert
                             </Button>
-                            <Button variant="ghost" size="sm">
-                              <Mail className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm">
-                              <MessageCircle className="w-4 h-4" />
+                            <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
+                              <Edit className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>
@@ -797,6 +821,24 @@ export default function LeadsWorkflow() {
                 <Button className="bg-indigo-600 hover:bg-indigo-700">
                   Create Sequence
                 </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Confirm Convert Dialog */}
+        <Dialog open={confirmConvertOpen} onOpenChange={setConfirmConvertOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Confirm Conversion</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-700">
+                Are you sure you want to convert <span className="font-semibold">{leadToConvert?.name}</span> to a customer? This will mark the lead as converted.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setConfirmConvertOpen(false)}>Cancel</Button>
+                <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => { confirmConvert(); }}>Confirm</Button>
               </div>
             </div>
           </DialogContent>

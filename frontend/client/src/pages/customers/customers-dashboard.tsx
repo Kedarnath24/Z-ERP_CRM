@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Users, TrendingUp, DollarSign, MessageSquare, UserPlus, UserCheck, Kanban, UserCircle, MessagesSquare, FolderTree } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import LeadsModule from "./leads";
 import CustomersListModule from "./customers-list";
 import CommunicationLogModule from "./communication-log";
 
@@ -62,10 +61,7 @@ export default function CustomersDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Lead
-          </Button>
+          
           <Button size="sm">
             <UserCheck className="h-4 w-4 mr-2" />
             Add Customer
@@ -113,10 +109,7 @@ export default function CustomersDashboard() {
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-4">
-          <TabsTrigger value="leads" className="flex items-center gap-2">
-            <Kanban className="h-4 w-4" />
-            Leads
-          </TabsTrigger>
+          
           <TabsTrigger value="customers" className="flex items-center gap-2">
             <UserCircle className="h-4 w-4" />
             Customers
@@ -128,7 +121,7 @@ export default function CustomersDashboard() {
         </TabsList>
 
         <TabsContent value="leads">
-          <LeadsModule />
+          
         </TabsContent>
 
         <TabsContent value="customers">

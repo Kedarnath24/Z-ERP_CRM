@@ -8,15 +8,6 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import DashboardOverview from "@/pages/dashboard-overview";
 import NotFound from "@/pages/not-found";
 
-// Purchase Module Pages
-import PurchaseRequisitions from "@/pages/purchases/purchase-requisitions";
-import Suppliers from "@/pages/purchases/suppliers";
-import Quotations from "@/pages/purchases/quotations";
-import PurchaseOrders from "@/pages/purchases/purchase-orders";
-import GoodsReceiptNotes from "@/pages/purchases/goods-receipt-notes";
-import PurchaseInvoices from "@/pages/purchases/purchase-invoices";
-import PurchaseReports from "@/pages/purchases/purchase-reports";
-
 // Projects Module Pages
 import ProjectsList from "@/pages/projects/projects-list";
 import ProjectDetail from "@/pages/projects/project-detail";
@@ -56,43 +47,17 @@ import ProductsDashboard from "@/pages/products/ProductsDashboard";
 // Profile Module Pages
 import EmployeeProfile from "@/pages/profile/EmployeeProfile";
 
-// Remote Desk Monitoring Pages
-import RemoteDeskMonitoring from "@/pages/monitoring/RemoteDeskMonitoring";
-
 // New Enterprise Components
 import AttendanceDashboard from "@/pages/attendance/AttendanceDashboard";
 import OrganizationsManagement from "@/pages/organizations/OrganizationsManagement";
 
 // New Z-ERP Modules
-import FlipBookLibrary from "@/pages/flipbook/FlipBookLibrary";
-import FlipBookViewer from "@/pages/flipbook/FlipBookViewer";
-import FieldStaffTracking from "@/pages/fieldstaff/FieldStaffTracking";
 import SubscriptionManagement from "@/pages/subscriptions/SubscriptionManagement";
 import LeadsWorkflow from "@/pages/leads/LeadsWorkflow";
-import SuperAdminDashboard from "@/pages/superadmin/SuperAdminDashboard";
 import AdminSetup from "@/pages/admin/AdminSetup";
-import WorkflowAutomation from "@/pages/workflow/WorkflowAutomation";
-
-// WhatsApp Module Pages
-import {
-  Connect,
-  Settings,
-  WABAConfig,
-  MarketingCampaigns,
-  BotFlows,
-  Conversations,
-  BotAnalytics,
-} from "@/pages/whatsapp";
-
-// Bookings Module Pages
-import Appointments from "@/pages/bookings/Appointments";
-import Callbacks from "@/pages/bookings/Callbacks";
-import TimeSlots from "@/pages/bookings/TimeSlots";
-import BookingCalendar from "@/pages/bookings/Calendar";
-import FormInfo from "@/pages/bookings/FormInfo";
 
 // Contacts Module
-import ContactsList from "@/pages/contacts/ContactsList";
+// ContactsList removed
 
 // Finance Module
 import TaxRates from "@/pages/finance/TaxRates";
@@ -100,21 +65,11 @@ import Currency from "@/pages/finance/Currency";
 import PaymentModes from "@/pages/finance/PaymentModes";
 import ExpenseCategories from "@/pages/finance/ExpenseCategories";
 
-// Estimate Requests Module
-import EstimateRequests from "@/pages/estimates/EstimateRequests";
-
-// Email Module
-import EmailTemplates from "@/pages/email/EmailTemplates";
-import EmailIntegration from "@/pages/email/EmailIntegration";
-
 // Setup Module
 import StaffSetup from "@/pages/setup/StaffSetup";
 import GroupsSetup from "@/pages/setup/GroupsSetup";
 import LeadSetup from "@/pages/setup/LeadSetup";
 import WebToLead from "@/pages/setup/WebToLead";
-
-// Custom Links Module
-import CustomLinks from "@/pages/customlinks/CustomLinks";
 
 // Customer Groups
 import CustomerGroups from "@/pages/customers/customer-groups";
@@ -129,7 +84,6 @@ import ContractTypes from "@/pages/contracts/contract-types";
 // Settings Module
 import SettingsDashboard from "@/pages/settings/SettingsDashboard";
 import GeneralSettings from "@/pages/settings/GeneralSettings";
-import EmailSettingsPage from "@/pages/settings/EmailSettings";
 import ESignSettings from "@/pages/settings/ESignSettings";
 import FinanceSettings from "@/pages/settings/FinanceSettings";
 import LeadsSettings from "@/pages/settings/LeadsSettings";
@@ -173,22 +127,19 @@ function AppRouter() {
       <Route path="/recruitment/*" component={RecruitmentDashboard} />
       <Route path="/recruitment" component={RecruitmentDashboard} />
       
+      <Route path="/customers/groups" component={CustomerGroups} />
       <Route path="/customers/*" component={CustomersDashboard} />
       <Route path="/customers" component={CustomersDashboard} />
       
       <Route path="/contracts/*" component={ContractsDashboard} />
       <Route path="/contracts" component={ContractsDashboard} />
       
-      <Route path="/purchases/*" component={PurchaseRequisitions} />
-      <Route path="/purchases" component={PurchaseRequisitions} />
       <Route path="/vendors/*" component={VendorsLanding} />
       <Route path="/vendors" component={VendorsLanding} />
       <Route path="/products/*" component={ProductsDashboard} />
       <Route path="/products" component={ProductsDashboard} />
       <Route path="/profile/*" component={EmployeeProfile} />
       <Route path="/profile" component={EmployeeProfile} />
-      <Route path="/remote-desk/*" component={RemoteDeskMonitoring} />
-      <Route path="/remote-desk" component={RemoteDeskMonitoring} />
       
       {/* Attendance Module */}
       <Route path="/attendance/*" component={AttendanceDashboard} />
@@ -198,40 +149,11 @@ function AppRouter() {
       <Route path="/organizations/*" component={OrganizationsManagement} />
       <Route path="/organizations" component={OrganizationsManagement} />
       
-      {/* Flip Book Module */}
-      <Route path="/flipbook/*" component={FlipBookLibrary} />
-      <Route path="/flipbook" component={FlipBookLibrary} />
-      
-      {/* Bookings Module */}
-      <Route path="/dashboard/bookings/*" component={Appointments} />
-      
-      {/* Contacts Module */}
-      <Route path="/dashboard/contacts/*" component={ContactsList} />
-      <Route path="/dashboard/contacts" component={ContactsList} />
-      
       {/* Finance Module */}
       <Route path="/dashboard/finance/*" component={TaxRates} />
       
-      {/* Estimate Requests Module */}
-      <Route path="/dashboard/estimates/*" component={EstimateRequests} />
-      <Route path="/dashboard/estimates" component={EstimateRequests} />
-      
-      {/* Email Module */}
-      <Route path="/dashboard/email/*" component={EmailTemplates} />
-      
       {/* Setup Module */}
       <Route path="/dashboard/setup/*" component={StaffSetup} />
-      
-      {/* Custom Links Module */}
-      <Route path="/dashboard/custom-links/*" component={CustomLinks} />
-      <Route path="/dashboard/custom-links" component={CustomLinks} />
-      
-      {/* Field Staff Tracking Module */}
-      <Route path="/fieldstaff/*" component={FieldStaffTracking} />
-      <Route path="/fieldstaff" component={FieldStaffTracking} />
-      
-      {/* WhatsApp Module Routes */}
-      <Route path="/dashboard/whatsapp/*" component={Connect} />
       
       {/* Subscription Management Module */}
       <Route path="/subscriptions/*" component={SubscriptionManagement} />
@@ -242,14 +164,6 @@ function AppRouter() {
       <Route path="/leads/status" component={LeadStatus} />
       <Route path="/leads/*" component={LeadsWorkflow} />
       <Route path="/leads" component={LeadsWorkflow} />
-      
-      {/* Workflow Automation Module */}
-      <Route path="/workflow/*" component={WorkflowAutomation} />
-      <Route path="/workflow" component={WorkflowAutomation} />
-      
-      {/* Super Admin Module */}
-      <Route path="/superadmin/*" component={SuperAdminDashboard} />
-      <Route path="/superadmin" component={SuperAdminDashboard} />
       
       {/* Admin Setup Module */}
       <Route path="/admin/*" component={AdminSetup} />

@@ -18,13 +18,11 @@ import {
   MapPin,
   MessageCircle,
   CreditCard,
-  Shield,
   Settings,
   ChevronDown,
   Menu,
   Building2,
   Sparkles,
-  CheckSquare,
   Search,
   Bell,
   Plus,
@@ -32,11 +30,8 @@ import {
   Smile,
   Send,
   X,
-  Calendar,
   DollarSign,
   FileText,
-  Mail,
-  Link as LinkIcon,
 } from 'lucide-react';
 import ProfileDropdown from './ProfileDropdown';
 import WorkspaceSelector from './WorkspaceSelector';
@@ -160,7 +155,6 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         { name: 'Communication', path: '/customers/communication' },
       ]
     },
-    { name: 'Contacts', icon: UserPlus, path: '/dashboard/contacts' },
     { 
       name: 'Contracts', 
       icon: FileSignature, 
@@ -176,22 +170,6 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       ]
     },
     { 
-      name: 'Purchases', 
-      icon: ShoppingCart, 
-      path: '/purchases',
-      hasSubmenu: true,
-      submenuKey: 'purchases',
-      submenu: [
-        { name: 'Purchase Requisitions', path: '/purchases/requisitions' },
-        { name: 'Suppliers', path: '/purchases/suppliers' },
-        { name: 'Quotations', path: '/purchases/quotations' },
-        { name: 'Purchase Orders', path: '/purchases/orders' },
-        { name: 'Goods Receipts', path: '/purchases/goods-receipts' },
-        { name: 'Invoices', path: '/purchases/invoices' },
-        { name: 'Reports', path: '/purchases/reports' },
-      ]
-    },
-    { 
       name: 'Vendors', 
       icon: Briefcase, 
       path: '/vendors',
@@ -203,74 +181,20 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         { name: 'Documentation', path: '/vendors/documentation' },
       ]
     },
-    { name: 'Products', icon: Package, path: '/products' },
+    { 
+      name: 'Items', 
+      icon: Package, 
+      path: '/products',
+      hasSubmenu: true,
+      submenuKey: 'items',
+      submenu: [
+        { name: 'Products', path: '/items/products' },
+        { name: 'Services', path: '/items/services' },
+      ]
+    },
+
     { name: 'Profile', icon: Users, path: '/profile' },
-    { name: 'Remote Desk', icon: Monitor, path: '/remote-desk' },
-    { 
-      name: 'Flip Book', 
-      icon: BookOpen, 
-      path: '/flipbook',
-      hasSubmenu: true,
-      submenuKey: 'flipbook',
-      submenu: [
-        { name: 'Library', path: '/flipbook/library' },
-        { name: 'Viewer', path: '/flipbook/viewer' },
-      ]
-    },
-    { 
-      name: 'Field Staff Tracking', 
-      icon: MapPin, 
-      path: '/fieldstaff',
-      hasSubmenu: true,
-      submenuKey: 'fieldstaff',
-      submenu: [
-        { name: 'Staff Live Map', path: '/fieldstaff/live-map' },
-        { name: 'Movement History', path: '/fieldstaff/movement-history' },
-        { name: 'Geofence Manager', path: '/fieldstaff/geofence' },
-        { name: 'Proof of Visit', path: '/fieldstaff/proof-of-visit' },
-        { name: 'Attendance Check-In', path: '/fieldstaff/attendance' },
-        { name: 'Task Assignment', path: '/fieldstaff/tasks' },
-        { name: 'Expense Logs', path: '/fieldstaff/expenses' },
-      ]
-    },
-    { 
-      name: 'Bookings', 
-      icon: Calendar, 
-      path: '/dashboard/bookings/appointments',
-      hasSubmenu: true,
-      submenuKey: 'bookings',
-      submenu: [
-        { name: 'Appointments', path: '/dashboard/bookings/appointments' },
-        { name: 'Callbacks', path: '/dashboard/bookings/callbacks' },
-        { name: 'Time Slots', path: '/dashboard/bookings/time-slots' },
-        { name: 'Calendar', path: '/dashboard/bookings/calendar' },
-        { name: 'Form Info', path: '/dashboard/bookings/form-info' },
-      ]
-    },
-    { 
-      name: 'WhatsApp', 
-      icon: MessageCircle, 
-      path: '/dashboard/whatsapp/connect',
-      hasSubmenu: true,
-      submenuKey: 'whatsapp',
-      submenu: [
-        { name: 'Connect', path: '/dashboard/whatsapp/connect' },
-        { name: 'Settings', path: '/dashboard/whatsapp/settings' },
-        { name: 'WABA Config', path: '/dashboard/whatsapp/waba-config' },
-        { name: 'Marketing Campaigns', path: '/dashboard/whatsapp/marketing-campaigns' },
-        { 
-          name: 'Bot Automation', 
-          path: '/dashboard/whatsapp/bot-flows',
-          hasSubmenu: true,
-          submenuKey: 'whatsapp-bot', // Added key
-          submenu: [
-            { name: 'Bot Flows', path: '/dashboard/whatsapp/bot-flows' },
-          ]
-        },
-        { name: 'Conversations', path: '/dashboard/whatsapp/conversations' },
-        { name: 'Bot Analytics', path: '/dashboard/whatsapp/bot-analytics' },
-      ]
-    },
+    
     { name: 'Subscription', icon: CreditCard, path: '/subscriptions' },
     { 
       name: 'Finance', 
@@ -283,22 +207,6 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         { name: 'Currency', path: '/dashboard/finance/currency' },
         { name: 'Payment Modes', path: '/dashboard/finance/payment-modes' },
         { name: 'Expense Categories', path: '/dashboard/finance/expense-categories' },
-      ]
-    },
-    { 
-      name: 'Estimate Requests', 
-      icon: FileText, 
-      path: '/dashboard/estimates'
-    },
-    { 
-      name: 'Email', 
-      icon: Mail, 
-      path: '/dashboard/email/templates',
-      hasSubmenu: true,
-      submenuKey: 'email',
-      submenu: [
-        { name: 'Templates', path: '/dashboard/email/templates' },
-        { name: 'Integration', path: '/dashboard/email/integration' },
       ]
     },
     { 
@@ -330,31 +238,6 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       ]
     },
     { 
-      name: 'Workflow', 
-      icon: CheckSquare, 
-      path: '/workflow',
-      hasSubmenu: true,
-      submenuKey: 'workflow',
-      submenu: [
-        { name: 'Workflow Builder', path: '/workflow/builder' },
-        { name: 'Active Workflows', path: '/workflow/active' },
-        { name: 'Analytics', path: '/workflow/analytics' },
-      ]
-    },
-    { 
-      name: 'Super Admin', 
-      icon: Shield, 
-      path: '/superadmin',
-      hasSubmenu: true,
-      submenuKey: 'superadmin',
-      submenu: [
-        { name: 'Organizations', path: '/superadmin/organizations' },
-        { name: 'Module Usage', path: '/superadmin/modules' },
-        { name: 'System Health', path: '/superadmin/system' },
-        { name: 'Audit Logs', path: '/superadmin/audit' },
-      ]
-    },
-    { 
       name: 'Admin', 
       icon: Settings, 
       path: '/admin',
@@ -382,7 +265,6 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         { name: 'Leads', path: '/dashboard/settings/leads' },
       ]
     },
-    { name: 'Custom Links', icon: LinkIcon, path: '/dashboard/custom-links' },
   ], []);
 
   // State for expandable menus
@@ -393,20 +275,11 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     'income-expense': false,
     receivables: false,
     payables: false,
-    purchases: false,
     vendors: false,
-    flipbook: false,
-    fieldstaff: false,
-    whatsapp: false,
-    'whatsapp-bot': false,
     leads: false,
-    workflow: false,
-    superadmin: false,
     admin: false,
     finance: false,
     setup: false,
-    email: false,
-    bookings: false,
     contracts: false,
     customers: false,
     settings: false,
@@ -558,15 +431,9 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     { name: 'Banking', path: '/accounts/banking', category: 'Accounts', keywords: 'bank transactions' },
     { name: 'Customers', path: '/customers', category: 'Sales', keywords: 'clients contacts CRM' },
     { name: 'Vendors', path: '/vendors', category: 'Purchases', keywords: 'suppliers vendors procurement' },
-    { name: 'Purchase Orders', path: '/purchases/orders', category: 'Purchases', keywords: 'PO procurement buying' },
     { name: 'Products', path: '/products', category: 'Inventory', keywords: 'items stock catalog' },
-    { name: 'Flip Book', path: '/flipbook', category: 'Communication', keywords: 'documents PDF viewer' },
-    { name: 'Field Staff Tracking', path: '/fieldstaff', category: 'HR', keywords: 'GPS location tracking' },
-    { name: 'WhatsApp Integration', path: '/whatsapp', category: 'Communication', keywords: 'chat messaging WAHA WABA' },
     { name: 'Subscriptions', path: '/subscriptions', category: 'Accounts', keywords: 'recurring billing plans' },
     { name: 'Leads', path: '/leads', category: 'Sales', keywords: 'prospects opportunities pipeline' },
-    { name: 'Workflow Automation', path: '/workflow', category: 'System', keywords: 'automation rules triggers' },
-    { name: 'Super Admin', path: '/superadmin', category: 'Admin', keywords: 'organizations system settings' },
     { name: 'Admin Setup', path: '/admin', category: 'Admin', keywords: 'configuration permissions users' },
     { name: 'Profile', path: '/profile', category: 'Profile', keywords: 'account settings preferences' },
   ], []);
