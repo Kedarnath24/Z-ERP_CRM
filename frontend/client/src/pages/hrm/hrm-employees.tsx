@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -32,7 +32,11 @@ import {
   TrendingUp,
   UserCheck,
   Clock,
-  UserMinus
+  UserMinus,
+  CheckCircle,
+  Activity,
+  AlertCircle,
+  History
 } from 'lucide-react';
 import { 
   Dialog, 
@@ -57,14 +61,24 @@ import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { cn } from "@/lib/utils";
-import React from 'react';
 
-export default function EmployeeManagement() {
+// HRMAttendance: Employee Management module.
+export default function HRMEmployees() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [isExporting, setIsExporting] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newEmployee, setNewEmployee] = useState({
+    name: '',
+    designation: '',
+    department: '',
+    location: '',
+    email: '',
+    phone: '',
+    joining: new Date().toISOString().split('T')[0]
+  });
   const { toast } = useToast();
 
   const [employees, setEmployees] = useState([
@@ -78,7 +92,8 @@ export default function EmployeeManagement() {
       status: 'active',
       avatar: 'JS',
       email: 'john.smith@company.com',
-      phone: '+1 234 567 8900'
+      phone: '+1 234 567 8900',
+      exitWorkflow: null
     },
     {
       id: 'EMP002',
@@ -90,7 +105,8 @@ export default function EmployeeManagement() {
       status: 'active',
       avatar: 'SJ',
       email: 'sarah.j@company.com',
-      phone: '+1 234 567 8901'
+      phone: '+1 234 567 8901',
+      exitWorkflow: null
     },
     {
       id: 'EMP003',
@@ -102,7 +118,8 @@ export default function EmployeeManagement() {
       status: 'probation',
       avatar: 'MB',
       email: 'mike.brown@company.com',
-      phone: '+1 234 567 8902'
+      phone: '+1 234 567 8902',
+      exitWorkflow: null
     },
     {
       id: 'EMP004',
@@ -114,7 +131,8 @@ export default function EmployeeManagement() {
       status: 'active',
       avatar: 'ED',
       email: 'emily.davis@company.com',
-      phone: '+1 234 567 8903'
+      phone: '+1 234 567 8903',
+      exitWorkflow: null
     },
     {
       id: 'EMP005',
@@ -126,7 +144,8 @@ export default function EmployeeManagement() {
       status: 'onboarding',
       avatar: 'AW',
       email: 'alex.wilson@company.com',
-      phone: '+1 234 567 8904'
+      phone: '+1 234 567 8904',
+      exitWorkflow: null
     },
     {
       id: 'EMP006',
@@ -138,7 +157,8 @@ export default function EmployeeManagement() {
       status: 'active',
       avatar: 'LA',
       email: 'lisa.anderson@company.com',
-      phone: '+1 234 567 8905'
+      phone: '+1 234 567 8905',
+      exitWorkflow: null
     }
   ]);
 
@@ -146,7 +166,7 @@ export default function EmployeeManagement() {
     active: { label: 'Active', class: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
     probation: { label: 'Probation', class: 'bg-amber-100 text-amber-700 border-amber-200' },
     onboarding: { label: 'Onboarding', class: 'bg-blue-100 text-blue-700 border-blue-200' },
-    exit: { label: 'Exit Process', class: 'bg-rose-100 text-rose-700 border-rose-200' }
+    exit: { label: 'Exit Workflow', class: 'bg-rose-100 text-rose-700 border-rose-200' }
   };
 
   const filteredEmployees = useMemo(() => {
@@ -186,6 +206,58 @@ export default function EmployeeManagement() {
       setIsExporting(false);
       toast({ title: "Export Ready", description: "Download started." });
     }, 1200);
+  };
+
+  const handleAddEmployee = () => {
+    if (!newEmployee.name || !newEmployee.designation || !newEmployee.department) {
+      toast({ 
+        title: "Validation Error", 
+        description: "Please fill in all required fields.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    const id = `EMP${String(employees.length + 1).padStart(3, '0')}`;
+    const avatar = newEmployee.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    
+    const employeeToAdd = {
+      ...newEmployee,
+      id,
+      avatar,
+      status: 'onboarding'
+    };
+
+    setEmployees([employeeToAdd, ...employees]);
+    setIsAddDialogOpen(false);
+    setNewEmployee({
+      name: '',
+      designation: '',
+      department: '',
+      location: '',
+      email: '',
+      phone: '',
+      joining: new Date().toISOString().split('T')[0]
+    });
+    
+    toast({ 
+      title: "Employee Added", 
+      description: `${newEmployee.name} has been added to the directory and onboarding initiated.` 
+    });
+  };
+
+  const handleUpdateStatus = (employeeId: string, newStatus: string, workflow?: any) => {
+    setEmployees(employees.map(emp => 
+      emp.id === employeeId ? { ...emp, status: newStatus, exitWorkflow: workflow || emp.exitWorkflow } : emp
+    ));
+    
+    if (!workflow) {
+      const statusLabel = statusConfig[newStatus]?.label || newStatus;
+      toast({
+        title: "Status Updated",
+        description: `Employee status changed to ${statusLabel}.`
+      });
+    }
   };
 
   return (
@@ -238,13 +310,94 @@ export default function EmployeeManagement() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Button 
-                className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-xl font-bold transition-all active:scale-95"
-                onClick={() => toast({ title: "Coming Soon", description: "The employee onboarding form is currently being built." })}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Employee
-              </Button>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-xl font-bold transition-all active:scale-95"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Employee
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+                  <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-700 p-6">
+                    <DialogTitle className="text-2xl font-bold text-white tracking-tight">New Employee</DialogTitle>
+                    <DialogDescription className="text-blue-100 font-medium">Create a new employee profile and initiate onboarding</DialogDescription>
+                  </div>
+                  <div className="p-8 space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Full Name</Label>
+                      <Input 
+                        placeholder="e.g. Robert Fox" 
+                        value={newEmployee.name}
+                        onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
+                        className="rounded-xl border-slate-200 h-11 bg-slate-50/50" 
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Designation</Label>
+                        <Input 
+                          placeholder="e.g. Lead Designer" 
+                          value={newEmployee.designation}
+                          onChange={(e) => setNewEmployee({...newEmployee, designation: e.target.value})}
+                          className="rounded-xl border-slate-200 h-11 bg-slate-50/50" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Department</Label>
+                        <Select onValueChange={(v) => setNewEmployee({...newEmployee, department: v})}>
+                          <SelectTrigger className="rounded-xl border-slate-200 h-11 bg-slate-50/50">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            <SelectItem value="Engineering">Engineering</SelectItem>
+                            <SelectItem value="Product">Product</SelectItem>
+                            <SelectItem value="Design">Design</SelectItem>
+                            <SelectItem value="Sales">Sales</SelectItem>
+                            <SelectItem value="Marketing">Marketing</SelectItem>
+                            <SelectItem value="Human Resources">Human Resources</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Official Email</Label>
+                      <Input 
+                        placeholder="robert@company.com" 
+                        type="email"
+                        value={newEmployee.email}
+                        onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
+                        className="rounded-xl border-slate-200 h-11 bg-slate-50/50" 
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Work Location</Label>
+                        <Input 
+                          placeholder="e.g. Remote" 
+                          value={newEmployee.location}
+                          onChange={(e) => setNewEmployee({...newEmployee, location: e.target.value})}
+                          className="rounded-xl border-slate-200 h-11 bg-slate-50/50" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Joining Date</Label>
+                        <Input 
+                          type="date" 
+                          value={newEmployee.joining}
+                          onChange={(e) => setNewEmployee({...newEmployee, joining: e.target.value})}
+                          className="rounded-xl border-slate-200 h-11 bg-slate-50/50" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="px-8 pb-8 flex gap-3">
+                    <Button variant="ghost" className="flex-1 rounded-xl h-11 font-bold text-slate-500 hover:bg-slate-100" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
+                    <Button className="flex-1 bg-blue-600 hover:bg-blue-700 rounded-xl h-11 font-bold shadow-lg shadow-blue-100" onClick={handleAddEmployee}>Create Employee</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
@@ -271,7 +424,7 @@ export default function EmployeeManagement() {
                         : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/50"
                     )}
                   >
-                    {tab === 'all' ? 'Directory' : tab}
+                    {tab === 'all' ? 'Directory' : tab === 'exit' ? 'Exit Management' : tab}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -306,13 +459,213 @@ export default function EmployeeManagement() {
             </div>
 
             <TabsContent value={activeTab} className="mt-6">
-              {filteredEmployees.length > 0 ? (
+              {activeTab === 'exit' ? (
+                // Detailed Exit Management View
+                <div className="space-y-6">
+                  {filteredEmployees.filter(emp => emp.status === 'exit').length > 0 ? (
+                    <>
+                      {/* Exit Overview Stats */}
+                      <div className="grid gap-4 md:grid-cols-4">
+                        <Card className="border-rose-200 bg-rose-50/30">
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs font-bold text-rose-600 uppercase tracking-wider mb-1">Active Exits</p>
+                                <h3 className="text-3xl font-black text-rose-700">
+                                  {filteredEmployees.filter(emp => emp.status === 'exit').length}
+                                </h3>
+                              </div>
+                              <div className="p-3 bg-rose-100 rounded-xl">
+                                <UserMinus className="h-6 w-6 text-rose-600" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="border-amber-200 bg-amber-50/30">
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-1">Pending Clearance</p>
+                                <h3 className="text-3xl font-black text-amber-700">
+                                  {filteredEmployees.filter(emp => emp.status === 'exit' && emp.exitWorkflow?.status === 'pending_approvals').length}
+                                </h3>
+                              </div>
+                              <div className="p-3 bg-amber-100 rounded-xl">
+                                <Clock className="h-6 w-6 text-amber-600" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="border-blue-200 bg-blue-50/30">
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">Avg Exit Duration</p>
+                                <h3 className="text-3xl font-black text-blue-700">14 days</h3>
+                              </div>
+                              <div className="p-3 bg-blue-100 rounded-xl">
+                                <Calendar className="h-6 w-6 text-blue-600" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                        <Card className="border-emerald-200 bg-emerald-50/30">
+                          <CardContent className="p-6">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-1">Completed</p>
+                                <h3 className="text-3xl font-black text-emerald-700">8</h3>
+                              </div>
+                              <div className="p-3 bg-emerald-100 rounded-xl">
+                                <CheckCircle className="h-6 w-6 text-emerald-600" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+
+                      {/* Detailed Exit Workflows */}
+                      <div className="space-y-4">
+                        {filteredEmployees.filter(emp => emp.status === 'exit').map((employee) => (
+                          <Card key={employee.id} className="border-rose-200/60 hover:shadow-lg transition-all">
+                            <CardContent className="p-6">
+                              <div className="flex items-start justify-between mb-6">
+                                <div className="flex items-center gap-4">
+                                  <Avatar className="h-16 w-16 border-2 border-rose-200">
+                                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${employee.name}`} />
+                                    <AvatarFallback className="bg-rose-100 text-rose-700 text-lg font-bold">{employee.avatar}</AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <h3 className="text-xl font-bold text-slate-900">{employee.name}</h3>
+                                    <p className="text-sm text-slate-500 font-medium">{employee.designation} • {employee.department}</p>
+                                    <p className="text-xs text-slate-400 mt-1">{employee.id}</p>
+                                  </div>
+                                </div>
+                                <Badge className="bg-rose-100 text-rose-700 border-rose-200 px-3 py-1.5 font-bold">
+                                  Exit in Progress
+                                </Badge>
+                              </div>
+
+                              {employee.exitWorkflow ? (
+                                <>
+                                  <div className="mb-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Exit Reason</p>
+                                        <p className="text-sm font-bold text-slate-700">{employee.exitWorkflow.reason}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Initiated On</p>
+                                        <p className="text-sm font-bold text-slate-700">
+                                          {new Date(employee.exitWorkflow.initiatedAt).toLocaleDateString('en-US', { 
+                                            month: 'short', 
+                                            day: 'numeric', 
+                                            year: 'numeric' 
+                                          })}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Exit Workflow Steps */}
+                                  <div className="space-y-3">
+                                    <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-3">
+                                      <Activity className="h-4 w-4 text-rose-600" />
+                                      Clearance Progress
+                                    </h4>
+                                    {employee.exitWorkflow.steps.map((step: any, idx: number) => (
+                                      <div 
+                                        key={idx} 
+                                        className={cn(
+                                          "flex items-center justify-between p-4 rounded-xl border transition-all",
+                                          step.status === 'pending' 
+                                            ? "bg-amber-50 border-amber-200" 
+                                            : step.status === 'completed'
+                                            ? "bg-emerald-50 border-emerald-200"
+                                            : "bg-slate-50 border-slate-200"
+                                        )}
+                                      >
+                                        <div className="flex items-center gap-3">
+                                          {step.status === 'pending' ? (
+                                            <Clock className="h-5 w-5 text-amber-600" />
+                                          ) : step.status === 'completed' ? (
+                                            <CheckCircle className="h-5 w-5 text-emerald-600" />
+                                          ) : (
+                                            <div className="h-5 w-5 rounded-full border-2 border-slate-300" />
+                                          )}
+                                          <div>
+                                            <p className="text-sm font-bold text-slate-800">{step.name}</p>
+                                            {step.completedBy && (
+                                              <p className="text-xs text-slate-500 mt-0.5">Approved by {step.completedBy}</p>
+                                            )}
+                                          </div>
+                                        </div>
+                                        <Badge 
+                                          className={cn(
+                                            "rounded-lg text-[10px] font-black uppercase",
+                                            step.status === 'pending' 
+                                              ? "bg-amber-100 text-amber-700" 
+                                              : step.status === 'completed'
+                                              ? "bg-emerald-100 text-emerald-700"
+                                              : "bg-slate-100 text-slate-500"
+                                          )}
+                                        >
+                                          {step.status === 'completed' ? 'Cleared' : step.status === 'pending' ? 'In Progress' : 'Waiting'}
+                                        </Badge>
+                                      </div>
+                                    ))}
+                                  </div>
+
+                                  {/* Action Buttons */}
+                                  <div className="flex gap-3 mt-6 pt-6 border-t border-slate-100">
+                                    <Button 
+                                      variant="outline" 
+                                      className="flex-1 rounded-xl h-11 font-bold border-blue-200 text-blue-600 hover:bg-blue-50"
+                                    >
+                                      <FileText className="h-4 w-4 mr-2" />
+                                      View Details
+                                    </Button>
+                                    <Button 
+                                      className="flex-1 rounded-xl h-11 font-bold bg-rose-600 hover:bg-rose-700"
+                                    >
+                                      <Download className="h-4 w-4 mr-2" />
+                                      Export Clearance
+                                    </Button>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-center py-8 text-slate-500">
+                                  <AlertCircle className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                                  <p className="text-sm font-medium">No exit workflow data available</p>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <Card className="border-dashed border-2 py-24 bg-slate-50/30 rounded-[2rem]">
+                      <CardContent className="flex flex-col items-center justify-center text-center">
+                        <div className="p-5 bg-rose-100 rounded-full mb-6">
+                          <UserMinus className="h-10 w-10 text-rose-300" />
+                        </div>
+                        <h3 className="text-xl font-bold text-slate-900">No Active Exit Processes</h3>
+                        <p className="text-sm text-slate-500 max-w-xs mt-2 font-medium">
+                          There are currently no employees in the exit workflow. All clearances are up to date.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              ) : filteredEmployees.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {filteredEmployees.map((employee) => (
                     <EmployeeCard 
                       key={employee.id} 
                       employee={employee} 
                       statusConfig={statusConfig} 
+                      onUpdateStatus={handleUpdateStatus}
                     />
                   ))}
                 </div>
@@ -348,8 +701,45 @@ export default function EmployeeManagement() {
   );
 }
 
-function EmployeeCard({ employee, statusConfig }: { employee: any, statusConfig: any }) {
+function EmployeeCard({ employee, statusConfig, onUpdateStatus }: { employee: any, statusConfig: any, onUpdateStatus: (id: string, status: string, workflow?: any) => void }) {
   const { toast } = useToast();
+  const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
+  const [exitReason, setExitReason] = useState('');
+  
+  const handleInitiateExit = () => {
+    // Validation
+    if (!exitReason) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a reason for exit before proceeding.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const workflow = {
+      initiatedAt: new Date().toISOString(),
+      reason: exitReason,
+      status: 'pending_approvals',
+      steps: [
+        { name: 'Manager Approval', status: 'pending' },
+        { name: 'HR Clearance', status: 'waiting' },
+        { name: 'IT Assets Recovery', status: 'waiting' },
+        { name: 'Finance Settlement', status: 'waiting' }
+      ]
+    };
+    
+    onUpdateStatus(employee.id, 'exit', workflow);
+    setIsExitDialogOpen(false);
+    setExitReason(''); // Clear the reason after successful submission
+    
+    toast({
+      title: "✅ Exit Process Initiated",
+      description: `${exitReason} workflow started for ${employee.name}. All relevant departments will be notified.`,
+      duration: 5000
+    });
+  };
+
   return (
     <Card className="group hover:border-blue-200 hover:shadow-xl transition-all duration-300 rounded-[1.5rem] overflow-hidden border-slate-200/60 flex flex-col bg-white">
       <div className="h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500" />
@@ -469,15 +859,96 @@ function EmployeeCard({ employee, statusConfig }: { employee: any, statusConfig:
                 <ProfileInfoItem icon={<Briefcase />} label="Employment Type" value="Full Time" />
               </div>
 
+              {employee.status === 'exit' && employee.exitWorkflow && (
+                <div className="mb-8 p-6 bg-rose-50 rounded-3xl border border-rose-100">
+                  <h4 className="text-sm font-black text-rose-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <History className="h-4 w-4" />
+                    Exit Workflow Progress
+                  </h4>
+                  <div className="space-y-3">
+                    {employee.exitWorkflow.steps.map((step: any, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between bg-white/60 p-3 rounded-xl border border-rose-100/50">
+                        <span className="text-sm font-bold text-slate-700">{step.name}</span>
+                        <Badge className={cn(
+                          "rounded-lg text-[10px] font-black uppercase tracking-tight",
+                          step.status === 'pending' ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-400"
+                        )}>
+                          {step.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-4">
                 <Button className="flex-1 bg-blue-600 hover:bg-blue-700 rounded-2xl py-7 h-auto font-bold shadow-lg shadow-blue-200 transition-all active:scale-[0.98]">
                   <Edit className="h-5 w-5 mr-3" />
                   Edit Profile
                 </Button>
-                <Button variant="outline" className="flex-1 rounded-2xl py-7 h-auto text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 font-bold transition-all active:scale-[0.98]">
-                  <Trash2 className="h-5 w-5 mr-3" />
-                  Terminate
-                </Button>
+                
+                <Dialog open={isExitDialogOpen} onOpenChange={setIsExitDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="flex-1 rounded-2xl py-7 h-auto text-rose-600 border-rose-200 hover:bg-rose-50 hover:text-rose-700 font-bold transition-all active:scale-[0.98]">
+                      <Trash2 className="h-5 w-5 mr-3" />
+                      Exit Process
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
+                    <div className="h-24 bg-gradient-to-r from-rose-600 to-rose-700 p-6">
+                      <DialogTitle className="text-2xl font-bold text-white tracking-tight">Exit Process</DialogTitle>
+                      <DialogDescription className="text-rose-100 font-medium">Initiate resignation or termination for {employee.name}</DialogDescription>
+                    </div>
+                    <div className="p-8 space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Reason for Exit</Label>
+                        <Select onValueChange={setExitReason}>
+                          <SelectTrigger className="rounded-xl border-slate-200 h-11 bg-slate-50/50">
+                            <SelectValue placeholder="Select reason" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            <SelectItem value="Resignation">Voluntary Resignation</SelectItem>
+                            <SelectItem value="Termination">Termination (Performance/Policy)</SelectItem>
+                            <SelectItem value="Retirement">Retirement</SelectItem>
+                            <SelectItem value="Contract End">End of Contract</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Notice Period Status</Label>
+                        <Select>
+                          <SelectTrigger className="rounded-xl border-slate-200 h-11 bg-slate-50/50">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent className="rounded-xl">
+                            <SelectItem value="serving">Serving Notice</SelectItem>
+                            <SelectItem value="waived">Notice Waived</SelectItem>
+                            <SelectItem value="immediate">Immediate Release</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="px-8 pb-8 flex gap-3">
+                      <Button 
+                        variant="ghost" 
+                        className="flex-1 rounded-xl h-11 font-bold text-slate-500 hover:bg-slate-100" 
+                        onClick={() => {
+                          setIsExitDialogOpen(false);
+                          setExitReason(''); // Clear form on cancel
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        className="flex-1 bg-rose-600 hover:bg-rose-700 rounded-xl h-11 font-bold shadow-lg shadow-rose-100 disabled:opacity-50 disabled:cursor-not-allowed" 
+                        onClick={handleInitiateExit}
+                        disabled={!exitReason}
+                      >
+                        Confirm Exit Process
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </DialogContent>

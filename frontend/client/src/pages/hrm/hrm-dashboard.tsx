@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { 
@@ -17,15 +18,25 @@ import {
   Activity,
   CalendarDays,
   CheckCircle2,
-  ChevronRight
+  ChevronRight,
+  GitBranch
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import React from 'react';
 
 export default function HRMDashboard() {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [requestType, setRequestType] = useState('');
 
   const kpiStats = [
     { title: 'Total Employees', value: '248', icon: Users, color: 'text-blue-600', bgColor: 'bg-blue-50', gradient: 'from-blue-500/10 to-indigo-500/10' },
@@ -100,6 +111,15 @@ export default function HRMDashboard() {
       accent: 'border-pink-200'
     },
     {
+      icon: TrendingUp,
+      title: 'Salary Design',
+      description: 'Configure earnings, deductions, and statutory rules',
+      route: '/hrm/payroll',
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      accent: 'border-indigo-200'
+    },
+    {
       icon: Zap,
       title: 'Automation',
       description: 'Automate HR workflows and notifications',
@@ -107,6 +127,15 @@ export default function HRMDashboard() {
       color: 'text-amber-600',
       bgColor: 'bg-amber-50',
       accent: 'border-amber-200'
+    },
+    {
+      icon: GitBranch,
+      title: 'Workflows',
+      description: 'Multi-stage approval processes and business logic',
+      route: '/hrm/workflows',
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      accent: 'border-indigo-200'
     }
   ];
 
@@ -128,7 +157,10 @@ export default function HRMDashboard() {
               <Activity className="h-4 w-4 mr-2" />
               Live Feed
             </Button>
-            <Button className="rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 font-bold px-6">
+            <Button 
+              onClick={() => setIsCreateDialogOpen(true)}
+              className="rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 font-bold px-6"
+            >
               Create Request
             </Button>
           </div>
@@ -231,8 +263,446 @@ export default function HRMDashboard() {
           />
         </div>
       </div>
+
+      {/* Create Request Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] rounded-3xl p-0 overflow-hidden border-none shadow-2xl">
+          <div className="bg-gradient-to-br from-blue-600 to-indigo-600 p-8 text-white">
+            <DialogTitle className="text-3xl font-black flex items-center gap-2">
+              <Sparkles className="h-7 w-7" />
+              Create HR Request
+            </DialogTitle>
+            <DialogDescription className="text-blue-100 font-medium mt-2">
+              Submit a new request for HR operations and employee services
+            </DialogDescription>
+          </div>
+          
+          <ScrollArea className="max-h-[calc(85vh-180px)]">
+            <div className="p-8 space-y-6">
+            {/* Request Type Selection */}
+            <div className="space-y-3">
+              <Label className="text-xs font-black uppercase text-slate-400 ml-1">Request Type</Label>
+              <Select value={requestType} onValueChange={setRequestType}>
+                <SelectTrigger className="rounded-xl bg-slate-50 border-slate-200 h-14 font-bold text-base">
+                  <SelectValue placeholder="Select what you need..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="leave">Leave Application</SelectItem>
+                  <SelectItem value="travel">Travel Request</SelectItem>
+                  <SelectItem value="expense">Expense Claim</SelectItem>
+                  <SelectItem value="certificate">Work Certificate</SelectItem>
+                  <SelectItem value="advance">Salary Advance</SelectItem>
+                  <SelectItem value="resignation">Resignation</SelectItem>
+                  <SelectItem value="complaint">Complaint/Grievance</SelectItem>
+                  <SelectItem value="other">Other Request</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dynamic Form Based on Request Type */}
+            {requestType === 'leave' && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase text-slate-400 ml-1">From Date</Label>
+                    <Input id="leave-from" type="date" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase text-slate-400 ml-1">To Date</Label>
+                    <Input id="leave-to" type="date" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Leave Type</Label>
+                  <Select onValueChange={(val) => (document.getElementById('leave-type') as any).value = val}>
+                    <SelectTrigger className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold">
+                      <SelectValue placeholder="Select leave type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="casual">Casual Leave</SelectItem>
+                      <SelectItem value="sick">Sick Leave</SelectItem>
+                      <SelectItem value="earned">Earned Leave</SelectItem>
+                      <SelectItem value="maternity">Maternity Leave</SelectItem>
+                      <SelectItem value="paternity">Paternity Leave</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <input type="hidden" id="leave-type" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Reason</Label>
+                  <Textarea id="leave-reason" placeholder="Brief description of your leave request..." className="rounded-xl bg-slate-50 border-slate-200 min-h-24 font-medium" />
+                </div>
+              </div>
+            )}
+
+            {requestType === 'travel' && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Destination</Label>
+                  <Input id="travel-destination" placeholder="City, Country" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase text-slate-400 ml-1">Departure Date</Label>
+                    <Input id="travel-from" type="date" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase text-slate-400 ml-1">Return Date</Label>
+                    <Input id="travel-to" type="date" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Purpose</Label>
+                  <Textarea id="travel-purpose" placeholder="Business purpose and expected outcomes..." className="rounded-xl bg-slate-50 border-slate-200 min-h-24 font-medium" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Estimated Budget (USD)</Label>
+                  <Input id="travel-budget" type="number" placeholder="0.00" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                </div>
+              </div>
+            )}
+
+            {requestType === 'expense' && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Expense Category</Label>
+                  <Select onValueChange={(val) => (document.getElementById('expense-category') as any).value = val}>
+                    <SelectTrigger className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="travel">Travel & Transport</SelectItem>
+                      <SelectItem value="meals">Meals & Entertainment</SelectItem>
+                      <SelectItem value="accommodation">Accommodation</SelectItem>
+                      <SelectItem value="supplies">Office Supplies</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <input type="hidden" id="expense-category" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Amount (USD)</Label>
+                  <Input id="expense-amount" type="number" placeholder="0.00" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Description</Label>
+                  <Textarea id="expense-description" placeholder="Describe the expense with details..." className="rounded-xl bg-slate-50 border-slate-200 min-h-24 font-medium" />
+                </div>
+              </div>
+            )}
+
+            {requestType === 'certificate' && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Certificate Type</Label>
+                  <Select onValueChange={(val) => (document.getElementById('cert-type') as any).value = val}>
+                    <SelectTrigger className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold">
+                      <SelectValue placeholder="Select certificate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="employment">Employment Certificate</SelectItem>
+                      <SelectItem value="experience">Experience Certificate</SelectItem>
+                      <SelectItem value="salary">Salary Certificate</SelectItem>
+                      <SelectItem value="noc">No Objection Certificate</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <input type="hidden" id="cert-type" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Purpose</Label>
+                  <Textarea id="cert-purpose" placeholder="Why do you need this certificate?" className="rounded-xl bg-slate-50 border-slate-200 min-h-24 font-medium" />
+                </div>
+              </div>
+            )}
+
+            {requestType === 'advance' && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Amount Required (USD)</Label>
+                  <Input id="advance-amount" type="number" placeholder="0.00" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Repayment Installments</Label>
+                  <Input id="advance-installments" type="number" placeholder="Number of months" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Reason</Label>
+                  <Textarea id="advance-reason" placeholder="Explain why you need this advance..." className="rounded-xl bg-slate-50 border-slate-200 min-h-24 font-medium" />
+                </div>
+              </div>
+            )}
+
+            {requestType === 'resignation' && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Last Working Date</Label>
+                  <Input id="resign-date" type="date" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Notice Period (Days)</Label>
+                  <Input id="resign-notice" type="number" placeholder="e.g., 30, 60, 90" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Reason for Leaving</Label>
+                  <Textarea id="resign-reason" placeholder="Optional: Share your feedback..." className="rounded-xl bg-slate-50 border-slate-200 min-h-24 font-medium" />
+                </div>
+              </div>
+            )}
+
+            {requestType === 'complaint' && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Category</Label>
+                  <Select onValueChange={(val) => (document.getElementById('complaint-category') as any).value = val}>
+                    <SelectTrigger className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="harassment">Harassment</SelectItem>
+                      <SelectItem value="discrimination">Discrimination</SelectItem>
+                      <SelectItem value="workplace">Workplace Safety</SelectItem>
+                      <SelectItem value="management">Management Issue</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <input type="hidden" id="complaint-category" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Subject</Label>
+                  <Input id="complaint-subject" placeholder="Brief subject line" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Details</Label>
+                  <Textarea id="complaint-details" placeholder="Describe the situation in detail..." className="rounded-xl bg-slate-50 border-slate-200 min-h-32 font-medium" />
+                </div>
+              </div>
+            )}
+
+            {requestType === 'other' && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Subject</Label>
+                  <Input id="other-subject" placeholder="What is your request about?" className="rounded-xl bg-slate-50 border-slate-200 h-12 font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-black uppercase text-slate-400 ml-1">Details</Label>
+                  <Textarea id="other-details" placeholder="Describe your request in detail..." className="rounded-xl bg-slate-50 border-slate-200 min-h-32 font-medium" />
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => {
+                  setIsCreateDialogOpen(false);
+                  setRequestType('');
+                }}
+                className="flex-1 rounded-xl h-12 font-bold text-slate-500 hover:bg-slate-100"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmitRequest}
+                disabled={!requestType}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 rounded-xl h-12 font-bold shadow-lg shadow-blue-100"
+              >
+                Submit Request
+              </Button>
+            </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
+
+  function handleSubmitRequest() {
+    if (!requestType) {
+      toast({
+        title: "Validation Error",
+        description: "Please select a request type first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validation and submission logic based on request type
+    let isValid = false;
+    let requestId = '';
+    let message = '';
+
+    switch (requestType) {
+      case 'leave':
+        const leaveFrom = (document.getElementById('leave-from') as HTMLInputElement)?.value;
+        const leaveTo = (document.getElementById('leave-to') as HTMLInputElement)?.value;
+        const leaveType = (document.getElementById('leave-type') as HTMLInputElement)?.value;
+        const leaveReason = (document.getElementById('leave-reason') as HTMLTextAreaElement)?.value;
+        
+        if (!leaveFrom || !leaveTo || !leaveType || !leaveReason) {
+          toast({
+            title: "Incomplete Form",
+            description: "Please fill in all leave request fields.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        requestId = `LV-${Date.now().toString().slice(-6)}`;
+        message = `Leave application submitted for ${new Date(leaveFrom).toLocaleDateString()} to ${new Date(leaveTo).toLocaleDateString()}`;
+        isValid = true;
+        break;
+
+      case 'travel':
+        const travelDest = (document.getElementById('travel-destination') as HTMLInputElement)?.value;
+        const travelFrom = (document.getElementById('travel-from') as HTMLInputElement)?.value;
+        const travelTo = (document.getElementById('travel-to') as HTMLInputElement)?.value;
+        const travelPurpose = (document.getElementById('travel-purpose') as HTMLTextAreaElement)?.value;
+        
+        if (!travelDest || !travelFrom || !travelTo || !travelPurpose) {
+          toast({
+            title: "Incomplete Form",
+            description: "Please fill in all travel request fields.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        requestId = `TRV-${Date.now().toString().slice(-6)}`;
+        message = `Travel request to ${travelDest} submitted successfully`;
+        isValid = true;
+        break;
+
+      case 'expense':
+        const expenseCategory = (document.getElementById('expense-category') as HTMLInputElement)?.value;
+        const expenseAmount = (document.getElementById('expense-amount') as HTMLInputElement)?.value;
+        const expenseDesc = (document.getElementById('expense-description') as HTMLTextAreaElement)?.value;
+        
+        if (!expenseCategory || !expenseAmount || !expenseDesc || parseFloat(expenseAmount) <= 0) {
+          toast({
+            title: "Incomplete Form",
+            description: "Please fill in all expense claim fields with valid amount.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        requestId = `EXP-${Date.now().toString().slice(-6)}`;
+        message = `Expense claim of $${expenseAmount} submitted for approval`;
+        isValid = true;
+        break;
+
+      case 'certificate':
+        const certType = (document.getElementById('cert-type') as HTMLInputElement)?.value;
+        const certPurpose = (document.getElementById('cert-purpose') as HTMLTextAreaElement)?.value;
+        
+        if (!certType || !certPurpose) {
+          toast({
+            title: "Incomplete Form",
+            description: "Please fill in all certificate request fields.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        requestId = `CERT-${Date.now().toString().slice(-6)}`;
+        message = `Certificate request submitted - will be processed in 2-3 business days`;
+        isValid = true;
+        break;
+
+      case 'advance':
+        const advAmount = (document.getElementById('advance-amount') as HTMLInputElement)?.value;
+        const advInstallments = (document.getElementById('advance-installments') as HTMLInputElement)?.value;
+        const advReason = (document.getElementById('advance-reason') as HTMLTextAreaElement)?.value;
+        
+        if (!advAmount || !advInstallments || !advReason || parseFloat(advAmount) <= 0) {
+          toast({
+            title: "Incomplete Form",
+            description: "Please fill in all salary advance fields.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        requestId = `ADV-${Date.now().toString().slice(-6)}`;
+        message = `Salary advance request of $${advAmount} submitted for approval`;
+        isValid = true;
+        break;
+
+      case 'resignation':
+        const resignDate = (document.getElementById('resign-date') as HTMLInputElement)?.value;
+        const resignNotice = (document.getElementById('resign-notice') as HTMLInputElement)?.value;
+        
+        if (!resignDate || !resignNotice) {
+          toast({
+            title: "Incomplete Form",
+            description: "Please fill in last working date and notice period.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        requestId = `RESIGN-${Date.now().toString().slice(-6)}`;
+        message = `Resignation submitted - HR will contact you shortly`;
+        isValid = true;
+        break;
+
+      case 'complaint':
+        const complaintCategory = (document.getElementById('complaint-category') as HTMLInputElement)?.value;
+        const complaintSubject = (document.getElementById('complaint-subject') as HTMLInputElement)?.value;
+        const complaintDetails = (document.getElementById('complaint-details') as HTMLTextAreaElement)?.value;
+        
+        if (!complaintCategory || !complaintSubject || !complaintDetails) {
+          toast({
+            title: "Incomplete Form",
+            description: "Please fill in all complaint/grievance fields.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        requestId = `COMP-${Date.now().toString().slice(-6)}`;
+        message = `Your complaint has been registered - ID: ${requestId}`;
+        isValid = true;
+        break;
+
+      case 'other':
+        const otherSubject = (document.getElementById('other-subject') as HTMLInputElement)?.value;
+        const otherDetails = (document.getElementById('other-details') as HTMLTextAreaElement)?.value;
+        
+        if (!otherSubject || !otherDetails) {
+          toast({
+            title: "Incomplete Form",
+            description: "Please provide subject and details for your request.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        requestId = `REQ-${Date.now().toString().slice(-6)}`;
+        message = `Your request has been submitted - ID: ${requestId}`;
+        isValid = true;
+        break;
+    }
+
+    if (isValid) {
+      toast({
+        title: "✅ Request Submitted Successfully",
+        description: message,
+        duration: 5000
+      });
+      
+      setIsCreateDialogOpen(false);
+      setRequestType('');
+      
+      // Clear all form fields
+      const allInputs = document.querySelectorAll('input[type="text"], input[type="date"], input[type="number"], textarea, input[type="hidden"]');
+      allInputs.forEach((input: any) => {
+        if (input.id) input.value = '';
+      });
+    }
+  }
 }
 
 function InsightCard({ title, icon, items }: { title: string, icon: React.ReactNode, items: any[] }) {
