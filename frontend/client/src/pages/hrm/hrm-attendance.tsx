@@ -42,7 +42,8 @@ import {
   Activity,
   Printer,
   FileSpreadsheet,
-  Plus
+  Plus,
+  Mail
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -65,6 +66,9 @@ export default function HRMAttendance() {
   const [activeTab, setActiveTab] = useState('today');
   const [searchQuery, setSearchQuery] = useState('');
   const [isExporting, setIsExporting] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   const attendance = [
@@ -83,11 +87,152 @@ export default function HRMAttendance() {
   ]);
 
   const [monthlySummary, setMonthlySummary] = useState([
-    { name: 'John Smith', present: 20, absent: 2, late: 1, leave: 1, overtime: '8h', avatar: 'JS' },
-    { name: 'Sarah Johnson', present: 22, absent: 0, late: 0, leave: 2, overtime: '12h', avatar: 'SJ' },
-    { name: 'Mike Brown', present: 18, absent: 1, late: 4, leave: 1, overtime: '2h', avatar: 'MB' },
-    { name: 'Emily Davis', present: 15, absent: 0, late: 0, leave: 7, overtime: '0h', avatar: 'ED' },
-    { name: 'Alex Wilson', present: 19, absent: 3, late: 1, leave: 1, overtime: '5h', avatar: 'AW' },
+    {
+      id: 'EMP001',
+      name: 'John Smith',
+      department: 'Engineering',
+      present: 20,
+      absent: 2,
+      late: 1,
+      leave: 1,
+      overtime: '8h',
+      avatar: 'JS',
+      email: 'john.smith@company.com',
+      joinDate: '2023-05-15',
+      dailyAttendance: [
+        { date: '2025-06-01', checkIn: '09:02 AM', checkOut: '06:15 PM', status: 'present', hours: '9.2h', notes: 'On time' },
+        { date: '2025-06-02', checkIn: '09:15 AM', checkOut: '06:30 PM', status: 'late', hours: '9.2h', notes: 'Traffic delay' },
+        { date: '2025-06-03', checkIn: '08:58 AM', checkOut: '06:10 PM', status: 'present', hours: '9.2h', notes: 'Early arrival' },
+        { date: '2025-06-04', checkIn: '-', checkOut: '-', status: 'absent', hours: '0h', notes: 'Personal emergency' },
+        { date: '2025-06-05', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Regular day' }
+      ],
+      leaveHistory: [
+        { type: 'Sick Leave', from: '2025-05-20', to: '2025-05-21', days: 2, status: 'approved', reason: 'Fever' }
+      ],
+      performance: {
+        punctuality: 85,
+        productivity: 92,
+        teamwork: 88,
+        overall: 88
+      }
+    },
+    {
+      id: 'EMP002',
+      name: 'Sarah Johnson',
+      department: 'Product',
+      present: 22,
+      absent: 0,
+      late: 0,
+      leave: 2,
+      overtime: '12h',
+      avatar: 'SJ',
+      email: 'sarah.johnson@company.com',
+      joinDate: '2022-08-20',
+      dailyAttendance: [
+        { date: '2025-06-01', checkIn: '08:55 AM', checkOut: '06:20 PM', status: 'present', hours: '9.4h', notes: 'Early arrival' },
+        { date: '2025-06-02', checkIn: '09:00 AM', checkOut: '07:00 PM', status: 'present', hours: '10h', notes: 'Overtime work' },
+        { date: '2025-06-03', checkIn: '08:58 AM', checkOut: '06:15 PM', status: 'present', hours: '9.3h', notes: 'Regular day' },
+        { date: '2025-06-04', checkIn: '09:02 AM', checkOut: '06:05 PM', status: 'present', hours: '9h', notes: 'Meeting heavy day' },
+        { date: '2025-06-05', checkIn: '09:00 AM', checkOut: '08:00 PM', status: 'present', hours: '11h', notes: 'Product launch prep' }
+      ],
+      leaveHistory: [
+        { type: 'Vacation', from: '2025-05-15', to: '2025-05-17', days: 3, status: 'approved', reason: 'Family trip' }
+      ],
+      performance: {
+        punctuality: 98,
+        productivity: 95,
+        teamwork: 94,
+        overall: 96
+      }
+    },
+    {
+      id: 'EMP003',
+      name: 'Mike Brown',
+      department: 'Design',
+      present: 18,
+      absent: 1,
+      late: 4,
+      leave: 1,
+      overtime: '2h',
+      avatar: 'MB',
+      email: 'mike.brown@company.com',
+      joinDate: '2024-01-10',
+      dailyAttendance: [
+        { date: '2025-06-01', checkIn: '09:20 AM', checkOut: '06:25 PM', status: 'late', hours: '9h', notes: 'Design review session' },
+        { date: '2025-06-02', checkIn: '09:30 AM', checkOut: '06:30 PM', status: 'late', hours: '9h', notes: 'Client presentation' },
+        { date: '2025-06-03', checkIn: '09:05 AM', checkOut: '06:00 PM', status: 'present', hours: '8.9h', notes: 'Creative work' },
+        { date: '2025-06-04', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'WFH approved' },
+        { date: '2025-06-05', checkIn: '09:15 AM', checkOut: '06:10 PM', status: 'late', hours: '8.9h', notes: 'Morning meeting' }
+      ],
+      leaveHistory: [
+        { type: 'WFH', from: '2025-06-04', to: '2025-06-04', days: 1, status: 'approved', reason: 'Internet installation' }
+      ],
+      performance: {
+        punctuality: 72,
+        productivity: 89,
+        teamwork: 85,
+        overall: 82
+      }
+    },
+    {
+      id: 'EMP004',
+      name: 'Emily Davis',
+      department: 'HR Management',
+      present: 15,
+      absent: 0,
+      late: 0,
+      leave: 7,
+      overtime: '0h',
+      avatar: 'ED',
+      email: 'emily.davis@company.com',
+      joinDate: '2021-03-12',
+      dailyAttendance: [
+        { date: '2025-06-01', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'Sick leave' },
+        { date: '2025-06-02', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'Sick leave' },
+        { date: '2025-06-03', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Back to office' },
+        { date: '2025-06-04', checkIn: '08:58 AM', checkOut: '05:58 PM', status: 'present', hours: '9h', notes: 'HR meetings' },
+        { date: '2025-06-05', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Policy review' }
+      ],
+      leaveHistory: [
+        { type: 'Sick Leave', from: '2025-06-01', to: '2025-06-02', days: 2, status: 'approved', reason: 'Medical checkup' },
+        { type: 'Maternity Leave', from: '2025-04-01', to: '2025-05-30', days: 60, status: 'approved', reason: 'Maternity' }
+      ],
+      performance: {
+        punctuality: 100,
+        productivity: 87,
+        teamwork: 93,
+        overall: 90
+      }
+    },
+    {
+      id: 'EMP005',
+      name: 'Alex Wilson',
+      department: 'Sales',
+      present: 19,
+      absent: 3,
+      late: 1,
+      leave: 1,
+      overtime: '5h',
+      avatar: 'AW',
+      email: 'alex.wilson@company.com',
+      joinDate: '2020-12-01',
+      dailyAttendance: [
+        { date: '2025-06-01', checkIn: '09:05 AM', checkOut: '07:00 PM', status: 'present', hours: '9.9h', notes: 'Client calls' },
+        { date: '2025-06-02', checkIn: '-', checkOut: '-', status: 'absent', hours: '0h', notes: 'Unexcused absence' },
+        { date: '2025-06-03', checkIn: '09:20 AM', checkOut: '06:15 PM', status: 'late', hours: '8.9h', notes: 'Sales presentation' },
+        { date: '2025-06-04', checkIn: '09:00 AM', checkOut: '06:30 PM', status: 'present', hours: '9.5h', notes: 'Deal closure' },
+        { date: '2025-06-05', checkIn: '08:58 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Regular sales day' }
+      ],
+      leaveHistory: [
+        { type: 'Casual Leave', from: '2025-05-25', to: '2025-05-26', days: 2, status: 'approved', reason: 'Family function' }
+      ],
+      performance: {
+        punctuality: 78,
+        productivity: 91,
+        teamwork: 83,
+        overall: 84
+      }
+    }
   ]);
 
   const shifts = [
@@ -119,11 +264,151 @@ export default function HRMAttendance() {
     }, 800);
   };
 
-  const handleAssignShift = (empName: string, day: string, shiftId: number) => {
-    setRoster(roster.map(r => 
-      r.employee === empName ? { ...r, [day.toLowerCase()]: shiftId } : r
-    ));
-    toast({ title: "Shift Assigned", description: `${empName}'s ${day} shift updated.` });
+  // Handle viewing employee details
+  const handleViewDetails = async (employee: any) => {
+    const loadingKey = `details_${employee.id}`;
+    setLoadingStates(prev => ({ ...prev, [loadingKey]: true }));
+    
+    try {
+      // Simulate loading delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setSelectedEmployee(employee);
+      setIsDetailsModalOpen(true);
+      
+      toast({
+        title: "Details Loaded",
+        description: `Attendance details for ${employee.name} have been loaded.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load employee details. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [loadingKey]: false }));
+    }
+  };
+
+  const handleAssignShift = async (empName: string, day: string, shiftId: number) => {
+    const loadingKey = `shift-${empName}-${day}`;
+    setLoadingStates(prev => ({ ...prev, [loadingKey]: true }));
+    
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setRoster(roster.map(r => 
+        r.employee === empName ? { ...r, [day.toLowerCase()]: shiftId } : r
+      ));
+      
+      const shiftName = shiftId === 0 ? 'Day Off' : shifts.find(s => s.id === shiftId)?.name || 'Unknown';
+      toast({ 
+        title: "Shift Assignment Updated!", 
+        description: `${empName}'s ${day.toUpperCase()} shift changed to ${shiftName}.` 
+      });
+    } catch (error) {
+      toast({
+        title: "Assignment Failed",
+        description: "Failed to update shift assignment. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [loadingKey]: false }));
+    }
+  };
+
+  const handleBulkAssignShift = async (assignments: { employee: string; shifts: Record<string, number> }[]) => {
+    setLoadingStates(prev => ({ ...prev, 'bulk-assign': true }));
+    
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      setRoster(prev => prev.map(r => {
+        const assignment = assignments.find(a => a.employee === r.employee);
+        if (assignment) {
+          return { ...r, ...assignment.shifts };
+        }
+        return r;
+      }));
+      
+      toast({
+        title: "Bulk Assignment Complete!",
+        description: `Successfully updated shift assignments for ${assignments.length} employee(s).`
+      });
+      
+      setIsShiftDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "Bulk Assignment Failed",
+        description: "Failed to update shift assignments. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, 'bulk-assign': false }));
+    }
+  };
+
+  const [bulkShiftAssignments, setBulkShiftAssignments] = useState<Record<string, Record<string, number>>>({});
+
+  const handleApproveLeave = async (requestId: string) => {
+    const loadingKey = `approve-${requestId}`;
+    setLoadingStates(prev => ({ ...prev, [loadingKey]: true }));
+    
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setLeaveRequests(prev => prev.map(request => 
+        request.id === requestId 
+          ? { ...request, status: 'approved' }
+          : request
+      ));
+      
+      toast({
+        title: "Leave Request Approved!",
+        description: "The leave request has been successfully approved and the employee will be notified.",
+      });
+    } catch (error) {
+      toast({
+        title: "Approval Failed",
+        description: "Failed to approve leave request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [loadingKey]: false }));
+    }
+  };
+
+  const handleRejectLeave = async (requestId: string) => {
+    const loadingKey = `reject-${requestId}`;
+    setLoadingStates(prev => ({ ...prev, [loadingKey]: true }));
+    
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setLeaveRequests(prev => prev.map(request => 
+        request.id === requestId 
+          ? { ...request, status: 'rejected' }
+          : request
+      ));
+      
+      toast({
+        title: "Leave Request Rejected",
+        description: "The leave request has been rejected and the employee will be notified with feedback.",
+        variant: "destructive"
+      });
+    } catch (error) {
+      toast({
+        title: "Rejection Failed",
+        description: "Failed to reject leave request. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [loadingKey]: false }));
+    }
   };
 
   const statusConfig: Record<string, { label: string; class: string; icon: any }> = {
@@ -466,21 +751,87 @@ export default function HRMAttendance() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 rounded-lg border-emerald-200 text-emerald-600 hover:bg-emerald-50 font-bold text-xs"
-                          >
-                            Approve
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 font-bold text-xs"
-                          >
-                            Reject
-                          </Button>
+                        <div className="flex flex-col sm:flex-row justify-end gap-1.5 sm:gap-2">
+                          {request.status === 'pending' ? (
+                            <>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-8 w-full sm:w-auto rounded-lg border-emerald-200 text-emerald-600 hover:bg-emerald-50 font-bold text-xs transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => handleApproveLeave(request.id)}
+                                disabled={loadingStates[`approve-${request.id}`] || loadingStates[`reject-${request.id}`]}
+                              >
+                                {loadingStates[`approve-${request.id}`] ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-600 mr-1" />
+                                    Approving...
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Approve
+                                  </>
+                                )}
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-8 w-full sm:w-auto rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 font-bold text-xs transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                onClick={() => handleRejectLeave(request.id)}
+                                disabled={loadingStates[`approve-${request.id}`] || loadingStates[`reject-${request.id}`]}
+                              >
+                                {loadingStates[`reject-${request.id}`] ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-rose-600 mr-1" />
+                                    Rejecting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                    Reject
+                                  </>
+                                )}
+                              </Button>
+                            </>
+                          ) : (
+                            <div className="flex items-center justify-end gap-2">
+                              <Badge className={cn("rounded-full px-3 py-1 border font-bold text-[10px] uppercase", leaveStatusConfig[request.status].class)}>
+                                {request.status === 'approved' ? '✓ Processed' : '✗ Declined'}
+                              </Badge>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-slate-100 transition-all">
+                                    <MoreVertical className="h-4 w-4 text-slate-400" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48 rounded-xl p-2 shadow-xl border-slate-200">
+                                  <DropdownMenuLabel className="font-bold text-xs text-slate-500 uppercase tracking-wider px-3">Quick Actions</DropdownMenuLabel>
+                                  <DropdownMenuSeparator className="my-2 bg-slate-100" />
+                                  <DropdownMenuItem className="rounded-lg font-medium py-2.5 cursor-pointer hover:bg-slate-50">
+                                    <Mail className="h-4 w-4 mr-2 text-slate-400" />
+                                    Send Notification
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem className="rounded-lg font-medium py-2.5 cursor-pointer hover:bg-slate-50">
+                                    <History className="h-4 w-4 mr-2 text-slate-400" />
+                                    View History
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator className="my-2 bg-slate-100" />
+                                  <DropdownMenuItem 
+                                    className="rounded-lg font-medium py-2.5 cursor-pointer hover:bg-amber-50 text-amber-600"
+                                    onClick={() => {
+                                      setLeaveRequests(prev => prev.map(req => 
+                                        req.id === request.id ? { ...req, status: 'pending' } : req
+                                      ));
+                                      toast({ title: "Status Reset", description: "Leave request moved back to pending status." });
+                                    }}
+                                  >
+                                    <AlertCircle className="h-4 w-4 mr-2" />
+                                    Reset to Pending
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -538,7 +889,21 @@ export default function HRMAttendance() {
                       <TableCell className="text-center font-bold text-blue-600">{row.leave}</TableCell>
                       <TableCell className="text-center font-bold text-slate-600">{row.overtime}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-blue-600">View Details</Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleViewDetails(row)}
+                          disabled={loadingStates[`details_${row.id}`]}
+                          className="h-8 rounded-lg font-bold text-blue-600 hover:bg-blue-50 transition-all duration-200 hover:scale-105 disabled:opacity-50"
+                        >
+                          {loadingStates[`details_${row.id}`] ? (
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2" />
+                          ) : (
+                            <Activity className="h-3 w-3 mr-2" />
+                          )}
+                          <span className="hidden sm:inline">View Details</span>
+                          <span className="sm:hidden">Details</span>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -558,7 +923,12 @@ export default function HRMAttendance() {
                     ))}
                   </div>
                 </div>
-                <Button variant="outline" size="sm" className="rounded-xl border-slate-200 font-bold">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="rounded-xl border-slate-200 font-bold hover:bg-slate-50 transition-all active:scale-95"
+                  onClick={() => setIsShiftDialogOpen(true)}
+                >
                   <Plus className="h-3.5 w-3.5 mr-1.5" />
                   Assign Shift
                 </Button>
@@ -584,27 +954,48 @@ export default function HRMAttendance() {
                         <TableCell key={dayIdx} className="text-center p-2">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <div className="cursor-pointer">
-                                {sId === 0 ? (
-                                  <span className="text-[10px] text-slate-300 font-bold hover:text-slate-500 transition-colors">OFF</span>
+                              <div className="cursor-pointer relative">
+                                {loadingStates[`shift-${row.employee}-${['mon','tue','wed','thu','fri','sat','sun'][dayIdx]}`] ? (
+                                  <div className="flex items-center justify-center">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600" />
+                                  </div>
+                                ) : sId === 0 ? (
+                                  <span className="text-[10px] text-slate-300 font-bold hover:text-slate-500 transition-colors px-2 py-1 rounded-lg hover:bg-slate-100">OFF</span>
                                 ) : (
-                                  <Badge className={cn("rounded-md text-[10px] font-black hover:scale-110 transition-transform", shifts.find(s => s.id === sId)?.color)}>
+                                  <Badge className={cn("rounded-lg text-[10px] font-black hover:scale-110 transition-all cursor-pointer px-2 py-1", shifts.find(s => s.id === sId)?.color)}>
                                     {shifts.find(s => s.id === sId)?.name.split(' ')[0][0]}
                                   </Badge>
                                 )}
                               </div>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent className="rounded-xl">
-                              <DropdownMenuLabel>Change Shift ({['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][dayIdx]})</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleAssignShift(row.employee, ['mon','tue','wed','thu','fri','sat','sun'][dayIdx], 0)}>
-                                <span className="text-xs font-bold text-slate-500">Day Off</span>
+                            <DropdownMenuContent className="rounded-xl p-2 shadow-xl border-slate-200">
+                              <DropdownMenuLabel className="font-bold text-xs text-slate-500 uppercase tracking-wider px-3">
+                                Assign Shift - {['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][dayIdx]}
+                              </DropdownMenuLabel>
+                              <DropdownMenuSeparator className="my-2 bg-slate-100" />
+                              <DropdownMenuItem 
+                                className="rounded-lg font-medium py-2.5 cursor-pointer hover:bg-slate-50"
+                                onClick={() => handleAssignShift(row.employee, ['mon','tue','wed','thu','fri','sat','sun'][dayIdx], 0)}
+                                disabled={loadingStates[`shift-${row.employee}-${['mon','tue','wed','thu','fri','sat','sun'][dayIdx]}`]}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full bg-slate-300" />
+                                  <span className="text-xs font-bold text-slate-500">Day Off</span>
+                                </div>
                               </DropdownMenuItem>
                               {shifts.map(s => (
-                                <DropdownMenuItem key={s.id} onClick={() => handleAssignShift(row.employee, ['mon','tue','wed','thu','fri','sat','sun'][dayIdx], s.id)}>
+                                <DropdownMenuItem 
+                                  key={s.id} 
+                                  className="rounded-lg font-medium py-2.5 cursor-pointer hover:bg-slate-50"
+                                  onClick={() => handleAssignShift(row.employee, ['mon','tue','wed','thu','fri','sat','sun'][dayIdx], s.id)}
+                                  disabled={loadingStates[`shift-${row.employee}-${['mon','tue','wed','thu','fri','sat','sun'][dayIdx]}`]}
+                                >
                                   <div className="flex items-center gap-2">
-                                    <div className={cn("w-2 h-2 rounded-full", s.color.split(' ')[0])} />
-                                    <span className="text-xs font-bold">{s.name}</span>
+                                    <div className={cn("w-3 h-3 rounded-full", s.color.split(' ')[0].replace('bg-', 'bg-'))} />
+                                    <div className="flex flex-col">
+                                      <span className="text-xs font-bold">{s.name}</span>
+                                      <span className="text-[10px] text-slate-400">{s.time}</span>
+                                    </div>
                                   </div>
                                 </DropdownMenuItem>
                               ))}
@@ -620,6 +1011,481 @@ export default function HRMAttendance() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Employee Attendance Details Modal */}
+      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Activity className="h-5 w-5 text-blue-600" />
+              Attendance Details - {selectedEmployee?.name}
+            </DialogTitle>
+            <DialogDescription className="text-slate-600">
+              Comprehensive attendance summary and performance metrics for {selectedEmployee?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedEmployee && (
+            <div className="space-y-6 py-4">
+              {/* Employee Header */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-100">
+                <Avatar className="h-16 w-16 border-3 border-white shadow-lg">
+                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedEmployee.name}`} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white text-lg font-bold">
+                    {selectedEmployee.avatar}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-bold text-slate-900">{selectedEmployee.name}</h3>
+                  <p className="text-slate-600 font-medium">{selectedEmployee.department}</p>
+                  <div className="flex flex-wrap gap-4 mt-2 text-sm text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Joined: {new Date(selectedEmployee.joinDate).toLocaleDateString()}
+                    </span>
+                    <span className="flex items-center gap-1 truncate">
+                      <Mail className="h-3 w-3" />
+                      {selectedEmployee.email}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Badge className="bg-blue-100 text-blue-700 border-blue-200 px-3 py-1.5 font-bold text-center">
+                    ID: {selectedEmployee.id}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Quick Stats Overview */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <CheckCircle className="h-5 w-5 text-emerald-600" />
+                    <span className="text-xs font-bold text-emerald-600 uppercase">Present</span>
+                  </div>
+                  <div className="text-2xl font-black text-emerald-700">{selectedEmployee.present}</div>
+                  <div className="text-xs text-emerald-600">Days this month</div>
+                </div>
+                <div className="p-4 bg-rose-50 rounded-xl border border-rose-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <XCircle className="h-5 w-5 text-rose-600" />
+                    <span className="text-xs font-bold text-rose-600 uppercase">Absent</span>
+                  </div>
+                  <div className="text-2xl font-black text-rose-700">{selectedEmployee.absent}</div>
+                  <div className="text-xs text-rose-600">Days this month</div>
+                </div>
+                <div className="p-4 bg-amber-50 rounded-xl border border-amber-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <Clock className="h-5 w-5 text-amber-600" />
+                    <span className="text-xs font-bold text-amber-600 uppercase">Late</span>
+                  </div>
+                  <div className="text-2xl font-black text-amber-700">{selectedEmployee.late}</div>
+                  <div className="text-xs text-amber-600">Times this month</div>
+                </div>
+                <div className="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <Coffee className="h-5 w-5 text-purple-600" />
+                    <span className="text-xs font-bold text-purple-600 uppercase">Overtime</span>
+                  </div>
+                  <div className="text-2xl font-black text-purple-700">{selectedEmployee.overtime}</div>
+                  <div className="text-xs text-purple-600">This month</div>
+                </div>
+              </div>
+
+              {/* Performance Metrics */}
+              <div className="p-6 bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200">
+                <h4 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  Performance Metrics
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {Object.entries(selectedEmployee.performance).map(([key, value]) => (
+                    <div key={key} className="text-center">
+                      <div className="relative w-16 h-16 mx-auto mb-2">
+                        <div className="absolute inset-0 bg-slate-200 rounded-full"></div>
+                        <div 
+                          className={`absolute inset-0 rounded-full ${
+                            value >= 90 ? 'bg-emerald-500' : 
+                            value >= 80 ? 'bg-blue-500' : 
+                            value >= 70 ? 'bg-amber-500' : 'bg-rose-500'
+                          }`}
+                          style={{
+                            clipPath: `polygon(50% 50%, 50% 0%, ${
+                              50 + (value / 100) * 50 * Math.cos(((value / 100) * 360 - 90) * Math.PI / 180)
+                            }% ${
+                              50 + (value / 100) * 50 * Math.sin(((value / 100) * 360 - 90) * Math.PI / 180)
+                            }%, 50% 50%)`
+                          }}
+                        ></div>
+                        <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-slate-700">{value}%</span>
+                        </div>
+                      </div>
+                      <p className="text-xs font-bold text-slate-600 capitalize">{key}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tabbed Detailed Information */}
+              <Tabs defaultValue="daily" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 h-12 bg-slate-100 rounded-2xl p-1">
+                  <TabsTrigger value="daily" className="rounded-xl text-sm font-bold">
+                    <CalendarDays className="h-4 w-4 mr-2" />
+                    Daily Records
+                  </TabsTrigger>
+                  <TabsTrigger value="leaves" className="rounded-xl text-sm font-bold">
+                    <Plane className="h-4 w-4 mr-2" />
+                    Leave History
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="daily" className="mt-6">
+                  <div className="space-y-3">
+                    <h4 className="text-lg font-bold text-slate-800">Recent Daily Attendance</h4>
+                    <div className="space-y-2">
+                      {selectedEmployee.dailyAttendance.map((record: any, idx: number) => (
+                        <div 
+                          key={idx} 
+                          className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border transition-all hover:shadow-md ${
+                            record.status === 'present' ? 'bg-emerald-50 border-emerald-200' :
+                            record.status === 'late' ? 'bg-amber-50 border-amber-200' :
+                            record.status === 'absent' ? 'bg-rose-50 border-rose-200' :
+                            'bg-blue-50 border-blue-200'
+                          }`}
+                        >
+                          <div className="mb-3 sm:mb-0">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className={`p-1.5 rounded-lg ${
+                                record.status === 'present' ? 'bg-emerald-100' :
+                                record.status === 'late' ? 'bg-amber-100' :
+                                record.status === 'absent' ? 'bg-rose-100' :
+                                'bg-blue-100'
+                              }`}>
+                                {record.status === 'present' && <CheckCircle className="h-4 w-4 text-emerald-600" />}
+                                {record.status === 'late' && <Clock className="h-4 w-4 text-amber-600" />}
+                                {record.status === 'absent' && <XCircle className="h-4 w-4 text-rose-600" />}
+                                {record.status === 'leave' && <Plane className="h-4 w-4 text-blue-600" />}
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-800">
+                                  {new Date(record.date).toLocaleDateString('en-US', { 
+                                    weekday: 'short', 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                  })}
+                                </p>
+                                <p className="text-xs text-slate-600">{record.notes}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
+                              <span className="font-medium text-slate-700">
+                                {record.checkIn} - {record.checkOut}
+                              </span>
+                              <Badge className={`text-xs font-bold ${
+                                record.status === 'present' ? 'bg-emerald-200 text-emerald-700' :
+                                record.status === 'late' ? 'bg-amber-200 text-amber-700' :
+                                record.status === 'absent' ? 'bg-rose-200 text-rose-700' :
+                                'bg-blue-200 text-blue-700'
+                              }`}>
+                                {record.hours}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="leaves" className="mt-6">
+                  <div className="space-y-3">
+                    <h4 className="text-lg font-bold text-slate-800">Leave History</h4>
+                    {selectedEmployee.leaveHistory.length > 0 ? (
+                      <div className="space-y-3">
+                        {selectedEmployee.leaveHistory.map((leave: any, idx: number) => (
+                          <div key={idx} className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between">
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Badge className="bg-blue-200 text-blue-700 text-xs font-bold">
+                                    {leave.type}
+                                  </Badge>
+                                  <Badge className={`text-xs font-bold ${
+                                    leave.status === 'approved' ? 'bg-emerald-200 text-emerald-700' :
+                                    leave.status === 'pending' ? 'bg-amber-200 text-amber-700' :
+                                    'bg-rose-200 text-rose-700'
+                                  }`}>
+                                    {leave.status.toUpperCase()}
+                                  </Badge>
+                                </div>
+                                <p className="text-sm font-bold text-slate-800">
+                                  {new Date(leave.from).toLocaleDateString()} - {new Date(leave.to).toLocaleDateString()}
+                                </p>
+                                <p className="text-xs text-slate-600 mt-1">{leave.reason}</p>
+                              </div>
+                              <div className="text-right mt-3 sm:mt-0">
+                                <div className="text-lg font-bold text-blue-700">{leave.days}</div>
+                                <div className="text-xs text-blue-600">Days</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-slate-500">
+                        <Plane className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                        <p className="text-sm font-medium">No leave records found</p>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+          
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setIsDetailsModalOpen(false)} className="rounded-lg">
+              Close
+            </Button>
+            <Button 
+              onClick={() => {
+                // Generate PDF report functionality can be added here
+                toast({
+                  title: "Report Generated",
+                  description: `Attendance report for ${selectedEmployee?.name} has been downloaded.`,
+                });
+              }}
+              className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Export Report
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Shift Assignment Dialog */}
+      <Dialog open={isShiftDialogOpen} onOpenChange={setIsShiftDialogOpen}>
+        <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
+              <Clock className="h-5 w-5 text-indigo-600" />
+              Bulk Shift Assignment
+            </DialogTitle>
+            <DialogDescription className="text-slate-600">
+              Assign shifts for multiple employees across the week. Select employees and their preferred shifts for each day.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Shift Legend */}
+            <div className="p-4 bg-slate-50 rounded-xl">
+              <h4 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <Badge className="bg-slate-200 text-slate-700 text-xs">INFO</Badge>
+                Available Shifts
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {shifts.map(shift => (
+                  <div key={shift.id} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
+                    <div className={cn("w-4 h-4 rounded-full", shift.color.split(' ')[0])} />
+                    <div>
+                      <p className="font-bold text-sm text-slate-800">{shift.name}</p>
+                      <p className="text-xs text-slate-500">{shift.time}</p>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
+                  <div className="w-4 h-4 rounded-full bg-slate-300" />
+                  <div>
+                    <p className="font-bold text-sm text-slate-800">Day Off</p>
+                    <p className="text-xs text-slate-500">No shift assigned</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bulk Assignment Table */}
+            <div className="rounded-xl border border-slate-200 overflow-hidden">
+              <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                  <UserCheck className="h-4 w-4 text-indigo-600" />
+                  Employee Shift Assignment
+                </h4>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-slate-50/50 border-b border-slate-200">
+                      <th className="text-left font-bold text-slate-700 p-3 min-w-[150px]">Employee</th>
+                      <th className="text-center font-bold text-slate-700 p-3 min-w-[100px]">Mon</th>
+                      <th className="text-center font-bold text-slate-700 p-3 min-w-[100px]">Tue</th>
+                      <th className="text-center font-bold text-slate-700 p-3 min-w-[100px]">Wed</th>
+                      <th className="text-center font-bold text-slate-700 p-3 min-w-[100px]">Thu</th>
+                      <th className="text-center font-bold text-slate-700 p-3 min-w-[100px]">Fri</th>
+                      <th className="text-center font-bold text-slate-700 p-3 min-w-[100px]">Sat</th>
+                      <th className="text-center font-bold text-slate-700 p-3 min-w-[100px]">Sun</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roster.map((row, i) => (
+                      <tr key={i} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                        <td className="p-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${row.employee}`} />
+                              <AvatarFallback className="text-xs font-bold">
+                                {row.employee.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="font-bold text-slate-800">{row.employee}</span>
+                          </div>
+                        </td>
+                        {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map((day) => (
+                          <td key={day} className="p-3 text-center">
+                            <Select
+                              value={bulkShiftAssignments[row.employee]?.[day]?.toString() || row[day as keyof typeof row].toString()}
+                              onValueChange={(value) => {
+                                const shiftId = parseInt(value);
+                                setBulkShiftAssignments(prev => ({
+                                  ...prev,
+                                  [row.employee]: {
+                                    ...prev[row.employee],
+                                    [day]: shiftId
+                                  }
+                                }));
+                              }}
+                            >
+                              <SelectTrigger className="w-full h-8 text-xs rounded-lg">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl">
+                                <SelectItem value="0" className="text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 rounded-full bg-slate-300" />
+                                    Day Off
+                                  </div>
+                                </SelectItem>
+                                {shifts.map(shift => (
+                                  <SelectItem key={shift.id} value={shift.id.toString()} className="text-xs">
+                                    <div className="flex items-center gap-2">
+                                      <div className={cn("w-2 h-2 rounded-full", shift.color.split(' ')[0])} />
+                                      {shift.name.split(' ')[0][0]}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Button
+                variant="outline"
+                className="rounded-xl font-bold border-slate-200 text-slate-600 hover:bg-slate-50"
+                onClick={() => {
+                  // Set all to morning shift
+                  const assignments: Record<string, Record<string, number>> = {};
+                  roster.forEach(emp => {
+                    assignments[emp.employee] = {
+                      mon: 1, tue: 1, wed: 1, thu: 1, fri: 1, sat: 0, sun: 0
+                    };
+                  });
+                  setBulkShiftAssignments(assignments);
+                }}
+              >
+                <UserCheck className="h-4 w-4 mr-2 text-blue-500" />
+                Standard Week (M-F Morning)
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="rounded-xl font-bold border-slate-200 text-slate-600 hover:bg-slate-50"
+                onClick={() => {
+                  // Set all to day off
+                  const assignments: Record<string, Record<string, number>> = {};
+                  roster.forEach(emp => {
+                    assignments[emp.employee] = {
+                      mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0
+                    };
+                  });
+                  setBulkShiftAssignments(assignments);
+                }}
+              >
+                <Coffee className="h-4 w-4 mr-2 text-slate-500" />
+                Clear All Shifts
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="rounded-xl font-bold border-slate-200 text-slate-600 hover:bg-slate-50"
+                onClick={() => {
+                  setBulkShiftAssignments({});
+                  toast({ title: "Reset Complete", description: "All assignments reset to current values." });
+                }}
+              >
+                <History className="h-4 w-4 mr-2 text-amber-500" />
+                Reset Changes
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+            <Button
+              variant="ghost"
+              className="w-full sm:w-auto rounded-xl font-bold text-slate-600 hover:bg-slate-100"
+              onClick={() => {
+                setIsShiftDialogOpen(false);
+                setBulkShiftAssignments({});
+              }}
+            >
+              Cancel Changes
+            </Button>
+            <Button
+              className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 font-bold text-white disabled:opacity-50"
+              onClick={() => {
+                const assignments = Object.entries(bulkShiftAssignments)
+                  .filter(([_, shifts]) => Object.keys(shifts).length > 0)
+                  .map(([employee, shifts]) => ({ employee, shifts }));
+                
+                if (assignments.length === 0) {
+                  toast({
+                    title: "No Changes Detected",
+                    description: "Please make at least one shift assignment change.",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                handleBulkAssignShift(assignments);
+              }}
+              disabled={loadingStates['bulk-assign']}
+            >
+              {loadingStates['bulk-assign'] ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Updating Assignments...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Apply Shift Assignments
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
