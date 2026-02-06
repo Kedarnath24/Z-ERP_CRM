@@ -43,7 +43,8 @@ import {
   Printer,
   FileSpreadsheet,
   Plus,
-  Mail
+  Mail,
+  FileText
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -719,6 +720,7 @@ export default function HRMAttendance() {
                     <TableHead className="font-bold text-slate-700">Duration</TableHead>
                     <TableHead className="font-bold text-slate-700">Status</TableHead>
                     <TableHead className="text-right font-bold text-slate-700">Actions</TableHead>
+                    <TableHead className="font-bold text-slate-700">Documents</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -833,6 +835,22 @@ export default function HRMAttendance() {
                             </div>
                           )}
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 rounded-lg border-blue-200 text-blue-600 hover:bg-blue-50 font-bold text-xs transition-all hover:scale-105 active:scale-95"
+                          onClick={() => {
+                            toast({
+                              title: "Document Viewer",
+                              description: `Opening documents for ${request.employee}'s leave request...`,
+                            });
+                          }}
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          View
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

@@ -197,7 +197,7 @@ export default function HRMDashboard() {
               <Zap className="h-5 w-5 text-amber-500 fill-amber-500" />
               Core Modules
             </h2>
-            <Button variant="link" className="text-blue-600 font-bold">Customize Grid</Button>
+            
           </div>
           
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

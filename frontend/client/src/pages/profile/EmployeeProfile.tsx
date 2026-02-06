@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Download, Edit, Camera, Calendar as CalendarIcon, Clock, CheckCircle, XCircle, FileText, Shield, Briefcase, Activity, CheckSquare } from 'lucide-react';
+import { Download, Edit, Calendar as CalendarIcon, Clock, CheckCircle, XCircle, FileText, Shield, Briefcase, Activity, CheckSquare } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -54,20 +54,24 @@ interface PayrollRecord {
   paymentDate: string;
 }
 
-interface FaceIdSession {
-  id: string;
-  timestamp: string;
-  type: 'Clock In' | 'Clock Out';
-  status: 'Success' | 'Failed';
-}
-
 export default function EmployeeProfile() {
   const [activeTab, setActiveTab] = useState('overview');
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [isCameraActive, setIsCameraActive] = useState(false);
+  
   const [leaveFile, setLeaveFile] = useState<File | null>(null);
+  const [leavePreviewUrl, setLeavePreviewUrl] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (leavePreviewUrl) {
+        URL.revokeObjectURL(leavePreviewUrl);
+      }
+    };
+  }, [leavePreviewUrl]);
 
   // Mock employee data
   const employee = {
@@ -172,26 +176,7 @@ export default function EmployeeProfile() {
     },
   ];
 
-  const faceIdSessions: FaceIdSession[] = [
-    {
-      id: '1',
-      timestamp: '2026-01-15 09:00 AM',
-      type: 'Clock In',
-      status: 'Success',
-    },
-    {
-      id: '2',
-      timestamp: '2026-01-14 05:30 PM',
-      type: 'Clock Out',
-      status: 'Success',
-    },
-    {
-      id: '3',
-      timestamp: '2026-01-14 09:15 AM',
-      type: 'Clock In',
-      status: 'Success',
-    },
-  ];
+  
 
   const attendanceRecords: AttendanceRecord[] = [
     {
@@ -344,21 +329,87 @@ export default function EmployeeProfile() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="leaveAttachment">Attach Document (optional)</Label>
+
             <input
               id="leaveAttachment"
+              ref={inputRef}
               type="file"
               accept=".pdf,.doc,.docx,.jpg,.png"
-              onChange={(e) => setLeaveFile(e.target.files?.[0] ?? null)}
-              className="w-full"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0] ?? null;
+                if (leavePreviewUrl) {
+                  URL.revokeObjectURL(leavePreviewUrl);
+                }
+                if (file && file.type.startsWith('image/')) {
+                  setLeavePreviewUrl(URL.createObjectURL(file));
+                } else {
+                  setLeavePreviewUrl(null);
+                }
+                setLeaveFile(file);
+              }}
             />
-            {leaveFile && (
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-sm truncate">{leaveFile.name}</span>
-                <Button variant="ghost" size="sm" onClick={() => setLeaveFile(null)}>
-                  Remove
-                </Button>
-              </div>
-            )}
+
+            <div
+              ref={containerRef}
+              className="w-full border-dashed border-2 border-gray-300 rounded-md p-3 text-center cursor-pointer hover:border-primary transition overflow-hidden"
+              onDragOver={(e: any) => { e.preventDefault(); e.stopPropagation(); }}
+              onDragEnter={(e: any) => { e.preventDefault(); e.stopPropagation(); }}
+              onDragLeave={(e: any) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={(e: any) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const file = e.dataTransfer?.files?.[0] ?? null;
+                if (!file) return;
+                if (leavePreviewUrl) URL.revokeObjectURL(leavePreviewUrl);
+                if (file.type.startsWith('image/')) {
+                  setLeavePreviewUrl(URL.createObjectURL(file));
+                } else {
+                  setLeavePreviewUrl(null);
+                }
+                setLeaveFile(file);
+              }}
+              onClick={() => inputRef.current?.click()}
+            >
+              {!leaveFile ? (
+                <div className="flex flex-col items-center gap-2 py-2">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Drag & drop or click to browse</p>
+                  <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, JPG, PNG</p>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3 w-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex-shrink-0">
+                    {leavePreviewUrl ? (
+                      <img src={leavePreviewUrl} alt="preview" className="w-12 h-12 object-cover rounded" />
+                    ) : (
+                      <div className="w-12 h-12 rounded bg-gray-100 flex items-center justify-center">
+                        <FileText className="w-5 h-5 text-gray-500" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className="text-sm truncate font-medium" title={leaveFile.name}>{leaveFile.name}</p>
+                    <p className="text-xs text-muted-foreground">{(leaveFile.size / 1024).toFixed(1)} KB</p>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="flex-shrink-0"
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      if (leavePreviewUrl) URL.revokeObjectURL(leavePreviewUrl); 
+                      setLeaveFile(null); 
+                      setLeavePreviewUrl(null); 
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
@@ -367,7 +418,8 @@ export default function EmployeeProfile() {
             variant="outline"
             onClick={() => {
               setShowLeaveModal(false);
-              setLeaveFile(null);
+                setLeaveFile(null);
+                setLeavePreviewUrl(null);
             }}
           >
             Cancel
@@ -375,7 +427,8 @@ export default function EmployeeProfile() {
           <Button
             onClick={() => {
               setShowLeaveModal(false);
-              setLeaveFile(null);
+                setLeaveFile(null);
+                setLeavePreviewUrl(null);
             }}
           >
             Submit Request
@@ -429,7 +482,6 @@ export default function EmployeeProfile() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="insurance">Insurance</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="faceid">Face ID</TabsTrigger>
           <TabsTrigger value="leave">Leave</TabsTrigger>
           <TabsTrigger value="payroll">Payroll</TabsTrigger>
         </TabsList>
@@ -640,100 +692,7 @@ export default function EmployeeProfile() {
           </Card>
         </TabsContent>
 
-        {/* TAB 4: FACE ID ATTENDANCE */}
-        <TabsContent value="faceid" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Camera UI */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Face ID Clock In/Out</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center relative overflow-hidden">
-                  {isCameraActive ? (
-                    <div className="relative w-full h-full">
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Camera className="w-16 h-16 text-gray-400" />
-                      </div>
-                      <div className="absolute inset-0 border-4 border-primary rounded-lg animate-pulse"></div>
-                      <p className="absolute bottom-4 left-0 right-0 text-center text-white bg-black/50 py-2">
-                        Position your face in the frame
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="text-center space-y-2">
-                      <Camera className="w-16 h-16 mx-auto text-gray-400" />
-                      <p className="text-muted-foreground">Camera inactive</p>
-                    </div>
-                  )}
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    onClick={() => setIsCameraActive(!isCameraActive)}
-                    variant={isCameraActive ? 'destructive' : 'default'}
-                    className="w-full"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    {isCameraActive ? 'Clock Out' : 'Clock In'}
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    Cancel
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Today's Status */}
-            <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Today's Status</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Clock In</span>
-                    <span className="font-semibold">09:00 AM</span>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Clock Out</span>
-                    <span className="font-semibold">--:-- --</span>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Work Hours</span>
-                    <span className="font-semibold text-green-600">6h 15m</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {faceIdSessions.slice(0, 5).map((session) => (
-                      <div key={session.id} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">{session.type}</p>
-                            <p className="text-xs text-muted-foreground">{session.timestamp}</p>
-                          </div>
-                        </div>
-                        <Badge variant={getStatusBadgeVariant(session.status)}>
-                          {session.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </TabsContent>
+        
 
         {/* TAB 5: LEAVE MANAGEMENT */}
         <TabsContent value="leave" className="space-y-6">

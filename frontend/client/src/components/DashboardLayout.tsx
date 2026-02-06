@@ -218,8 +218,9 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       submenu: [
         { name: 'Staff', path: '/dashboard/setup/staff' },
         { name: 'Groups', path: '/dashboard/setup/groups' },
-        { name: 'Lead Setup', path: '/dashboard/setup/lead-setup' },
-        { name: 'Web-to-Lead', path: '/dashboard/setup/web-to-lead' },
+        { name: 'Roles', path: '/dashboard/setup/roles' },
+        { name: 'Permissions', path: '/dashboard/setup/permissions' },
+        
       ]
     },
     { 
