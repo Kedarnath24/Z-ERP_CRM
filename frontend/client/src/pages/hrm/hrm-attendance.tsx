@@ -1099,31 +1099,34 @@ export default function HRMAttendance() {
                   Performance Metrics
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {Object.entries(selectedEmployee.performance).map(([key, value]) => (
+                  {Object.entries(selectedEmployee.performance).map(([key, value]) => {
+                    const numValue = typeof value === 'number' ? value : 0;
+                    return (
                     <div key={key} className="text-center">
                       <div className="relative w-16 h-16 mx-auto mb-2">
                         <div className="absolute inset-0 bg-slate-200 rounded-full"></div>
                         <div 
                           className={`absolute inset-0 rounded-full ${
-                            value >= 90 ? 'bg-emerald-500' : 
-                            value >= 80 ? 'bg-blue-500' : 
-                            value >= 70 ? 'bg-amber-500' : 'bg-rose-500'
+                            numValue >= 90 ? 'bg-emerald-500' : 
+                            numValue >= 80 ? 'bg-blue-500' : 
+                            numValue >= 70 ? 'bg-amber-500' : 'bg-rose-500'
                           }`}
                           style={{
                             clipPath: `polygon(50% 50%, 50% 0%, ${
-                              50 + (value / 100) * 50 * Math.cos(((value / 100) * 360 - 90) * Math.PI / 180)
+                              50 + (numValue / 100) * 50 * Math.cos(((numValue / 100) * 360 - 90) * Math.PI / 180)
                             }% ${
-                              50 + (value / 100) * 50 * Math.sin(((value / 100) * 360 - 90) * Math.PI / 180)
+                              50 + (numValue / 100) * 50 * Math.sin(((numValue / 100) * 360 - 90) * Math.PI / 180)
                             }%, 50% 50%)`
                           }}
                         ></div>
                         <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                          <span className="text-sm font-bold text-slate-700">{value}%</span>
+                          <span className="text-sm font-bold text-slate-700">{numValue}%</span>
                         </div>
                       </div>
                       <p className="text-xs font-bold text-slate-600 capitalize">{key}</p>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               </div>
 
