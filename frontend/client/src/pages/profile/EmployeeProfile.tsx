@@ -67,6 +67,7 @@ export default function EmployeeProfile() {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [leaveFile, setLeaveFile] = useState<File | null>(null);
 
   // Mock employee data
   const employee = {
@@ -192,6 +193,57 @@ export default function EmployeeProfile() {
     },
   ];
 
+  const attendanceRecords: AttendanceRecord[] = [
+    {
+      date: '2026-02-06',
+      status: 'Present',
+      checkIn: '09:00 AM',
+      checkOut: '05:30 PM',
+    },
+    {
+      date: '2026-02-05',
+      status: 'Present',
+      checkIn: '09:15 AM',
+      checkOut: '05:45 PM',
+    },
+    {
+      date: '2026-02-04',
+      status: 'Present',
+      checkIn: '08:50 AM',
+      checkOut: '05:20 PM',
+    },
+    {
+      date: '2026-02-03',
+      status: 'Present',
+      checkIn: '09:05 AM',
+      checkOut: '05:35 PM',
+    },
+    {
+      date: '2026-01-31',
+      status: 'Leave',
+      checkIn: '-',
+      checkOut: '-',
+    },
+    {
+      date: '2026-01-30',
+      status: 'Present',
+      checkIn: '09:10 AM',
+      checkOut: '05:40 PM',
+    },
+    {
+      date: '2026-01-29',
+      status: 'Present',
+      checkIn: '09:00 AM',
+      checkOut: '06:00 PM',
+    },
+    {
+      date: '2026-01-28',
+      status: 'Present',
+      checkIn: '08:55 AM',
+      checkOut: '05:25 PM',
+    },
+  ];
+
   // Leave balance data
   const leaveBalance = {
     total: 20,
@@ -290,12 +342,44 @@ export default function EmployeeProfile() {
             <Label htmlFor="reason">Reason</Label>
             <Input id="reason" placeholder="Reason for leave" />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="leaveAttachment">Attach Document (optional)</Label>
+            <input
+              id="leaveAttachment"
+              type="file"
+              accept=".pdf,.doc,.docx,.jpg,.png"
+              onChange={(e) => setLeaveFile(e.target.files?.[0] ?? null)}
+              className="w-full"
+            />
+            {leaveFile && (
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-sm truncate">{leaveFile.name}</span>
+                <Button variant="ghost" size="sm" onClick={() => setLeaveFile(null)}>
+                  Remove
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
+        
         <DialogFooter>
-          <Button variant="outline" onClick={() => setShowLeaveModal(false)}>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowLeaveModal(false);
+              setLeaveFile(null);
+            }}
+          >
             Cancel
           </Button>
-          <Button onClick={() => setShowLeaveModal(false)}>Submit Request</Button>
+          <Button
+            onClick={() => {
+              setShowLeaveModal(false);
+              setLeaveFile(null);
+            }}
+          >
+            Submit Request
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -505,35 +589,53 @@ export default function EmployeeProfile() {
         <TabsContent value="attendance" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Attendance Calendar</CardTitle>
+              <CardTitle>Attendance Records</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  className="rounded-md border"
-                />
-              </div>
-              <div className="mt-6 flex items-center justify-center gap-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-green-500 rounded"></div>
-                  <span className="text-sm">Present</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-red-500 rounded"></div>
-                  <span className="text-sm">Absent</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                  <span className="text-sm">Leave</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-gray-400 rounded"></div>
-                  <span className="text-sm">Holiday</span>
-                </div>
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Check In</TableHead>
+                    <TableHead>Check Out</TableHead>
+                    <TableHead>Work Hours</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {attendanceRecords.map((record) => {
+                    const calculateWorkHours = () => {
+                      if (!record.checkIn || !record.checkOut || record.checkIn === '-') return '-';
+                      // Simple calculation for display purposes
+                      return '8h 30m';
+                    };
+
+                    return (
+                      <TableRow key={record.date}>
+                        <TableCell className="font-medium">{record.date}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusBadgeVariant(record.status)}>
+                            {record.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {record.checkIn !== '-' && <CheckCircle className="w-4 h-4 text-green-600" />}
+                            {record.checkIn}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {record.checkOut !== '-' && <XCircle className="w-4 h-4 text-red-600" />}
+                            {record.checkOut}
+                          </div>
+                        </TableCell>
+                        <TableCell>{calculateWorkHours()}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
