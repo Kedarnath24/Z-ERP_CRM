@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useToast } from '@/hooks/use-toast';
 import { 
   Briefcase, 
   Users, 
@@ -68,6 +69,31 @@ export default function RecruitmentDashboard() {
   const [activeTab, setActiveTab] = useState('jobs');
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
   const [isScheduleInterviewOpen, setIsScheduleInterviewOpen] = useState(false);
+  const [activeJobsCount, setActiveJobsCount] = useState(12);
+  const [jobTitle, setJobTitle] = useState('');
+  const [department, setDepartment] = useState('');
+  const [employmentType, setEmploymentType] = useState('');
+  const [location, setLocation] = useState('');
+  const [salaryRange, setSalaryRange] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
+  const { toast } = useToast();
+
+  const publishJob = () => {
+    if (!jobTitle.trim()) {
+      toast({ title: 'Missing title', description: 'Please provide a job title.' });
+      return;
+    }
+    setActiveJobsCount((c) => c + 1);
+    setIsPostJobOpen(false);
+    // Reset form
+    setJobTitle('');
+    setDepartment('');
+    setEmploymentType('');
+    setLocation('');
+    setSalaryRange('');
+    setJobDescription('');
+    toast({ title: 'Job posted', description: `${jobTitle} has been published.` });
+  };
 
   return (
     <DashboardLayout>
@@ -165,11 +191,11 @@ export default function RecruitmentDashboard() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Job Title</Label>
-                      <Input placeholder="e.g. Senior Full Stack Developer" />
+                      <Input placeholder="e.g. Senior Full Stack Developer" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label>Department</Label>
-                      <Select>
+                      <Select value={department} onValueChange={setDepartment}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select department" />
                         </SelectTrigger>
@@ -185,7 +211,7 @@ export default function RecruitmentDashboard() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Employment Type</Label>
-                      <Select>
+                      <Select value={employmentType} onValueChange={setEmploymentType}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
@@ -198,24 +224,26 @@ export default function RecruitmentDashboard() {
                     </div>
                     <div className="space-y-2">
                       <Label>Location</Label>
-                      <Input placeholder="e.g. Remote, New York, NY" />
+                      <Input placeholder="e.g. Remote, New York, NY" value={location} onChange={(e) => setLocation(e.target.value)} />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Salary Range</Label>
-                    <Input placeholder="e.g. ,000 - ,000" />
+                    <Input placeholder="e.g. ,000 - ,000" value={salaryRange} onChange={(e) => setSalaryRange(e.target.value)} />
                   </div>
                   <div className="space-y-2">
                     <Label>Job Description</Label>
                     <Textarea 
                       placeholder="Enter detailed job description, requirements and benefits..." 
                       className="min-h-[120px]"
+                      value={jobDescription}
+                      onChange={(e) => setJobDescription(e.target.value)}
                     />
                   </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setIsPostJobOpen(false)}>Cancel</Button>
-                  <Button onClick={() => setIsPostJobOpen(false)} className="bg-purple-600 hover:bg-purple-700 text-white">Publish Position</Button>
+                  <Button onClick={publishJob} className="bg-purple-600 hover:bg-purple-700 text-white">Publish Position</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -231,7 +259,7 @@ export default function RecruitmentDashboard() {
               </div>
               <div>
                 <p className="text-sm text-slate-500 font-medium whitespace-nowrap">Active Jobs</p>
-                <h3 className="text-2xl font-bold">12</h3>
+                <h3 className="text-2xl font-bold">{activeJobsCount}</h3>
               </div>
               <div className="ml-auto flex items-center text-xs text-green-600 font-medium">
                 <TrendingUp className="h-3 w-3 mr-1" />

@@ -25,6 +25,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -41,7 +52,8 @@ const INTERVIEWS_DATA = [
     time: '10:00 AM',
     type: 'Video',
     status: 'Scheduled',
-    round: 'Technical'
+    round: 'Technical',
+    feedback: ''
   },
   {
     id: 2,
@@ -51,7 +63,8 @@ const INTERVIEWS_DATA = [
     time: '02:00 PM',
     type: 'Phone',
     status: 'Completed',
-    round: 'Initial'
+    round: 'Initial',
+    feedback: ''
   },
   {
     id: 3,
@@ -61,15 +74,25 @@ const INTERVIEWS_DATA = [
     time: '11:00 AM',
     type: 'Onsite',
     status: 'Scheduled',
-    round: 'Cultural Fit'
+    round: 'Cultural Fit',
+    feedback: ''
   }
 ];
 
 export default function InterviewScheduleModule() {
   const [searchTerm, setSearchTerm] = useState('');
   const [date, setDate] = useState<Date | undefined>(undefined);
+  const [interviews, setInterviews] = useState(INTERVIEWS_DATA);
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [selectedInterview, setSelectedInterview] = useState<typeof INTERVIEWS_DATA[0] | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>(undefined);
+  const [rescheduleTime, setRescheduleTime] = useState('');
+  const [feedbackText, setFeedbackText] = useState('');
+  const { toast } = useToast();
 
-  const filteredInterviews = INTERVIEWS_DATA.filter(i => {
+  const filteredInterviews = interviews.filter(i => {
     const matchesSearch = i.candidate.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          i.position.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDate = !date || format(i.date, 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd');
@@ -95,6 +118,43 @@ export default function InterviewScheduleModule() {
       case 'Phone': return <Phone className="h-4 w-4 text-blue-500" />;
       default: return <MapPin className="h-4 w-4 text-orange-500" />;
     }
+  };
+
+  const openReschedule = (interview: typeof INTERVIEWS_DATA[0]) => {
+    setSelectedInterview(interview);
+    setRescheduleDate(interview.date);
+    setRescheduleTime(interview.time);
+    setRescheduleOpen(true);
+  };
+
+  const saveReschedule = () => {
+    if (!selectedInterview) return;
+    setInterviews(prev => prev.map(i => i.id === selectedInterview.id ? { ...i, date: rescheduleDate || i.date, time: rescheduleTime, status: 'Scheduled' } : i));
+    setRescheduleOpen(false);
+    toast({ title: 'Interview rescheduled', description: 'The interview has been rescheduled.' });
+  };
+
+  const openView = (interview: typeof INTERVIEWS_DATA[0]) => {
+    setSelectedInterview(interview);
+    setViewOpen(true);
+  };
+
+  const openFeedback = (interview: typeof INTERVIEWS_DATA[0]) => {
+    setSelectedInterview(interview);
+    setFeedbackText('');
+    setFeedbackOpen(true);
+  };
+
+  const saveFeedback = () => {
+    if (!selectedInterview) return;
+    setInterviews(prev => prev.map(i => i.id === selectedInterview.id ? { ...i, feedback: feedbackText } : i));
+    setFeedbackOpen(false);
+    toast({ title: 'Feedback added', description: 'Your feedback was saved.' });
+  };
+
+  const cancelInterview = (id: number) => {
+    setInterviews(prev => prev.map(i => i.id === id ? { ...i, status: 'Cancelled' } : i));
+    toast({ title: 'Interview cancelled', description: 'The interview status is now Cancelled.' });
   };
 
   return (
@@ -183,10 +243,10 @@ export default function InterviewScheduleModule() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Reschedule</DropdownMenuItem>
-                      <DropdownMenuItem>View Candidate</DropdownMenuItem>
-                      <DropdownMenuItem>Add Feedback</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">Cancel Interview</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openReschedule(interview)}>Reschedule</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openView(interview)}>View Candidate</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openFeedback(interview)}>Add Feedback</DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600" onClick={() => cancelInterview(interview.id)}>Cancel Interview</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -194,6 +254,69 @@ export default function InterviewScheduleModule() {
             </CardContent>
           </Card>
         ))}
+
+        {/* Reschedule Dialog */}
+        <Dialog open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reschedule Interview</DialogTitle>
+              <DialogDescription>Select a new date and time.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <Calendar mode="single" selected={rescheduleDate} onSelect={setRescheduleDate} />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Time</label>
+                <Input value={rescheduleTime} onChange={(e) => setRescheduleTime(e.target.value)} placeholder="e.g. 10:30 AM" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRescheduleOpen(false)}>Cancel</Button>
+              <Button onClick={saveReschedule} className="bg-purple-600 text-white">Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* View Candidate Dialog */}
+        <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Candidate Details</DialogTitle>
+              <DialogDescription>Quick view of the candidate and interview.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              {selectedInterview ? (
+                <div className="space-y-2">
+                  <div><span className="font-semibold">Name:</span> {selectedInterview.candidate}</div>
+                  <div><span className="font-semibold">Position:</span> {selectedInterview.position}</div>
+                  <div><span className="font-semibold">Round:</span> {selectedInterview.round}</div>
+                  <div><span className="font-semibold">Date:</span> {format(selectedInterview.date, 'PPP')}</div>
+                  <div><span className="font-semibold">Time:</span> {selectedInterview.time}</div>
+                  {selectedInterview.feedback && <div><span className="font-semibold">Feedback:</span> {selectedInterview.feedback}</div>}
+                </div>
+              ) : null}
+            </div>
+            <DialogFooter>
+              <Button onClick={() => setViewOpen(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Feedback Dialog */}
+        <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Feedback</DialogTitle>
+              <DialogDescription>Provide feedback for the interview.</DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Textarea value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)} rows={6} />
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setFeedbackOpen(false)}>Cancel</Button>
+              <Button onClick={saveFeedback} className="bg-green-600 text-white">Save Feedback</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         {filteredInterviews.length === 0 && (
           <div className="py-12 text-center border-2 border-dashed rounded-lg">
             <CalendarIcon className="h-12 w-12 text-slate-300 mx-auto mb-4" />

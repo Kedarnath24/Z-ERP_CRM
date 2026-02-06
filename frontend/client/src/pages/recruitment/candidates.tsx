@@ -34,6 +34,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 
 const CANDIDATES_DATA = [
   {
@@ -83,8 +89,13 @@ export default function CandidatesModule() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [isAddCandidateOpen, setIsAddCandidateOpen] = useState(false);
+  const [candidates, setCandidates] = useState(CANDIDATES_DATA);
 
-  const filteredCandidates = CANDIDATES_DATA.filter(c => {
+  const updateStatus = (id: number, status: string) => {
+    setCandidates(prev => prev.map(c => c.id === id ? { ...c, status } : c));
+  };
+
+  const filteredCandidates = candidates.filter(c => {
     const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          c.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          c.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));

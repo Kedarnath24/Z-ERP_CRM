@@ -72,8 +72,8 @@ export default function ProfileDropdown() {
       localStorage.removeItem('zervos_subscription');
     }
 
-    // Navigate to the public/start page and reload to ensure any in-memory state is cleared
-    setLocation('/');
+    // Navigate to the login page and reload to ensure any in-memory state is cleared
+    setLocation('/login');
     // Force a hard reload so any React state/context is reset
     setTimeout(() => window.location.reload(), 50);
   };

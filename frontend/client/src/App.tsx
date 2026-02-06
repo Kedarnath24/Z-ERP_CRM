@@ -88,6 +88,10 @@ import ESignSettings from "@/pages/settings/ESignSettings";
 import FinanceSettings from "@/pages/settings/FinanceSettings";
 import LeadsSettings from "@/pages/settings/LeadsSettings";
 
+// Auth Pages
+import Login from "@/pages/auth/Login";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+
 import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Route, Switch } from "wouter";
@@ -98,6 +102,10 @@ import { queryClient } from "./lib/queryClient";
 function AppRouter() {
   return (
     <Switch>
+      {/* Auth Routes */}
+      <Route path="/login" component={Login} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      
       {/* Roots and Modules */}
       <Route path="/" component={DashboardOverview} />
       
