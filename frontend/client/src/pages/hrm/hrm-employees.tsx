@@ -109,6 +109,7 @@ export default function HRMEmployees() {
     joining: new Date().toISOString().split('T')[0],
     photo: null as File | null,
     bankName: '',
+    bankBranch: '',
     accountNumber: '',
     ifscCode: '',
     panNumber: '',
@@ -1083,6 +1084,7 @@ export default function HRMEmployees() {
       joining: new Date().toISOString().split('T')[0],
       photo: null,
       bankName: '',
+      bankBranch: '',
       accountNumber: '',
       ifscCode: '',
       panNumber: '',
@@ -1371,6 +1373,15 @@ export default function HRMEmployees() {
                             />
                           </div>
                           <div className="space-y-2">
+                            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Branch Name</Label>
+                            <Input 
+                              placeholder="e.g. Main Street Branch" 
+                              value={newEmployee.bankBranch}
+                              onChange={(e) => setNewEmployee({...newEmployee, bankBranch: e.target.value})}
+                              className="rounded-xl border-slate-200 h-11 bg-slate-50/50" 
+                            />
+                          </div>
+                          <div className="space-y-2">
                             <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Account Number</Label>
                             <Input 
                               placeholder="XXXX XXXX XXXX" 
@@ -1379,7 +1390,7 @@ export default function HRMEmployees() {
                               className="rounded-xl border-slate-200 h-11 bg-slate-50/50" 
                             />
                           </div>
-                          <div className="space-y-2 col-span-2">
+                          <div className="space-y-2">
                             <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">IFSC / Routing Code</Label>
                             <Input 
                               placeholder="e.g. HDFC0001234" 
@@ -2714,187 +2725,6 @@ export default function HRMEmployees() {
             <Button onClick={() => generateExcelReport()} className="bg-slate-600 hover:bg-slate-700">
               <FileSpreadsheet className="h-4 w-4 mr-2" />
               Export Historical Data
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Existing Add Employee Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-blue-600" />
-              Add New Employee
-            </DialogTitle>
-            <DialogDescription className="text-slate-600">
-              Create a new employee record with basic information.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="name" className="text-sm font-medium text-slate-700">Full Name</Label>
-                <Input
-                  id="name"
-                  placeholder="Enter full name"
-                  value={newEmployee.name}
-                  onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})}
-                  className="rounded-lg mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="designation" className="text-sm font-medium text-slate-700">Designation</Label>
-                <Input
-                  id="designation"
-                  placeholder="Enter job title"
-                  value={newEmployee.designation}
-                  onChange={(e) => setNewEmployee({...newEmployee, designation: e.target.value})}
-                  className="rounded-lg mt-1"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="department" className="text-sm font-medium text-slate-700">Department</Label>
-                <Select 
-                  value={newEmployee.department}
-                  onValueChange={(value) => setNewEmployee({...newEmployee, department: value})}
-                >
-                  <SelectTrigger className="rounded-lg mt-1">
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Engineering">Engineering</SelectItem>
-                    <SelectItem value="Product">Product</SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Marketing">Marketing</SelectItem>
-                    <SelectItem value="Sales">Sales</SelectItem>
-                    <SelectItem value="Human Resources">Human Resources</SelectItem>
-                    <SelectItem value="Finance">Finance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="location" className="text-sm font-medium text-slate-700">Location</Label>
-                <Input
-                  id="location"
-                  placeholder="Enter location"
-                  value={newEmployee.location}
-                  onChange={(e) => setNewEmployee({...newEmployee, location: e.target.value})}
-                  className="rounded-lg mt-1"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="email" className="text-sm font-medium text-slate-700">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter email address"
-                  value={newEmployee.email}
-                  onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})}
-                  className="rounded-lg mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone" className="text-sm font-medium text-slate-700">Phone Number</Label>
-                <Input
-                  id="phone"
-                  placeholder="Enter phone number"
-                  value={newEmployee.phone}
-                  onChange={(e) => setNewEmployee({...newEmployee, phone: e.target.value})}
-                  className="rounded-lg mt-1"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="joining" className="text-sm font-medium text-slate-700">Joining Date</Label>
-              <Input
-                id="joining"
-                type="date"
-                value={newEmployee.joining}
-                onChange={(e) => setNewEmployee({...newEmployee, joining: e.target.value})}
-                className="rounded-lg mt-1"
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsAddDialogOpen(false)}
-              className="rounded-lg"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => {
-                // Validation
-                if (!newEmployee.name || !newEmployee.designation || !newEmployee.department || 
-                    !newEmployee.location || !newEmployee.email || !newEmployee.phone) {
-                  toast({
-                    title: "Validation Error",
-                    description: "Please fill in all required fields.",
-                    variant: "destructive"
-                  });
-                  return;
-                }
-
-                // Generate unique employee ID
-                const generateEmployeeId = () => {
-                  const existingIds = employees.map(emp => emp.id);
-                  let newId = '';
-                  let counter = employees.length + 1;
-                  
-                  do {
-                    const idNumber = String(counter).padStart(3, '0');
-                    newId = `EMP${idNumber}`;
-                    counter++;
-                  } while (existingIds.includes(newId));
-                  
-                  return newId;
-                };
-
-                // Create new employee
-                const newEmployeeData = {
-                  id: generateEmployeeId(),
-                  name: newEmployee.name.trim(),
-                  designation: newEmployee.designation.trim(),
-                  department: newEmployee.department,
-                  location: newEmployee.location.trim(),
-                  joining: newEmployee.joining,
-                  status: 'active' as const,
-                  avatar: newEmployee.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2),
-                  email: newEmployee.email.trim().toLowerCase(),
-                  phone: newEmployee.phone.trim(),
-                  exitWorkflow: null
-                };
-
-                // Add to employees list
-                setEmployees(prev => [...prev, newEmployeeData]);
-
-                // Reset form
-                setNewEmployee({
-                  name: '',
-                  designation: '',
-                  department: '',
-                  location: '',
-                  email: '',
-                  phone: '',
-                  joining: new Date().toISOString().split('T')[0],
-                  photo: null
-                });
-
-                setIsAddDialogOpen(false);
-                toast({
-                  title: "✅ Employee Added Successfully",
-                  description: `${newEmployeeData.name} has been added to ${newEmployeeData.department} department.`,
-                });
-              }}
-              className="rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-            >
-              Add Employee
             </Button>
           </DialogFooter>
         </DialogContent>

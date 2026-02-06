@@ -15,17 +15,30 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { 
   Banknote,
   Calculator,
   Download,
   FileSpreadsheet,
   TrendingUp,
+  TrendingDown,
   Users,
   DollarSign,
   Percent,
   Shield,
-  Printer
+  Printer,
+  Eye,
+  CheckCircle2,
+  Send,
+  Receipt
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -41,6 +54,8 @@ export default function HRMPayroll() {
   const [selectedMonth, setSelectedMonth] = useState('February 2026');
   const [activeTab, setActiveTab] = useState('overview');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [payslipDialogOpen, setPayslipDialogOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   
   // Payroll configuration
   const [payrollConfig] = useState({
@@ -296,6 +311,119 @@ export default function HRMPayroll() {
     }
   };
 
+  const viewPayslip = (employee: any) => {
+    setSelectedEmployee(employee);
+    setPayslipDialogOpen(true);
+  };
+
+  const downloadPayslip = (employee: any) => {
+    const doc = new jsPDF();
+    
+    // Company header
+    doc.setFillColor(59, 130, 246);
+    doc.rect(0, 0, 210, 40, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PAYSLIP', 105, 20, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(selectedMonth, 105, 30, { align: 'center' });
+    
+    // Employee details
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Employee Details', 20, 55);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Employee ID: ${employee.id}`, 20, 65);
+    doc.text(`Name: ${employee.name}`, 20, 72);
+    doc.text(`Designation: ${employee.designation}`, 20, 79);
+    doc.text(`Department: ${employee.department}`, 20, 86);
+    
+    // Salary details table
+    const earnings = [
+      ['Basic Salary', `$${employee.baseSalary.toLocaleString()}`],
+      ['Allowances', `$${employee.allowances.toLocaleString()}`],
+      ['Gross Salary', `$${(employee.baseSalary + employee.allowances).toLocaleString()}`]
+    ];
+    
+    const deductions = [
+      ['Income Tax', `$${employee.tax.toLocaleString()}`],
+      ['PF Contribution', `$${employee.pf.toLocaleString()}`],
+      ['ESI', `$${employee.esi.toLocaleString()}`],
+      ['Professional Tax', `$${payrollConfig.profTax}`],
+      ['Total Deductions', `$${employee.deductions.toLocaleString()}`]
+    ];
+    
+    autoTable(doc, {
+      head: [['Earnings', 'Amount']],
+      body: earnings,
+      startY: 100,
+      theme: 'grid',
+      headStyles: { fillColor: [34, 197, 94] },
+      margin: { left: 20, right: 110 }
+    });
+    
+    autoTable(doc, {
+      head: [['Deductions', 'Amount']],
+      body: deductions,
+      startY: 100,
+      theme: 'grid',
+      headStyles: { fillColor: [239, 68, 68] },
+      margin: { left: 110, right: 20 }
+    });
+    
+    // Net salary
+    const finalY = (doc as any).lastAutoTable.finalY + 20;
+    doc.setFillColor(59, 130, 246);
+    doc.rect(20, finalY, 170, 15, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Net Salary:', 30, finalY + 10);
+    doc.text(`$${employee.netSalary.toLocaleString()}`, 160, finalY + 10, { align: 'right' });
+    
+    // Footer
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text('This is a computer-generated payslip. No signature required.', 105, 280, { align: 'center' });
+    
+    doc.save(`Payslip_${employee.id}_${selectedMonth.replace(' ', '_')}.pdf`);
+    
+    toast({
+      title: "✅ Payslip Downloaded",
+      description: `Payslip for ${employee.name} has been downloaded.`,
+    });
+  };
+
+  const sendPayslipToEmployee = async (employee: any) => {
+    setIsProcessing(true);
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      toast({
+        title: "✅ Payslip Sent Successfully",
+        description: `Payslip sent to ${employee.name} at ${employee.id.toLowerCase()}@company.com`,
+      });
+    } catch (error) {
+      toast({
+        title: "❌ Failed to Send",
+        description: "Failed to send payslip. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6 animate-in fade-in duration-500">
@@ -459,6 +587,7 @@ export default function HRMPayroll() {
                         <TableHead className="text-right">Deductions</TableHead>
                         <TableHead className="text-right">Net Salary</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -478,12 +607,41 @@ export default function HRMPayroll() {
                           <TableCell>
                             <Badge 
                               className={employee.status === 'processed' 
-                                ? 'bg-emerald-100 text-emerald-700' 
-                                : 'bg-amber-100 text-amber-700'
+                                ? 'bg-emerald-100 text-emerald-700 border-none' 
+                                : 'bg-amber-100 text-amber-700 border-none'
                               }
                             >
                               {employee.status === 'processed' ? 'Processed' : 'Pending'}
                             </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => viewPayslip(employee)}
+                                className="h-8 hover:bg-blue-50 hover:text-blue-700"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => downloadPayslip(employee)}
+                                className="h-8 hover:bg-green-50 hover:text-green-700"
+                              >
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => sendPayslipToEmployee(employee)}
+                                disabled={isProcessing}
+                                className="h-8 hover:bg-indigo-50 hover:text-indigo-700"
+                              >
+                                <Send className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -633,6 +791,157 @@ export default function HRMPayroll() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Payslip Preview Dialog */}
+      <Dialog open={payslipDialogOpen} onOpenChange={setPayslipDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="h-5 w-5 text-blue-600" />
+              Payslip - {selectedEmployee?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Salary details for February 2026
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedEmployee && (
+            <div className="space-y-6">
+              {/* Company Header */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-lg">
+                <h2 className="text-2xl font-bold">TechVision Solutions</h2>
+                <p className="text-blue-100 mt-1">Monthly Salary Statement</p>
+              </div>
+
+              {/* Employee Details */}
+              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-lg">
+                <div>
+                  <p className="text-sm text-slate-600">Employee Name</p>
+                  <p className="font-medium">{selectedEmployee.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Employee ID</p>
+                  <p className="font-medium">{selectedEmployee.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Designation</p>
+                  <p className="font-medium">{selectedEmployee.designation}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Department</p>
+                  <p className="font-medium">{selectedEmployee.department}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Pay Period</p>
+                  <p className="font-medium">February 2026</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">Payment Date</p>
+                  <p className="font-medium">28th February 2026</p>
+                </div>
+              </div>
+
+              {/* Earnings & Deductions */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Earnings */}
+                <div>
+                  <h3 className="font-semibold text-green-700 mb-3 flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Earnings
+                  </h3>
+                  <div className="space-y-2 bg-green-50 p-4 rounded-lg">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Basic Salary</span>
+                      <span className="font-medium">${selectedEmployee.baseSalary.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Allowances</span>
+                      <span className="font-medium">${selectedEmployee.allowances.toLocaleString()}</span>
+                    </div>
+                    <div className="border-t-2 border-green-200 pt-2 mt-2">
+                      <div className="flex justify-between font-bold text-green-700">
+                        <span>Gross Salary</span>
+                        <span>${(selectedEmployee.baseSalary + selectedEmployee.allowances).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Deductions */}
+                <div>
+                  <h3 className="font-semibold text-red-700 mb-3 flex items-center gap-2">
+                    <TrendingDown className="h-4 w-4" />
+                    Deductions
+                  </h3>
+                  <div className="space-y-2 bg-red-50 p-4 rounded-lg">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Income Tax</span>
+                      <span className="font-medium">${selectedEmployee.tax.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Provident Fund</span>
+                      <span className="font-medium">${selectedEmployee.pf.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">ESI</span>
+                      <span className="font-medium">${selectedEmployee.esi.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Professional Tax</span>
+                      <span className="font-medium">${selectedEmployee.profTax.toLocaleString()}</span>
+                    </div>
+                    <div className="border-t-2 border-red-200 pt-2 mt-2">
+                      <div className="flex justify-between font-bold text-red-700">
+                        <span>Total Deductions</span>
+                        <span>${selectedEmployee.deductions.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Net Salary */}
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-blue-100 text-sm">Net Salary (Take Home)</p>
+                    <p className="text-3xl font-bold mt-1">${selectedEmployee.netSalary.toLocaleString()}</p>
+                  </div>
+                  <CheckCircle2 className="h-12 w-12 text-blue-200" />
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="text-xs text-slate-500 text-center border-t pt-4">
+                <p>This is a system-generated payslip and does not require a signature.</p>
+                <p className="mt-1">For any queries, please contact HR Department: hr@techvision.com</p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 justify-end pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => downloadPayslip(selectedEmployee)}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+                <Button
+                  onClick={() => {
+                    sendPayslipToEmployee(selectedEmployee);
+                    setPayslipDialogOpen(false);
+                  }}
+                  disabled={isProcessing}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Send via Email
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
