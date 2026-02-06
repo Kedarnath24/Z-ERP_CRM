@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLocation } from 'wouter';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -41,7 +41,8 @@ import {
   TrendingUp,
   Activity,
   Printer,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Plus
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -56,10 +57,10 @@ import { cn } from "@/lib/utils";
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import React from 'react';
 
-// AttendanceLeave: Page component for tracking attendance and managing leave requests.
-export default function AttendanceLeave() {
+// Rebuild trigger: Attendance Leave module logic updated.
+// Consolidated React imports and fixed missing Lucide icons (Plus).
+export default function HRMAttendance() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState('today');
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,17 +76,62 @@ export default function AttendanceLeave() {
     { id: 'EMP006', name: 'Lisa Anderson', department: 'Marketing', checkIn: '09:05 AM', checkOut: '05:30 PM', status: 'present', hours: '8.2h', avatar: 'LA' }
   ];
 
-  const leaveRequests = [
+  const [leaveRequests, setLeaveRequests] = useState([
     { id: 'LR001', employee: 'Emily Davis', type: 'Sick Leave', from: '2025-06-15', to: '2025-06-16', days: 2, status: 'pending', reason: 'Medical checkup', avatar: 'ED' },
     { id: 'LR002', employee: 'Alex Wilson', type: 'Casual Leave', from: '2025-06-20', to: '2025-06-22', days: 3, status: 'approved', reason: 'Family function', avatar: 'AW' },
     { id: 'LR003', employee: 'Mike Brown', type: 'WFH', from: '2025-06-18', to: '2025-06-18', days: 1, status: 'approved', reason: 'Internet installation', avatar: 'MB' }
+  ]);
+
+  const [monthlySummary, setMonthlySummary] = useState([
+    { name: 'John Smith', present: 20, absent: 2, late: 1, leave: 1, overtime: '8h', avatar: 'JS' },
+    { name: 'Sarah Johnson', present: 22, absent: 0, late: 0, leave: 2, overtime: '12h', avatar: 'SJ' },
+    { name: 'Mike Brown', present: 18, absent: 1, late: 4, leave: 1, overtime: '2h', avatar: 'MB' },
+    { name: 'Emily Davis', present: 15, absent: 0, late: 0, leave: 7, overtime: '0h', avatar: 'ED' },
+    { name: 'Alex Wilson', present: 19, absent: 3, late: 1, leave: 1, overtime: '5h', avatar: 'AW' },
+  ]);
+
+  const shifts = [
+    { id: 1, name: 'Morning Shift', time: '09:00 AM - 06:00 PM', color: 'bg-blue-100 text-blue-700' },
+    { id: 2, name: 'Evening Shift', time: '02:00 PM - 11:00 PM', color: 'bg-indigo-100 text-indigo-700' },
+    { id: 3, name: 'Night Shift', time: '10:00 PM - 07:00 AM', color: 'bg-slate-700 text-white' },
   ];
+
+  const [roster, setRoster] = useState([
+    { employee: 'John Smith', mon: 1, tue: 1, wed: 1, thu: 1, fri: 1, sat: 0, sun: 0 },
+    { employee: 'Sarah Johnson', mon: 1, tue: 1, wed: 1, thu: 1, fri: 1, sat: 0, sun: 0 },
+    { employee: 'Mike Brown', mon: 2, tue: 2, wed: 2, thu: 2, fri: 2, sat: 1, sun: 0 },
+  ]);
+
+  const [isShiftDialogOpen, setIsShiftDialogOpen] = useState(false);
+  const [selectedRosterIndex, setSelectedRosterIndex] = useState<number | null>(null);
+
+  const handleMonthChange = (month: string) => {
+    // Mocking data update
+    toast({ title: "Updating Data", description: `Fetching attendance summary for ${month.toUpperCase()} 2025.` });
+    setTimeout(() => {
+      setMonthlySummary(monthlySummary.map(row => ({
+        ...row,
+        present: Math.floor(Math.random() * 20) + 5,
+        absent: Math.floor(Math.random() * 5),
+        late: Math.floor(Math.random() * 5),
+        overtime: `${Math.floor(Math.random() * 10)}h`
+      })));
+    }, 800);
+  };
+
+  const handleAssignShift = (empName: string, day: string, shiftId: number) => {
+    setRoster(roster.map(r => 
+      r.employee === empName ? { ...r, [day.toLowerCase()]: shiftId } : r
+    ));
+    toast({ title: "Shift Assigned", description: `${empName}'s ${day} shift updated.` });
+  };
 
   const statusConfig: Record<string, { label: string; class: string; icon: any }> = {
     present: { label: 'Present', class: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: CheckCircle },
     absent: { label: 'Absent', class: 'bg-rose-100 text-rose-700 border-rose-200', icon: XCircle },
-    late: { label: 'Late', class: 'bg-amber-100 text-amber-700 border-amber-200', icon: AlertCircle },
-    leave: { label: 'On Leave', class: 'bg-blue-100 text-blue-700 border-blue-200', icon: Coffee }
+    late: { label: 'Late', class: 'bg-amber-100 text-amber-700 border-amber-200', icon: Clock },
+    leave: { label: 'On Leave', class: 'bg-blue-100 text-blue-700 border-blue-200', icon: Plane },
+    halfday: { label: 'Half Day', class: 'bg-violet-100 text-violet-700 border-violet-200', icon: Coffee }
   };
 
   const leaveStatusConfig: Record<string, { label: string; class: string }> = {
@@ -445,30 +491,131 @@ export default function AttendanceLeave() {
           </TabsContent>
 
           <TabsContent value="monthly" className="mt-6">
-            <Card className="border-dashed border-2 py-20 bg-slate-50/30 rounded-[1.5rem]">
-              <CardContent className="flex flex-col items-center justify-center text-center">
-                <div className="p-4 bg-slate-100 rounded-full mb-4">
-                  <History className="h-8 w-8 text-slate-400" />
+            <Card className="rounded-[1.5rem] border-slate-200/60 shadow-sm overflow-hidden">
+              <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-slate-900">Attendance Summary</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Current Month: {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">Historical Reports Coming Soon</h3>
-                <p className="text-sm text-slate-500 max-w-xs mt-1 font-medium">
-                  We're finalizing the monthly visualization module. Check back shortly!
-                </p>
-              </CardContent>
+                <Select defaultValue="june" onValueChange={handleMonthChange}>
+                  <SelectTrigger className="w-[140px] rounded-xl h-9">
+                    <SelectValue placeholder="Select Month" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="june">June 2025</SelectItem>
+                    <SelectItem value="may">May 2025</SelectItem>
+                    <SelectItem value="april">April 2025</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50/30">
+                    <TableHead className="font-bold text-slate-700">Employee</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Present</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Absent</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Late</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">On Leave</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Overtime</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {monthlySummary.map((row, i) => (
+                    <TableRow key={i} className="group hover:bg-slate-50/50">
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${row.name}`} />
+                            <AvatarFallback>{row.avatar}</AvatarFallback>
+                          </Avatar>
+                          <p className="font-bold text-slate-900">{row.name}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center font-bold text-emerald-600">{row.present}</TableCell>
+                      <TableCell className="text-center font-bold text-rose-600">{row.absent}</TableCell>
+                      <TableCell className="text-center font-bold text-amber-600">{row.late}</TableCell>
+                      <TableCell className="text-center font-bold text-blue-600">{row.leave}</TableCell>
+                      <TableCell className="text-center font-bold text-slate-600">{row.overtime}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" className="h-8 rounded-lg font-bold text-blue-600">View Details</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </Card>
           </TabsContent>
 
           <TabsContent value="shift" className="mt-6">
-            <Card className="border-dashed border-2 py-20 bg-slate-50/30 rounded-[1.5rem]">
-              <CardContent className="flex flex-col items-center justify-center text-center">
-                <div className="p-4 bg-slate-100 rounded-full mb-4">
-                  <Briefcase className="h-8 w-8 text-slate-400" />
+            <Card className="rounded-[1.5rem] border-slate-200/60 shadow-sm overflow-hidden">
+               <div className="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <h3 className="font-bold text-slate-900">Weekly Shift Roster</h3>
+                  <div className="flex gap-2">
+                    {shifts.map(s => (
+                      <Badge key={s.id} className={cn("rounded-md text-[9px] px-2 py-0.5 border-none", s.color)}>{s.name}</Badge>
+                    ))}
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold text-slate-900">Shift Planning Module</h3>
-                <p className="text-sm text-slate-500 max-w-xs mt-1 font-medium">
-                  Dynamic shift scheduling and roster management is currently in beta.
-                </p>
-              </CardContent>
+                <Button variant="outline" size="sm" className="rounded-xl border-slate-200 font-bold">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  Assign Shift
+                </Button>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50/30">
+                    <TableHead className="font-bold text-slate-700">Employee</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Mon</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Tue</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Wed</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Thu</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Fri</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Sat</TableHead>
+                    <TableHead className="font-bold text-slate-700 text-center">Sun</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {roster.map((row, i) => (
+                    <TableRow key={i} className="hover:bg-slate-50/50 transition-colors">
+                      <TableCell className="font-bold text-slate-700">{row.employee}</TableCell>
+                      {[row.mon, row.tue, row.wed, row.thu, row.fri, row.sat, row.sun].map((sId, dayIdx) => (
+                        <TableCell key={dayIdx} className="text-center p-2">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <div className="cursor-pointer">
+                                {sId === 0 ? (
+                                  <span className="text-[10px] text-slate-300 font-bold hover:text-slate-500 transition-colors">OFF</span>
+                                ) : (
+                                  <Badge className={cn("rounded-md text-[10px] font-black hover:scale-110 transition-transform", shifts.find(s => s.id === sId)?.color)}>
+                                    {shifts.find(s => s.id === sId)?.name.split(' ')[0][0]}
+                                  </Badge>
+                                )}
+                              </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="rounded-xl">
+                              <DropdownMenuLabel>Change Shift ({['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][dayIdx]})</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleAssignShift(row.employee, ['mon','tue','wed','thu','fri','sat','sun'][dayIdx], 0)}>
+                                <span className="text-xs font-bold text-slate-500">Day Off</span>
+                              </DropdownMenuItem>
+                              {shifts.map(s => (
+                                <DropdownMenuItem key={s.id} onClick={() => handleAssignShift(row.employee, ['mon','tue','wed','thu','fri','sat','sun'][dayIdx], s.id)}>
+                                  <div className="flex items-center gap-2">
+                                    <div className={cn("w-2 h-2 rounded-full", s.color.split(' ')[0])} />
+                                    <span className="text-xs font-bold">{s.name}</span>
+                                  </div>
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </Card>
           </TabsContent>
         </Tabs>

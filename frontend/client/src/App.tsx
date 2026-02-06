@@ -22,6 +22,7 @@ import HRMPerformance from "@/pages/hrm/hrm-performance";
 import HRMLetters from "@/pages/hrm/hrm-letters";
 import HRMTravelExpense from "@/pages/hrm/hrm-travel-expense";
 import HRMAutomation from "@/pages/hrm/hrm-automation";
+import HRMWorkflows from "@/pages/hrm/hrm-workflows";
 
 // Sales Module Pages
 import SalesDashboard from "@/pages/sales/sales-dashboard";
@@ -126,6 +127,7 @@ function AppRouter() {
       <Route path="/hrm/letters" component={HRMLetters} />
       <Route path="/hrm/travel-expense" component={HRMTravelExpense} />
       <Route path="/hrm/automation" component={HRMAutomation} />
+      <Route path="/hrm/workflows" component={HRMWorkflows} />
       <Route path="/hrm/*" component={HRMDashboard} />
       <Route path="/hrm" component={HRMDashboard} />
       
