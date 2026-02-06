@@ -5,7 +5,16 @@ import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
 export default defineConfig({
   plugins: [
-    react(),
+    react({
+      // Enable Fast Refresh for better DX
+      fastRefresh: true,
+      // Optimize dependencies
+      babel: {
+        plugins: [
+          // Add any babel plugins here if needed
+        ],
+      },
+    }),
     runtimeErrorOverlay(),
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
@@ -31,15 +40,58 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+   // Optimize chunk splitting
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          'react-vendor': ['react', 'react-dom', 'react-hook-form'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          'utils-vendor': ['date-fns', 'clsx', 'tailwind-merge'],
+          'charts-vendor': ['recharts'],
+          'pdf-vendor': ['jspdf', 'jspdf-autotable'],
+        },
+      },
+    },
+    // Enable source maps for debugging
+    sourcemap: process.env.NODE_ENV !== 'production',
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000,
+    // Minification options
+    minify: 'esbuild',
+    target: 'esnext',
+  },
+  // Optimize dependencies
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'wouter',
+      '@tanstack/react-query',
+      'lucide-react',
+      'date-fns',
+      'recharts',
+      'jspdf',
+      'xlsx',
+    ],
+    exclude: [],
   },
   server: {
-    port: 5176, // Change this to any port you want (e.g., 3000, 8080, 5175, etc.)
+    port: 5176,
+    // Enable HMR
     hmr: {
-      overlay: false,
+      overlay: true,
+    },
+    // Warm up frequently used files
+    warmup: {
+      clientFiles: [
+        './client/src/App.tsx',
+        './client/src/main.tsx',
+        './client/src/pages/**/*.tsx',
+      ],
     },
     proxy: {
       "/api": {
-        // Match the dev server PORT used in package.json dev:server (currently 5001)
         target: "http://localhost:5001",
         changeOrigin: true,
       },
