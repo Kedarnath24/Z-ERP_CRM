@@ -11,6 +11,7 @@ export interface Notification {
     label: string;
     onClick: () => void;
   };
+  metadata?: Record<string, any>;
 }
 
 interface NotificationContextType {

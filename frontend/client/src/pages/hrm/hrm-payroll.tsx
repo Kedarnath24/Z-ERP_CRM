@@ -1993,7 +1993,7 @@ export default function HRMPayroll() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-sm">Professional Tax</span>
-                      <span className="font-medium">${selectedEmployee.profTax.toLocaleString()}</span>
+                      <span className="font-medium">${payrollConfig.profTax.toLocaleString()}</span>
                     </div>
                     <div className="border-t-2 border-red-200 pt-2 mt-2">
                       <div className="flex justify-between font-bold text-red-700">

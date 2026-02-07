@@ -519,10 +519,10 @@ export default function TravelExpense() {
             {/* KPI Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-2">
               <StatCard 
-                title="Active Missions"
-                value={requests.filter(r => r.status === 'approved').length}
-                description="Staff currently on mission"
-                icon={Globe}
+                title="Total Expenses"
+                value={`$${claims.reduce((acc, c) => acc + c.amount, 0).toFixed(2)}`}
+                description="All submitted claims"
+                icon={DollarSign}
                 color="bg-pink-100 text-pink-600"
               />
               <StatCard 

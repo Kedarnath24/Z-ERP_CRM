@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Calendar } from '@/components/ui/calendar';
 import StatsCard from '@/components/StatsCard';
@@ -59,6 +60,10 @@ export default function EmployeeProfile() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [leaveTypeValue, setLeaveTypeValue] = useState('Annual Leave');
+  const [otherLeaveType, setOtherLeaveType] = useState('');
+  const [showViewLeaveModal, setShowViewLeaveModal] = useState(false);
+  const [selectedLeave, setSelectedLeave] = useState<LeaveRequest | null>(null);
   
   const [leaveFile, setLeaveFile] = useState<File | null>(null);
   const [leavePreviewUrl, setLeavePreviewUrl] = useState<string | null>(null);
@@ -306,12 +311,29 @@ export default function EmployeeProfile() {
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="leaveType">Leave Type</Label>
-            <select id="leaveType" className="w-full border rounded-md p-2">
+            <select
+              id="leaveType"
+              value={leaveTypeValue}
+              onChange={(e) => setLeaveTypeValue(e.target.value)}
+              className="w-full border rounded-md p-2"
+            >
               <option>Annual Leave</option>
               <option>Sick Leave</option>
               <option>Personal Leave</option>
               <option>Emergency Leave</option>
+              <option>Other</option>
             </select>
+            {leaveTypeValue === 'Other' && (
+              <div className="mt-2">
+                <Label htmlFor="otherLeaveType">Please specify</Label>
+                <Input
+                  id="otherLeaveType"
+                  value={otherLeaveType}
+                  onChange={(e) => setOtherLeaveType(e.target.value)}
+                  placeholder="Specify leave type"
+                />
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -324,8 +346,8 @@ export default function EmployeeProfile() {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="reason">Reason</Label>
-            <Input id="reason" placeholder="Reason for leave" />
+            <Label htmlFor="reason">Description</Label>
+            <Textarea id="reason" placeholder="Reason for leave" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="leaveAttachment">Attach Document (optional)</Label>
@@ -760,7 +782,14 @@ export default function EmployeeProfile() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedLeave(leave);
+                            setShowViewLeaveModal(true);
+                          }}
+                        >
                           View
                         </Button>
                       </TableCell>
@@ -824,6 +853,57 @@ export default function EmployeeProfile() {
       {/* Modals */}
       <EditProfileModal />
       <RequestLeaveModal />
+      {/* View Leave Details Modal */}
+      <Dialog open={showViewLeaveModal} onOpenChange={(open) => { if(!open) { setShowViewLeaveModal(false); setSelectedLeave(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Leave Details</DialogTitle>
+            <DialogDescription>Details for the selected leave request</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {selectedLeave ? (
+              <>
+                <div>
+                  <Label>Type</Label>
+                  <p className="font-medium">{selectedLeave.type}</p>
+                </div>
+                <div>
+                  <Label>Start Date</Label>
+                  <p className="font-medium">{selectedLeave.startDate}</p>
+                </div>
+                <div>
+                  <Label>End Date</Label>
+                  <p className="font-medium">{selectedLeave.endDate}</p>
+                </div>
+                <div>
+                  <Label>Days</Label>
+                  <p className="font-medium">{selectedLeave.days}</p>
+                </div>
+                <div>
+                  <Label>Status </Label>
+                  <Badge variant={getStatusBadgeVariant(selectedLeave.status)}>{selectedLeave.status}</Badge>
+                </div>
+                {selectedLeave.reason && (
+                  <div>
+                    <Label>Reason</Label>
+                    <p className="whitespace-pre-wrap">{selectedLeave.reason}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p>No leave selected.</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => { setShowViewLeaveModal(false); setSelectedLeave(null); }}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </DashboardLayout>
   );

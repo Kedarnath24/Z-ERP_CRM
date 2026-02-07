@@ -20,7 +20,9 @@ import {
   X,
   Trash2,
   CheckCircle,
-  FileCheck
+  FileCheck,
+  FileSpreadsheet,
+  Printer
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -40,6 +42,8 @@ export default function EstimatesTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isExporting, setIsExporting] = useState(false);
+  const [viewEstimate, setViewEstimate] = useState<typeof estimates[0] | null>(null);
+  const [editEstimate, setEditEstimate] = useState<typeof estimates[0] | null>(null);
   const { toast } = useToast();
 
   // Mock data
@@ -139,8 +143,282 @@ export default function EstimatesTab() {
     expired: { label: 'Expired', class: 'bg-orange-100 text-orange-700 border-orange-200' }
   };
 
+  const handleUpdateEstimate = () => {
+    if (!editEstimate) return;
+    
+    setEstimates(estimates.map(est => 
+      est.id === editEstimate.id ? editEstimate : est
+    ));
+    setEditEstimate(null);
+    toast({ 
+      title: "Estimate Updated", 
+      description: `${editEstimate.id} has been updated successfully.` 
+    });
+  };
+
   return (
-    <Card>
+    <>
+      {/* View Estimate Dialog */}
+      <Dialog open={!!viewEstimate} onOpenChange={(open) => !open && setViewEstimate(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-blue-600" />
+              Estimate Details - {viewEstimate?.id}
+            </DialogTitle>
+            <DialogDescription>
+              View complete estimate information
+            </DialogDescription>
+          </DialogHeader>
+          {viewEstimate && (
+            <div className="space-y-6 py-4">
+              {/* Header Information */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-xs text-slate-500">Customer</Label>
+                    <p className="text-base font-semibold text-slate-900">{viewEstimate.customer}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Project</Label>
+                    <p className="text-base font-semibold text-slate-900">{viewEstimate.project}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Reference</Label>
+                    <p className="text-base font-mono text-slate-900">{viewEstimate.reference}</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-xs text-slate-500">Estimate Date</Label>
+                    <p className="text-base font-semibold text-slate-900">{viewEstimate.date}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Expiry Date</Label>
+                    <p className="text-base font-semibold text-slate-900">{viewEstimate.expiryDate}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Status</Label>
+                    <div className="pt-1">
+                      <Badge variant="outline" className={statusConfig[viewEstimate.status].class}>
+                        {statusConfig[viewEstimate.status].label}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Summary */}
+              <div className="border rounded-lg p-6 bg-slate-50">
+                <h3 className="font-semibold text-slate-900 mb-4">Financial Summary</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Subtotal:</span>
+                    <span className="font-semibold text-slate-900">{viewEstimate.amount}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Tax:</span>
+                    <span className="font-semibold text-slate-900">{viewEstimate.tax}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 border-t border-slate-200">
+                    <span className="text-lg font-bold text-slate-900">Total Amount:</span>
+                    <span className="text-2xl font-bold text-green-700">
+                      ${(parseFloat(viewEstimate.amount.replace(/[$,]/g, '')) + parseFloat(viewEstimate.tax.replace(/[$,]/g, ''))).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Invoice Status */}
+              <div className="flex items-center gap-2 p-4 border rounded-lg bg-white">
+                {viewEstimate.invoiced ? (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-emerald-600" />
+                    <div>
+                      <p className="font-semibold text-slate-900">Converted to Invoice</p>
+                      <p className="text-sm text-slate-600">This estimate has been invoiced</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-5 w-5 text-slate-400" />
+                    <div>
+                      <p className="font-semibold text-slate-900">Not Yet Invoiced</p>
+                      <p className="text-sm text-slate-600">This estimate can be converted to an invoice</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter className="flex justify-between items-center">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => handleExport('pdf')}>
+                <Download className="h-4 w-4 mr-2" />
+                Download PDF
+              </Button>
+              {viewEstimate && !viewEstimate.invoiced && (
+                <Button variant="outline" onClick={() => {
+                  toast({ title: "Converting", description: "Generating invoice from estimate..." });
+                  setViewEstimate(null);
+                }}>
+                  <ArrowRight className="h-4 w-4 mr-2" />
+                  Convert to Invoice
+                </Button>
+              )}
+            </div>
+            <Button onClick={() => setViewEstimate(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Estimate Dialog */}
+      <Dialog open={!!editEstimate} onOpenChange={(open) => !open && setEditEstimate(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-slate-600" />
+              Edit Estimate - {editEstimate?.id}
+            </DialogTitle>
+            <DialogDescription>Update estimate information</DialogDescription>
+          </DialogHeader>
+          {editEstimate && (
+            <div className="space-y-6 py-4">
+              {/* Header */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-number">Estimate Number</Label>
+                  <Input 
+                    id="edit-number" 
+                    value={editEstimate.id}
+                    onChange={(e) => setEditEstimate({...editEstimate, id: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-date">Date</Label>
+                  <Input 
+                    id="edit-date" 
+                    type="date" 
+                    value={editEstimate.date}
+                    onChange={(e) => setEditEstimate({...editEstimate, date: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-expiry">Expiry Date</Label>
+                  <Input 
+                    id="edit-expiry" 
+                    type="date" 
+                    value={editEstimate.expiryDate}
+                    onChange={(e) => setEditEstimate({...editEstimate, expiryDate: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              {/* Customer Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-customer">Customer</Label>
+                  <Input 
+                    id="edit-customer" 
+                    value={editEstimate.customer}
+                    onChange={(e) => setEditEstimate({...editEstimate, customer: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-project">Project</Label>
+                  <Input 
+                    id="edit-project" 
+                    value={editEstimate.project}
+                    onChange={(e) => setEditEstimate({...editEstimate, project: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              {/* Reference */}
+              <div className="space-y-2">
+                <Label htmlFor="edit-reference">Reference</Label>
+                <Input 
+                  id="edit-reference" 
+                  value={editEstimate.reference}
+                  onChange={(e) => setEditEstimate({...editEstimate, reference: e.target.value})}
+                />
+              </div>
+
+              {/* Financial Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-amount">Amount</Label>
+                  <Input 
+                    id="edit-amount" 
+                    value={editEstimate.amount}
+                    onChange={(e) => setEditEstimate({...editEstimate, amount: e.target.value})}
+                    placeholder="$0.00"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-tax">Tax</Label>
+                  <Input 
+                    id="edit-tax" 
+                    value={editEstimate.tax}
+                    onChange={(e) => setEditEstimate({...editEstimate, tax: e.target.value})}
+                    placeholder="$0.00"
+                  />
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className="space-y-2">
+                <Label htmlFor="edit-status">Status</Label>
+                <Select 
+                  value={editEstimate.status} 
+                  onValueChange={(value) => setEditEstimate({...editEstimate, status: value})}
+                >
+                  <SelectTrigger id="edit-status">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="sent">Sent</SelectItem>
+                    <SelectItem value="accepted">Accepted</SelectItem>
+                    <SelectItem value="declined">Declined</SelectItem>
+                    <SelectItem value="expired">Expired</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Summary */}
+              <div className="border rounded-lg p-6 bg-slate-50">
+                <h3 className="font-semibold text-slate-900 mb-4">Summary</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Subtotal:</span>
+                    <span className="font-semibold text-slate-900">{editEstimate.amount}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Tax:</span>
+                    <span className="font-semibold text-slate-900">{editEstimate.tax}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 border-t border-slate-200">
+                    <span className="text-lg font-bold text-slate-900">Total:</span>
+                    <span className="text-2xl font-bold text-green-700">
+                      ${(parseFloat(editEstimate.amount.replace(/[$,]/g, '')) + parseFloat(editEstimate.tax.replace(/[$,]/g, ''))).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditEstimate(null)}>Cancel</Button>
+            <Button onClick={handleUpdateEstimate}>
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Update Estimate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">Estimates</CardTitle>
         <div className="flex items-center gap-2">
@@ -353,10 +631,10 @@ export default function EstimatesTab() {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50" onClick={() => toast({ title: "View Estimate", description: `Loading ${estimate.id}...` })}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 hover:bg-blue-50" onClick={() => setViewEstimate(estimate)}>
                       <Eye className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:bg-slate-100" onClick={() => toast({ title: "Edit Estimate", description: `Opening editor for ${estimate.id}...` })}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-600 hover:bg-slate-100" onClick={() => setEditEstimate(estimate)}>
                       <Edit className="h-4 w-4" />
                     </Button>
                     <DropdownMenu>
@@ -393,5 +671,6 @@ export default function EstimatesTab() {
         </Table>
       </CardContent>
     </Card>
+    </>
   );
 }
