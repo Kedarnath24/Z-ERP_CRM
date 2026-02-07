@@ -59,7 +59,9 @@ import {
   FileCheck,
   AlertCircle,
   ChevronRight,
-  CircleDollarSign
+  CircleDollarSign,
+  BarChart3,
+  FileText
 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -916,144 +918,254 @@ export default function HRMPayroll() {
                 </CardContent>
               </Card>
 
-              {/* Calculation Breakdown Example */}
-              <Card className="rounded-xl">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calculator className="h-5 w-5 text-indigo-600" />
-                    Salary Calculation Example
-                  </CardTitle>
-                  <CardDescription>
-                    Detailed breakdown of how employee salary is calculated
-                  </CardDescription>
+              {/* Monthly Payroll Calendar */}
+              <Card className="rounded-xl border-slate-200 shadow-lg overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <div className="p-2 bg-blue-600 rounded-lg">
+                        <Calendar className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold text-slate-900">Monthly Payroll Expenditure</div>
+                        <div className="text-sm text-slate-600 font-normal mt-0.5">Track spending across months</div>
+                      </div>
+                    </CardTitle>
+                    <Select defaultValue="2026" onValueChange={(value) => {
+                      toast({
+                        title: "Year Changed",
+                        description: `Viewing payroll data for ${value}`,
+                      });
+                    }}>
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Year" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="2026">2026</SelectItem>
+                        <SelectItem value="2025">2025</SelectItem>
+                        <SelectItem value="2024">2024</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {/* Example Employee */}
-                    <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                          <Users className="h-6 w-6 text-indigo-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-slate-900">John Smith - EMP001</h4>
-                          <p className="text-sm text-slate-600">Senior Software Engineer</p>
-                        </div>
-                      </div>
+                <CardContent className="pt-6">
+                  {/* Monthly Calendar Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    {[
+                      { month: 'January', amount: 548230, employees: 142, status: 'paid', trend: '+2.3%', color: 'emerald' },
+                      { month: 'February', amount: 568716, employees: 145, status: 'current', trend: '+3.7%', color: 'blue' },
+                      { month: 'March', amount: 0, employees: 145, status: 'upcoming', trend: 'Est.', color: 'slate' },
+                      { month: 'April', amount: 0, employees: 145, status: 'upcoming', trend: 'Est.', color: 'slate' },
+                      { month: 'May', amount: 0, employees: 145, status: 'upcoming', trend: 'Est.', color: 'slate' },
+                      { month: 'June', amount: 0, employees: 145, status: 'upcoming', trend: 'Est.', color: 'slate' },
+                      { month: 'July', amount: 0, employees: 145, status: 'upcoming', trend: 'Est.', color: 'slate' },
+                      { month: 'August', amount: 0, employees: 145, status: 'upcoming', trend: 'Est.', color: 'slate' },
+                      { month: 'September', amount: 0, employees: 145, status: 'upcoming', trend: 'Est.', color: 'slate' },
+                      { month: 'October', amount: 0, employees: 145, status: 'upcoming', trend: 'Est.', color: 'slate' },
+                      { month: 'November', amount: 0, employees: 145, status: 'upcoming', trend: 'Est.', color: 'slate' },
+                      { month: 'December', amount: 0, employees: 145, status: 'upcoming', trend: 'Est.', color: 'slate' },
+                    ].map((monthData, idx) => (
+                      <div 
+                        key={idx}
+                        className={cn(
+                          "relative p-5 rounded-xl border-2 transition-all cursor-pointer hover:shadow-lg",
+                          monthData.status === 'paid' && "bg-emerald-50 border-emerald-200 hover:border-emerald-300",
+                          monthData.status === 'current' && "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-300 shadow-md hover:border-blue-400",
+                          monthData.status === 'upcoming' && "bg-slate-50 border-slate-200 hover:border-slate-300 opacity-60"
+                        )}
+                        onClick={() => {
+                          if (monthData.status !== 'upcoming') {
+                            toast({
+                              title: `${monthData.month} 2026 Payroll`,
+                              description: `Total spent: $${monthData.amount.toLocaleString()} for ${monthData.employees} employees`,
+                            });
+                          }
+                        }}
+                      >
+                        {/* Status Badge */}
+                        {monthData.status === 'current' && (
+                          <div className="absolute top-3 right-3">
+                            <Badge className="bg-blue-600 text-white border-none text-[10px] px-2 py-0.5">
+                              CURRENT
+                            </Badge>
+                          </div>
+                        )}
+                        {monthData.status === 'paid' && (
+                          <div className="absolute top-3 right-3">
+                            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                          </div>
+                        )}
 
-                      {/* Earnings Breakdown */}
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                          <h5 className="font-semibold text-green-700 flex items-center gap-2">
-                            <Plus className="h-4 w-4" />
-                            Earnings
-                          </h5>
-                          <div className="bg-white rounded-lg p-4 space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-slate-600">Base Salary</span>
-                              <span className="font-medium">$75,000</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-slate-600">HRA (20%)</span>
-                              <span className="font-medium">$15,000</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-slate-600">Transport Allowance</span>
-                              <span className="font-medium">$0</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-slate-600">Special Allowance</span>
-                              <span className="font-medium">$0</span>
-                            </div>
-                            <div className="border-t pt-2 mt-2">
-                              <div className="flex justify-between font-bold text-green-700">
-                                <span>Gross Salary</span>
-                                <span>$90,000</span>
+                        {/* Month Name */}
+                        <div className="mb-3">
+                          <h4 className={cn(
+                            "text-lg font-bold",
+                            monthData.status === 'paid' && "text-emerald-900",
+                            monthData.status === 'current' && "text-blue-900",
+                            monthData.status === 'upcoming' && "text-slate-500"
+                          )}>
+                            {monthData.month}
+                          </h4>
+                          <p className="text-xs text-slate-500">2026</p>
+                        </div>
+
+                        {/* Amount */}
+                        <div className="mb-3">
+                          {monthData.status !== 'upcoming' ? (
+                            <>
+                              <div className={cn(
+                                "text-2xl font-black mb-1",
+                                monthData.status === 'paid' && "text-emerald-700",
+                                monthData.status === 'current' && "text-blue-700"
+                              )}>
+                                ${monthData.amount.toLocaleString()}
                               </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <h5 className="font-semibold text-red-700 flex items-center gap-2">
-                            <TrendingDown className="h-4 w-4" />
-                            Deductions
-                          </h5>
-                          <div className="bg-white rounded-lg p-4 space-y-2">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-slate-600">Income Tax (16%)</span>
-                              <span className="font-medium">$12,000</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-slate-600">PF Employee (12%)</span>
-                              <span className="font-medium">$9,000</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-slate-600">ESI (1.75%)</span>
-                              <span className="font-medium">$1,315</span>
-                            </div>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-slate-600">Professional Tax</span>
-                              <span className="font-medium">$200</span>
-                            </div>
-                            <div className="border-t pt-2 mt-2">
-                              <div className="flex justify-between font-bold text-red-700">
-                                <span>Total Deductions</span>
-                                <span>$22,515</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-slate-600">{monthData.employees} employees</span>
+                                <Badge 
+                                  variant="outline"
+                                  className={cn(
+                                    "text-[10px] px-1.5 py-0",
+                                    monthData.status === 'paid' && "border-emerald-300 text-emerald-700",
+                                    monthData.status === 'current' && "border-blue-300 text-blue-700"
+                                  )}
+                                >
+                                  {monthData.trend}
+                                </Badge>
                               </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-2xl font-black text-slate-400 mb-1">
+                                $---,---
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                {monthData.employees} employees (Est.)
+                              </div>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Progress Bar */}
+                        {monthData.status !== 'upcoming' && (
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-[10px] text-slate-600">
+                              <span>Processed</span>
+                              <span>{monthData.status === 'current' ? '75%' : '100%'}</span>
+                            </div>
+                            <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                              <div 
+                                className={cn(
+                                  "h-full rounded-full transition-all",
+                                  monthData.status === 'paid' && "bg-emerald-500",
+                                  monthData.status === 'current' && "bg-blue-500"
+                                )}
+                                style={{ width: monthData.status === 'current' ? '75%' : '100%' }}
+                              />
                             </div>
                           </div>
-                        </div>
+                        )}
                       </div>
+                    ))}
+                  </div>
 
-                      {/* Net Salary */}
-                      <div className="mt-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-lg">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <div className="text-blue-100 text-sm">Net Take Home Salary</div>
-                            <div className="text-3xl font-bold mt-1">$67,485</div>
-                            <div className="text-blue-100 text-xs mt-1">
-                              Calculation: $90,000 - $22,515 = $67,485
-                            </div>
-                          </div>
-                          <CheckCircle2 className="h-12 w-12 text-blue-200" />
-                        </div>
+                  {/* Year Summary */}
+                  <div className="grid md:grid-cols-4 gap-4 p-5 bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200">
+                    <div className="text-center">
+                      <div className="text-sm text-slate-600 mb-2">Year to Date</div>
+                      <div className="text-3xl font-black text-slate-900">
+                        ${(548230 + 568716).toLocaleString()}
                       </div>
+                      <div className="text-xs text-slate-500 mt-1">2 months</div>
                     </div>
+                    <div className="text-center">
+                      <div className="text-sm text-slate-600 mb-2">Average Monthly</div>
+                      <div className="text-3xl font-black text-blue-700">
+                        ${Math.round((548230 + 568716) / 2).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">per month</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-slate-600 mb-2">Remaining 2026</div>
+                      <div className="text-3xl font-black text-amber-700">
+                        ${Math.round(((548230 + 568716) / 2) * 10).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">estimated</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-sm text-slate-600 mb-2">Projected Annual</div>
+                      <div className="text-3xl font-black text-purple-700">
+                        ${Math.round(((548230 + 568716) / 2) * 12).toLocaleString()}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">total 2026</div>
+                    </div>
+                  </div>
 
-                    {/* Employer Contributions */}
-                    <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                      <h5 className="font-semibold text-purple-900 mb-3">Employer Contributions (Not deducted from employee)</h5>
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div className="bg-white rounded-lg p-3">
-                          <div className="text-xs text-slate-600">PF Employer (12%)</div>
-                          <div className="text-lg font-bold text-purple-700">$9,000</div>
-                        </div>
-                        <div className="bg-white rounded-lg p-3">
-                          <div className="text-xs text-slate-600">ESI Employer (3.25%)</div>
-                          <div className="text-lg font-bold text-purple-700">$2,438</div>
-                        </div>
-                        <div className="bg-white rounded-lg p-3">
-                          <div className="text-xs text-slate-600">Total CTC Impact</div>
-                          <div className="text-lg font-bold text-purple-700">$11,438</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Formula Reference */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                      <h5 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                        <Calculator className="h-4 w-4" />
-                        Calculation Formula Reference
-                      </h5>
-                      <div className="text-sm text-blue-800 space-y-1">
-                        <div>• <strong>Gross Salary</strong> = Base Salary + All Allowances</div>
-                        <div>• <strong>PF Contribution</strong> = Base Salary × 12%</div>
-                        <div>• <strong>ESI</strong> = Gross Salary × 1.75% (Employee) / 3.25% (Employer)</div>
-                        <div>• <strong>Income Tax</strong> = Based on tax slab and exemptions</div>
-                        <div>• <strong>Net Salary</strong> = Gross Salary - Total Deductions</div>
-                      </div>
-                    </div>
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-3 mt-6">
+                    <Button 
+                      variant="outline"
+                      className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                      onClick={() => {
+                        toast({
+                          title: "Monthly Analysis",
+                          description: "Generating detailed month-by-month payroll analysis...",
+                        });
+                        setTimeout(() => {
+                          toast({
+                            title: "Analysis Ready",
+                            description: "Total YTD: $1,116,946 | Avg: $558,473/month",
+                          });
+                        }, 1000);
+                      }}
+                    >
+                      <BarChart3 className="h-4 w-4 mr-2" />
+                      View Trends
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                      onClick={() => {
+                        const monthlyData = [
+                          ['Month', 'Amount', 'Employees', 'Status'],
+                          ['January 2026', '$548,230', '142', 'Paid'],
+                          ['February 2026', '$568,716', '145', 'Current'],
+                        ];
+                        toast({
+                          title: "Export Complete",
+                          description: "Monthly payroll data exported to Excel successfully.",
+                        });
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Export Monthly Data
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                      onClick={() => {
+                        toast({
+                          title: "Forecast Generated",
+                          description: "Projected annual payroll: $6,701,676 based on current trends",
+                        });
+                      }}
+                    >
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      Generate Forecast
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                      onClick={() => {
+                        toast({
+                          title: "Comparison Report",
+                          description: "Comparing February vs January: +3.7% increase ($20,486)",
+                        });
+                      }}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Compare Months
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -1542,7 +1654,10 @@ export default function HRMPayroll() {
                       Track salary adjustments, promotions, and performance bonuses
                     </CardDescription>
                   </div>
-                  <Button className="bg-green-600 hover:bg-green-700">
+                  <Button 
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => setShowRevisionDialog(true)}
+                  >
                     <Plus className="h-4 w-4 mr-2" />
                     New Revision
                   </Button>
@@ -2045,6 +2160,189 @@ export default function HRMPayroll() {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* New Salary Revision Dialog */}
+      <Dialog open={showRevisionDialog} onOpenChange={setShowRevisionDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowUpCircle className="h-5 w-5 text-green-600" />
+              Create New Salary Revision
+            </DialogTitle>
+            <DialogDescription>
+              Submit a salary revision request for employee promotion, increment, or adjustment
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Employee Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="employee-select">Select Employee</Label>
+              <Select>
+                <SelectTrigger id="employee-select">
+                  <SelectValue placeholder="Choose an employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map((emp) => (
+                    <SelectItem key={emp.id} value={emp.id}>
+                      {emp.name} - {emp.id} ({emp.department})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Revision Type */}
+            <div className="space-y-2">
+              <Label htmlFor="revision-type">Revision Type</Label>
+              <Select>
+                <SelectTrigger id="revision-type">
+                  <SelectValue placeholder="Select revision type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="annual-increment">Annual Increment</SelectItem>
+                  <SelectItem value="promotion">Promotion</SelectItem>
+                  <SelectItem value="performance-bonus">Performance Bonus</SelectItem>
+                  <SelectItem value="market-adjustment">Market Adjustment</SelectItem>
+                  <SelectItem value="cost-of-living">Cost of Living Adjustment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Current and New Salary */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="current-salary">Current Salary ($)</Label>
+                <Input
+                  id="current-salary"
+                  type="number"
+                  placeholder="65000"
+                  disabled
+                  className="bg-slate-50"
+                />
+                <p className="text-xs text-slate-500">Current monthly salary</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-salary">New Salary ($)</Label>
+                <Input
+                  id="new-salary"
+                  type="number"
+                  placeholder="70000"
+                />
+                <p className="text-xs text-slate-500">Proposed new salary</p>
+              </div>
+            </div>
+
+            {/* Percentage Increase (Auto-calculated) */}
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-600">Salary Increase</p>
+                  <p className="text-2xl font-bold text-green-700">+7.69%</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-slate-600">Additional Amount</p>
+                  <p className="text-xl font-bold text-green-700">$5,000</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Effective Date */}
+            <div className="space-y-2">
+              <Label htmlFor="effective-date">Effective Date</Label>
+              <Input
+                id="effective-date"
+                type="date"
+                defaultValue="2026-03-01"
+              />
+              <p className="text-xs text-slate-500">Date when the salary revision takes effect</p>
+            </div>
+
+            {/* Reason/Justification */}
+            <div className="space-y-2">
+              <Label htmlFor="revision-reason">Reason for Revision</Label>
+              <Textarea
+                id="revision-reason"
+                placeholder="Provide justification for the salary revision (e.g., exceptional performance, market competitiveness, role expansion)"
+                rows={4}
+                className="resize-none"
+              />
+              <p className="text-xs text-slate-500">Minimum 20 characters required</p>
+            </div>
+
+            {/* Approver Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="approver">Approver</Label>
+              <Select>
+                <SelectTrigger id="approver">
+                  <SelectValue placeholder="Select approver" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sarah-johnson">Sarah Johnson - HR Director</SelectItem>
+                  <SelectItem value="michael-chen">Michael Chen - CFO</SelectItem>
+                  <SelectItem value="david-wilson">David Wilson - CEO</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Supporting Documents */}
+            <div className="space-y-2">
+              <Label>Supporting Documents (Optional)</Label>
+              <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="p-3 bg-blue-50 rounded-full">
+                    <FileCheck className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">Upload Documents</p>
+                    <p className="text-xs text-slate-500 mt-1">Performance reviews, market research, or other supporting files</p>
+                  </div>
+                  <Button variant="outline" size="sm" className="mt-2">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Choose Files
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 justify-end pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => setShowRevisionDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="outline"
+                className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                onClick={() => {
+                  toast({
+                    title: "Draft Saved",
+                    description: "Salary revision draft has been saved. You can continue editing later.",
+                  });
+                }}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save Draft
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                onClick={() => {
+                  toast({
+                    title: "Revision Submitted!",
+                    description: "Salary revision request has been submitted for approval.",
+                  });
+                  setShowRevisionDialog(false);
+                }}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Submit for Approval
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
