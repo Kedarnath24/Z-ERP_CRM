@@ -561,12 +561,7 @@ export default function HRMAttendance() {
               </DropdownMenu>
 
               <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-xl font-bold">
-                    <Coffee className="h-4 w-4 mr-2" />
-                    Apply for Leave
-                  </Button>
-                </DialogTrigger>
+                
                 <DialogContent className="max-w-md rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
                   <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-700 p-6">
                     <DialogTitle className="text-2xl font-bold text-white tracking-tight">Apply for Leave</DialogTitle>
