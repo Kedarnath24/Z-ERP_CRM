@@ -111,26 +111,8 @@ export default function HRMDashboard() {
       accent: 'border-pink-200'
     },
     {
-      icon: TrendingUp,
-      title: 'Salary Design',
-      description: 'Configure earnings, deductions, and statutory rules',
-      route: '/hrm/payroll',
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
-      accent: 'border-indigo-200'
-    },
-    {
-      icon: Zap,
-      title: 'Automation',
-      description: 'Automate HR workflows and notifications',
-      route: '/hrm/automation',
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
-      accent: 'border-amber-200'
-    },
-    {
       icon: GitBranch,
-      title: 'Workflows',
+      title: 'Automation',
       description: 'Multi-stage approval processes and business logic',
       route: '/hrm/workflows',
       color: 'text-indigo-600',

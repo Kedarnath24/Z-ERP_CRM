@@ -68,6 +68,7 @@ export default function HRMAttendance() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isTimesheetModalOpen, setIsTimesheetModalOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
@@ -101,14 +102,19 @@ export default function HRMAttendance() {
       email: 'john.smith@company.com',
       joinDate: '2023-05-15',
       dailyAttendance: [
-        { date: '2025-06-01', checkIn: '09:02 AM', checkOut: '06:15 PM', status: 'present', hours: '9.2h', notes: 'On time' },
-        { date: '2025-06-02', checkIn: '09:15 AM', checkOut: '06:30 PM', status: 'late', hours: '9.2h', notes: 'Traffic delay' },
-        { date: '2025-06-03', checkIn: '08:58 AM', checkOut: '06:10 PM', status: 'present', hours: '9.2h', notes: 'Early arrival' },
-        { date: '2025-06-04', checkIn: '-', checkOut: '-', status: 'absent', hours: '0h', notes: 'Personal emergency' },
-        { date: '2025-06-05', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Regular day' }
+        { date: '2025-06-01', checkIn: '09:02 AM', checkOut: '06:15 PM', status: 'present', hours: '9.2h', notes: 'On time', location: 'Office - Building A' },
+        { date: '2025-06-02', checkIn: '09:15 AM', checkOut: '06:30 PM', status: 'late', hours: '9.2h', notes: 'Traffic delay', location: 'Office - Building A' },
+        { date: '2025-06-03', checkIn: '08:58 AM', checkOut: '06:10 PM', status: 'present', hours: '9.2h', notes: 'Early arrival', location: 'Office - Building A' },
+        { date: '2025-06-04', checkIn: '-', checkOut: '-', status: 'absent', hours: '0h', notes: 'Personal emergency', location: 'N/A' },
+        { date: '2025-06-05', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Regular day', location: 'Office - Building A' },
+        { date: '2025-06-06', checkIn: '09:00 AM', checkOut: '01:00 PM', status: 'halfday', hours: '4h', notes: 'Half day leave', location: 'Office - Building A' },
+        { date: '2025-06-07', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Regular day', location: 'Remote - WFH' },
+        { date: '2025-06-08', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'Full day leave', location: 'N/A' }
       ],
       leaveHistory: [
-        { type: 'Sick Leave', from: '2025-05-20', to: '2025-05-21', days: 2, status: 'approved', reason: 'Fever' }
+        { type: 'Sick Leave', from: '2025-05-20', to: '2025-05-21', days: 2, leaveType: 'Full Day', status: 'approved', reason: 'Fever', location: 'Home' },
+        { type: 'Casual Leave', from: '2025-06-06', to: '2025-06-06', days: 0.5, leaveType: 'Half Day', status: 'approved', reason: 'Personal appointment', location: 'Medical Center' },
+        { type: 'Annual Leave', from: '2025-06-08', to: '2025-06-08', days: 1, leaveType: 'Full Day', status: 'approved', reason: 'Family event', location: 'Home' }
       ],
       performance: {
         punctuality: 85,
@@ -130,14 +136,17 @@ export default function HRMAttendance() {
       email: 'sarah.johnson@company.com',
       joinDate: '2022-08-20',
       dailyAttendance: [
-        { date: '2025-06-01', checkIn: '08:55 AM', checkOut: '06:20 PM', status: 'present', hours: '9.4h', notes: 'Early arrival' },
-        { date: '2025-06-02', checkIn: '09:00 AM', checkOut: '07:00 PM', status: 'present', hours: '10h', notes: 'Overtime work' },
-        { date: '2025-06-03', checkIn: '08:58 AM', checkOut: '06:15 PM', status: 'present', hours: '9.3h', notes: 'Regular day' },
-        { date: '2025-06-04', checkIn: '09:02 AM', checkOut: '06:05 PM', status: 'present', hours: '9h', notes: 'Meeting heavy day' },
-        { date: '2025-06-05', checkIn: '09:00 AM', checkOut: '08:00 PM', status: 'present', hours: '11h', notes: 'Product launch prep' }
+        { date: '2025-06-01', checkIn: '08:55 AM', checkOut: '06:20 PM', status: 'present', hours: '9.4h', notes: 'Early arrival', location: 'Office - Building B' },
+        { date: '2025-06-02', checkIn: '09:00 AM', checkOut: '07:00 PM', status: 'present', hours: '10h', notes: 'Overtime work', location: 'Office - Building B' },
+        { date: '2025-06-03', checkIn: '08:58 AM', checkOut: '06:15 PM', status: 'present', hours: '9.3h', notes: 'Regular day', location: 'Office - Building B' },
+        { date: '2025-06-04', checkIn: '09:02 AM', checkOut: '06:05 PM', status: 'present', hours: '9h', notes: 'Meeting heavy day', location: 'Office - Building B' },
+        { date: '2025-06-05', checkIn: '09:00 AM', checkOut: '08:00 PM', status: 'present', hours: '11h', notes: 'Product launch prep', location: 'Office - Building B' },
+        { date: '2025-06-06', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'Vacation leave', location: 'N/A' },
+        { date: '2025-06-07', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Regular day', location: 'Remote - WFH' }
       ],
       leaveHistory: [
-        { type: 'Vacation', from: '2025-05-15', to: '2025-05-17', days: 3, status: 'approved', reason: 'Family trip' }
+        { type: 'Vacation', from: '2025-05-15', to: '2025-05-17', days: 3, leaveType: 'Full Day', status: 'approved', reason: 'Family trip', location: 'Europe' },
+        { type: 'Personal Leave', from: '2025-06-06', to: '2025-06-06', days: 1, leaveType: 'Full Day', status: 'approved', reason: 'Personal matters', location: 'Home' }
       ],
       performance: {
         punctuality: 98,
@@ -159,14 +168,16 @@ export default function HRMAttendance() {
       email: 'mike.brown@company.com',
       joinDate: '2024-01-10',
       dailyAttendance: [
-        { date: '2025-06-01', checkIn: '09:20 AM', checkOut: '06:25 PM', status: 'late', hours: '9h', notes: 'Design review session' },
-        { date: '2025-06-02', checkIn: '09:30 AM', checkOut: '06:30 PM', status: 'late', hours: '9h', notes: 'Client presentation' },
-        { date: '2025-06-03', checkIn: '09:05 AM', checkOut: '06:00 PM', status: 'present', hours: '8.9h', notes: 'Creative work' },
-        { date: '2025-06-04', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'WFH approved' },
-        { date: '2025-06-05', checkIn: '09:15 AM', checkOut: '06:10 PM', status: 'late', hours: '8.9h', notes: 'Morning meeting' }
+        { date: '2025-06-01', checkIn: '09:20 AM', checkOut: '06:25 PM', status: 'late', hours: '9h', notes: 'Design review session', location: 'Office - Creative Hub' },
+        { date: '2025-06-02', checkIn: '09:30 AM', checkOut: '06:30 PM', status: 'late', hours: '9h', notes: 'Client presentation', location: 'Client Site' },
+        { date: '2025-06-03', checkIn: '09:05 AM', checkOut: '06:00 PM', status: 'present', hours: '8.9h', notes: 'Creative work', location: 'Office - Creative Hub' },
+        { date: '2025-06-04', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'WFH approved', location: 'Remote - WFH' },
+        { date: '2025-06-05', checkIn: '09:15 AM', checkOut: '06:10 PM', status: 'late', hours: '8.9h', notes: 'Morning meeting', location: 'Office - Creative Hub' },
+        { date: '2025-06-06', checkIn: '09:00 AM', checkOut: '01:30 PM', status: 'halfday', hours: '4.5h', notes: 'Half day afternoon leave', location: 'Office - Creative Hub' }
       ],
       leaveHistory: [
-        { type: 'WFH', from: '2025-06-04', to: '2025-06-04', days: 1, status: 'approved', reason: 'Internet installation' }
+        { type: 'WFH', from: '2025-06-04', to: '2025-06-04', days: 1, leaveType: 'Full Day', status: 'approved', reason: 'Internet installation', location: 'Home' },
+        { type: 'Personal Leave', from: '2025-06-06', to: '2025-06-06', days: 0.5, leaveType: 'Half Day', status: 'approved', reason: 'Doctor appointment', location: 'Hospital' }
       ],
       performance: {
         punctuality: 72,
@@ -188,15 +199,17 @@ export default function HRMAttendance() {
       email: 'emily.davis@company.com',
       joinDate: '2021-03-12',
       dailyAttendance: [
-        { date: '2025-06-01', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'Sick leave' },
-        { date: '2025-06-02', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'Sick leave' },
-        { date: '2025-06-03', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Back to office' },
-        { date: '2025-06-04', checkIn: '08:58 AM', checkOut: '05:58 PM', status: 'present', hours: '9h', notes: 'HR meetings' },
-        { date: '2025-06-05', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Policy review' }
+        { date: '2025-06-01', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'Sick leave', location: 'N/A' },
+        { date: '2025-06-02', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'Sick leave', location: 'N/A' },
+        { date: '2025-06-03', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Back to office', location: 'Office - HR Department' },
+        { date: '2025-06-04', checkIn: '08:58 AM', checkOut: '05:58 PM', status: 'present', hours: '9h', notes: 'HR meetings', location: 'Office - HR Department' },
+        { date: '2025-06-05', checkIn: '09:00 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Policy review', location: 'Office - HR Department' },
+        { date: '2025-06-06', checkIn: '09:00 AM', checkOut: '01:00 PM', status: 'halfday', hours: '4h', notes: 'Medical checkup - afternoon off', location: 'Office - HR Department' }
       ],
       leaveHistory: [
-        { type: 'Sick Leave', from: '2025-06-01', to: '2025-06-02', days: 2, status: 'approved', reason: 'Medical checkup' },
-        { type: 'Maternity Leave', from: '2025-04-01', to: '2025-05-30', days: 60, status: 'approved', reason: 'Maternity' }
+        { type: 'Sick Leave', from: '2025-06-01', to: '2025-06-02', days: 2, leaveType: 'Full Day', status: 'approved', reason: 'Medical checkup', location: 'Hospital' },
+        { type: 'Maternity Leave', from: '2025-04-01', to: '2025-05-30', days: 60, leaveType: 'Full Day', status: 'approved', reason: 'Maternity', location: 'Home' },
+        { type: 'Medical Leave', from: '2025-06-06', to: '2025-06-06', days: 0.5, leaveType: 'Half Day', status: 'approved', reason: 'Doctor appointment', location: 'Clinic' }
       ],
       performance: {
         punctuality: 100,
@@ -218,14 +231,18 @@ export default function HRMAttendance() {
       email: 'alex.wilson@company.com',
       joinDate: '2020-12-01',
       dailyAttendance: [
-        { date: '2025-06-01', checkIn: '09:05 AM', checkOut: '07:00 PM', status: 'present', hours: '9.9h', notes: 'Client calls' },
-        { date: '2025-06-02', checkIn: '-', checkOut: '-', status: 'absent', hours: '0h', notes: 'Unexcused absence' },
-        { date: '2025-06-03', checkIn: '09:20 AM', checkOut: '06:15 PM', status: 'late', hours: '8.9h', notes: 'Sales presentation' },
-        { date: '2025-06-04', checkIn: '09:00 AM', checkOut: '06:30 PM', status: 'present', hours: '9.5h', notes: 'Deal closure' },
-        { date: '2025-06-05', checkIn: '08:58 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Regular sales day' }
+        { date: '2025-06-01', checkIn: '09:05 AM', checkOut: '07:00 PM', status: 'present', hours: '9.9h', notes: 'Client calls', location: 'Office - Sales Floor' },
+        { date: '2025-06-02', checkIn: '-', checkOut: '-', status: 'absent', hours: '0h', notes: 'Unexcused absence', location: 'N/A' },
+        { date: '2025-06-03', checkIn: '09:20 AM', checkOut: '06:15 PM', status: 'late', hours: '8.9h', notes: 'Sales presentation', location: 'Client Office' },
+        { date: '2025-06-04', checkIn: '09:00 AM', checkOut: '06:30 PM', status: 'present', hours: '9.5h', notes: 'Deal closure', location: 'Office - Sales Floor' },
+        { date: '2025-06-05', checkIn: '08:58 AM', checkOut: '06:00 PM', status: 'present', hours: '9h', notes: 'Regular sales day', location: 'Office - Sales Floor' },
+        { date: '2025-06-06', checkIn: '-', checkOut: '-', status: 'leave', hours: '0h', notes: 'Full day leave', location: 'N/A' },
+        { date: '2025-06-07', checkIn: '09:00 AM', checkOut: '01:00 PM', status: 'halfday', hours: '4h', notes: 'Personal work - afternoon off', location: 'Office - Sales Floor' }
       ],
       leaveHistory: [
-        { type: 'Casual Leave', from: '2025-05-25', to: '2025-05-26', days: 2, status: 'approved', reason: 'Family function' }
+        { type: 'Casual Leave', from: '2025-05-25', to: '2025-05-26', days: 2, leaveType: 'Full Day', status: 'approved', reason: 'Family function', location: 'Home' },
+        { type: 'Personal Leave', from: '2025-06-06', to: '2025-06-06', days: 1, leaveType: 'Full Day', status: 'approved', reason: 'Personal matters', location: 'Home' },
+        { type: 'Casual Leave', from: '2025-06-07', to: '2025-06-07', days: 0.5, leaveType: 'Half Day', status: 'approved', reason: 'Personal appointment', location: 'Bank' }
       ],
       performance: {
         punctuality: 78,
@@ -284,6 +301,32 @@ export default function HRMAttendance() {
       toast({
         title: "Error",
         description: "Failed to load employee details. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [loadingKey]: false }));
+    }
+  };
+
+  // Handle viewing employee timesheet
+  const handleViewTimesheet = async (employee: any) => {
+    const loadingKey = `timesheet_${employee.id}`;
+    setLoadingStates(prev => ({ ...prev, [loadingKey]: true }));
+    
+    try {
+      // Simulate loading delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setSelectedEmployee(employee);
+      setIsTimesheetModalOpen(true);
+      
+      toast({
+        title: "Timesheet Loaded",
+        description: `Timesheet for ${employee.name} has been loaded.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load timesheet. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -806,16 +849,20 @@ export default function HRMAttendance() {
                                     <MoreVertical className="h-4 w-4 text-slate-400" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48 rounded-xl p-2 shadow-xl border-slate-200">
+                                <DropdownMenuContent align="end" className="w-56 rounded-xl p-2 shadow-xl border-slate-200">
                                   <DropdownMenuLabel className="font-bold text-xs text-slate-500 uppercase tracking-wider px-3">Quick Actions</DropdownMenuLabel>
                                   <DropdownMenuSeparator className="my-2 bg-slate-100" />
-                                  <DropdownMenuItem className="rounded-lg font-medium py-2.5 cursor-pointer hover:bg-slate-50">
-                                    <Mail className="h-4 w-4 mr-2 text-slate-400" />
-                                    Send Notification
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="rounded-lg font-medium py-2.5 cursor-pointer hover:bg-slate-50">
-                                    <History className="h-4 w-4 mr-2 text-slate-400" />
-                                    View History
+                                  <DropdownMenuItem 
+                                    className="rounded-lg font-medium py-2.5 cursor-pointer hover:bg-blue-50 text-blue-600"
+                                    onClick={() => {
+                                      toast({ 
+                                        title: "Email Sent Successfully", 
+                                        description: `Leave ${request.status} notification email sent to ${request.employee}.`,
+                                      });
+                                    }}
+                                  >
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    Send via Mail
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator className="my-2 bg-slate-100" />
                                   <DropdownMenuItem 
@@ -824,7 +871,10 @@ export default function HRMAttendance() {
                                       setLeaveRequests(prev => prev.map(req => 
                                         req.id === request.id ? { ...req, status: 'pending' } : req
                                       ));
-                                      toast({ title: "Status Reset", description: "Leave request moved back to pending status." });
+                                      toast({ 
+                                        title: "Status Reset", 
+                                        description: `Leave request for ${request.employee} moved back to pending status.` 
+                                      });
                                     }}
                                   >
                                     <AlertCircle className="h-4 w-4 mr-2" />
@@ -842,10 +892,19 @@ export default function HRMAttendance() {
                           size="sm" 
                           className="h-8 rounded-lg border-blue-200 text-blue-600 hover:bg-blue-50 font-bold text-xs transition-all hover:scale-105 active:scale-95"
                           onClick={() => {
+                            const documentTypes = ['Medical Certificate', 'Leave Application Form', 'Supporting Documents'];
+                            const randomDoc = documentTypes[Math.floor(Math.random() * documentTypes.length)];
                             toast({
-                              title: "Document Viewer",
-                              description: `Opening documents for ${request.employee}'s leave request...`,
+                              title: "Opening Documents",
+                              description: `${randomDoc} for ${request.employee}'s leave request is being loaded...`,
                             });
+                            // Simulate document loading
+                            setTimeout(() => {
+                              toast({
+                                title: "Documents Ready",
+                                description: `All documents for ${request.employee} are now available for review.`,
+                              });
+                            }, 1500);
                           }}
                         >
                           <FileText className="h-3 w-3 mr-1" />
@@ -907,21 +966,36 @@ export default function HRMAttendance() {
                       <TableCell className="text-center font-bold text-blue-600">{row.leave}</TableCell>
                       <TableCell className="text-center font-bold text-slate-600">{row.overtime}</TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={() => handleViewDetails(row)}
-                          disabled={loadingStates[`details_${row.id}`]}
-                          className="h-8 rounded-lg font-bold text-blue-600 hover:bg-blue-50 transition-all duration-200 hover:scale-105 disabled:opacity-50"
-                        >
-                          {loadingStates[`details_${row.id}`] ? (
-                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2" />
-                          ) : (
-                            <Activity className="h-3 w-3 mr-2" />
-                          )}
-                          <span className="hidden sm:inline">View Details</span>
-                          <span className="sm:hidden">Details</span>
-                        </Button>
+                        <div className="flex gap-2 justify-end">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleViewDetails(row)}
+                            disabled={loadingStates[`details_${row.id}`]}
+                            className="h-8 rounded-lg font-bold text-blue-600 hover:bg-blue-50 transition-all duration-200 hover:scale-105 disabled:opacity-50"
+                          >
+                            {loadingStates[`details_${row.id}`] ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2" />
+                            ) : (
+                              <Activity className="h-3 w-3 mr-2" />
+                            )}
+                            <span className="hidden sm:inline">Details</span>
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleViewTimesheet(row)}
+                            disabled={loadingStates[`timesheet_${row.id}`]}
+                            className="h-8 rounded-lg font-bold text-emerald-600 border-emerald-200 hover:bg-emerald-50 transition-all duration-200 hover:scale-105 disabled:opacity-50"
+                          >
+                            {loadingStates[`timesheet_${row.id}`] ? (
+                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-emerald-600 mr-2" />
+                            ) : (
+                              <FileSpreadsheet className="h-3 w-3 mr-2" />
+                            )}
+                            <span className="hidden sm:inline">Timesheet</span>
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1505,6 +1579,421 @@ export default function HRMAttendance() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Timesheet Dialog */}
+      <Dialog open={isTimesheetModalOpen} onOpenChange={setIsTimesheetModalOpen}>
+        <DialogContent className="sm:max-w-[1200px] max-h-[90vh] overflow-y-auto">
+          {selectedEmployee && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                  <div className="p-2 bg-emerald-100 rounded-xl">
+                    <FileSpreadsheet className="h-6 w-6 text-emerald-600" />
+                  </div>
+                  Employee Timesheet
+                </DialogTitle>
+                <DialogDescription className="text-slate-600">
+                  Comprehensive attendance timesheet for {selectedEmployee.name} - {selectedEmployee.department}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6 py-4">
+                {/* Employee Summary Card */}
+                <div className="p-6 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200/60">
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+                    <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedEmployee.name}`} />
+                      <AvatarFallback className="bg-gradient-to-br from-emerald-600 to-blue-600 text-white text-2xl font-bold">
+                        {selectedEmployee.avatar}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3">
+                        <div>
+                          <h3 className="text-2xl font-black text-slate-900">{selectedEmployee.name}</h3>
+                          <p className="text-sm text-slate-600 font-medium">{selectedEmployee.email}</p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {selectedEmployee.department} • Employee ID: {selectedEmployee.id}
+                          </p>
+                        </div>
+                        <Badge className="bg-emerald-600 text-white border-none px-4 py-2 rounded-xl font-bold text-sm w-fit">
+                          {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                        <div className="text-center p-3 bg-white rounded-xl border border-emerald-100">
+                          <div className="text-2xl font-black text-emerald-600">{selectedEmployee.present}</div>
+                          <div className="text-xs text-slate-600 font-medium">Present Days</div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded-xl border border-rose-100">
+                          <div className="text-2xl font-black text-rose-600">{selectedEmployee.absent}</div>
+                          <div className="text-xs text-slate-600 font-medium">Absent Days</div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded-xl border border-amber-100">
+                          <div className="text-2xl font-black text-amber-600">{selectedEmployee.late}</div>
+                          <div className="text-xs text-slate-600 font-medium">Late Arrivals</div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded-xl border border-blue-100">
+                          <div className="text-2xl font-black text-blue-600">{selectedEmployee.leave}</div>
+                          <div className="text-xs text-slate-600 font-medium">Leave Days</div>
+                        </div>
+                        <div className="text-center p-3 bg-white rounded-xl border border-purple-100">
+                          <div className="text-2xl font-black text-purple-600">{selectedEmployee.overtime}</div>
+                          <div className="text-xs text-slate-600 font-medium">Overtime</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tabbed Timesheet View */}
+                <Tabs defaultValue="attendance" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2 h-12 bg-slate-100 rounded-2xl p-1">
+                    <TabsTrigger value="attendance" className="rounded-xl text-sm font-bold">
+                      <CalendarDays className="h-4 w-4 mr-2" />
+                      Daily Attendance
+                    </TabsTrigger>
+                    <TabsTrigger value="leave-details" className="rounded-xl text-sm font-bold">
+                      <Plane className="h-4 w-4 mr-2" />
+                      Leave Details
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Daily Attendance Tab */}
+                  <TabsContent value="attendance" className="mt-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                          <Clock className="h-5 w-5 text-emerald-600" />
+                          Complete Attendance Record
+                        </h4>
+                        <Badge variant="outline" className="rounded-full">
+                          {selectedEmployee.dailyAttendance.length} Records
+                        </Badge>
+                      </div>
+
+                      <div className="rounded-xl border border-slate-200 overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-slate-50">
+                              <TableHead className="font-bold text-slate-700">Date</TableHead>
+                              <TableHead className="font-bold text-slate-700">Status</TableHead>
+                              <TableHead className="font-bold text-slate-700">Check In</TableHead>
+                              <TableHead className="font-bold text-slate-700">Check Out</TableHead>
+                              <TableHead className="font-bold text-slate-700">Hours</TableHead>
+                              <TableHead className="font-bold text-slate-700">Location</TableHead>
+                              <TableHead className="font-bold text-slate-700">Notes</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {selectedEmployee.dailyAttendance.map((record: any, idx: number) => (
+                              <TableRow 
+                                key={idx}
+                                className={cn(
+                                  "transition-colors",
+                                  record.status === 'present' && 'hover:bg-emerald-50/50',
+                                  record.status === 'late' && 'hover:bg-amber-50/50',
+                                  record.status === 'absent' && 'hover:bg-rose-50/50',
+                                  record.status === 'leave' && 'hover:bg-blue-50/50',
+                                  record.status === 'halfday' && 'hover:bg-violet-50/50'
+                                )}
+                              >
+                                <TableCell>
+                                  <div className="font-medium text-slate-900">
+                                    {new Date(record.date).toLocaleDateString('en-US', { 
+                                      weekday: 'short', 
+                                      month: 'short', 
+                                      day: 'numeric',
+                                      year: 'numeric'
+                                    })}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={cn(
+                                    "rounded-lg px-2.5 py-1 border font-bold text-[10px] uppercase tracking-wider",
+                                    statusConfig[record.status]?.class || 'bg-slate-100 text-slate-700'
+                                  )}>
+                                    <div className="flex items-center gap-1.5">
+                                      {React.createElement(statusConfig[record.status]?.icon || Clock, { className: "h-3 w-3" })}
+                                      {statusConfig[record.status]?.label || record.status}
+                                    </div>
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1.5">
+                                    <Clock className="h-3.5 w-3.5 text-blue-500" />
+                                    <span className="font-medium text-slate-700">{record.checkIn}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1.5">
+                                    <Clock className="h-3.5 w-3.5 text-rose-500" />
+                                    <span className="font-medium text-slate-700">{record.checkOut}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <Badge 
+                                    variant="secondary" 
+                                    className={cn(
+                                      "bg-slate-100 hover:bg-slate-100 border-none font-bold",
+                                      record.hours === '0h' && 'bg-rose-100 text-rose-700',
+                                      parseFloat(record.hours) > 9 && 'bg-emerald-100 text-emerald-700'
+                                    )}
+                                  >
+                                    {record.hours}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1.5">
+                                    <div className={cn(
+                                      "w-2 h-2 rounded-full",
+                                      record.location?.includes('Office') && 'bg-blue-500',
+                                      record.location?.includes('Remote') && 'bg-purple-500',
+                                      record.location === 'N/A' && 'bg-slate-300',
+                                      record.location?.includes('Client') && 'bg-orange-500'
+                                    )} />
+                                    <span className="text-sm font-medium text-slate-600">{record.location}</span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <p className="text-xs text-slate-600 max-w-[200px]">{record.notes}</p>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* Working Hours Summary */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-emerald-100 rounded-lg">
+                              <CheckCircle className="h-5 w-5 text-emerald-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-emerald-600 uppercase">Total Working Days</p>
+                              <p className="text-2xl font-black text-emerald-700">
+                                {selectedEmployee.dailyAttendance.filter((r: any) => 
+                                  r.status === 'present' || r.status === 'late'
+                                ).length}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-4 bg-violet-50 border border-violet-200 rounded-xl">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-violet-100 rounded-lg">
+                              <Coffee className="h-5 w-5 text-violet-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-violet-600 uppercase">Half Days Taken</p>
+                              <p className="text-2xl font-black text-violet-700">
+                                {selectedEmployee.dailyAttendance.filter((r: any) => 
+                                  r.status === 'halfday'
+                                ).length}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                              <Plane className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-blue-600 uppercase">Total Leave Days</p>
+                              <p className="text-2xl font-black text-blue-700">
+                                {selectedEmployee.dailyAttendance.filter((r: any) => 
+                                  r.status === 'leave' || r.status === 'absent'
+                                ).length}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Leave Details Tab */}
+                  <TabsContent value="leave-details" className="mt-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                          <Plane className="h-5 w-5 text-blue-600" />
+                          Complete Leave History
+                        </h4>
+                        <Badge variant="outline" className="rounded-full">
+                          {selectedEmployee.leaveHistory.length} Leave Records
+                        </Badge>
+                      </div>
+
+                      {selectedEmployee.leaveHistory.length > 0 ? (
+                        <div className="space-y-3">
+                          {selectedEmployee.leaveHistory.map((leave: any, idx: number) => (
+                            <div 
+                              key={idx} 
+                              className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl hover:shadow-md transition-all"
+                            >
+                              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <Badge className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                                      {leave.type}
+                                    </Badge>
+                                    <Badge className={cn(
+                                      "text-xs font-bold px-3 py-1 rounded-full",
+                                      leave.leaveType === 'Full Day' 
+                                        ? 'bg-rose-100 text-rose-700 border-rose-200' 
+                                        : 'bg-amber-100 text-amber-700 border-amber-200'
+                                    )}>
+                                      {leave.leaveType}
+                                    </Badge>
+                                    <Badge className={cn(
+                                      "text-xs font-bold px-3 py-1 rounded-full",
+                                      leave.status === 'approved' ? 'bg-emerald-100 text-emerald-700 border-emerald-200' :
+                                      leave.status === 'pending' ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                                      'bg-rose-100 text-rose-700 border-rose-200'
+                                    )}>
+                                      {leave.status.toUpperCase()}
+                                    </Badge>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                    <div>
+                                      <p className="text-xs font-bold text-blue-600 uppercase mb-1">Date Range</p>
+                                      <p className="text-sm font-bold text-slate-800">
+                                        {new Date(leave.from).toLocaleDateString('en-US', { 
+                                          month: 'short', 
+                                          day: 'numeric',
+                                          year: 'numeric'
+                                        })} 
+                                        {' → '}
+                                        {new Date(leave.to).toLocaleDateString('en-US', { 
+                                          month: 'short', 
+                                          day: 'numeric',
+                                          year: 'numeric'
+                                        })}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs font-bold text-blue-600 uppercase mb-1">Location</p>
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                        <p className="text-sm font-medium text-slate-700">{leave.location || 'Not specified'}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="mb-2">
+                                    <p className="text-xs font-bold text-blue-600 uppercase mb-1">Reason</p>
+                                    <p className="text-sm text-slate-700 leading-relaxed">{leave.reason}</p>
+                                  </div>
+                                </div>
+
+                                <div className="text-center md:text-right bg-white p-4 rounded-xl border border-blue-200">
+                                  <div className="text-3xl font-black text-blue-700 mb-1">{leave.days}</div>
+                                  <div className="text-xs text-blue-600 font-bold uppercase">
+                                    {leave.days === 1 || leave.days === 0.5 ? 'Day' : 'Days'}
+                                  </div>
+                                  <div className="text-[10px] text-slate-500 mt-1">
+                                    {leave.leaveType}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Leave Summary */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                            <div className="p-5 bg-gradient-to-br from-rose-50 to-orange-50 border border-rose-200 rounded-xl">
+                              <div className="flex items-center gap-3">
+                                <div className="p-3 bg-rose-100 rounded-xl">
+                                  <Calendar className="h-6 w-6 text-rose-600" />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-bold text-rose-600 uppercase">Total Full Day Leaves</p>
+                                  <p className="text-3xl font-black text-rose-700">
+                                    {selectedEmployee.leaveHistory
+                                      .filter((l: any) => l.leaveType === 'Full Day')
+                                      .reduce((sum: number, l: any) => sum + l.days, 0)}
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 mt-1">
+                                    {selectedEmployee.leaveHistory.filter((l: any) => l.leaveType === 'Full Day').length} requests
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="p-5 bg-gradient-to-br from-amber-50 to-yellow-50 border border-amber-200 rounded-xl">
+                              <div className="flex items-center gap-3">
+                                <div className="p-3 bg-amber-100 rounded-xl">
+                                  <Coffee className="h-6 w-6 text-amber-600" />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-bold text-amber-600 uppercase">Total Half Day Leaves</p>
+                                  <p className="text-3xl font-black text-amber-700">
+                                    {selectedEmployee.leaveHistory
+                                      .filter((l: any) => l.leaveType === 'Half Day')
+                                      .reduce((sum: number, l: any) => sum + l.days, 0)}
+                                  </p>
+                                  <p className="text-[10px] text-slate-500 mt-1">
+                                    {selectedEmployee.leaveHistory.filter((l: any) => l.leaveType === 'Half Day').length} requests
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-12 text-slate-500">
+                          <Plane className="h-16 w-16 mx-auto mb-4 text-slate-300" />
+                          <p className="text-sm font-medium">No leave records found for this period</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+
+              <DialogFooter className="gap-2 flex-col sm:flex-row">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsTimesheetModalOpen(false)} 
+                  className="rounded-xl w-full sm:w-auto"
+                >
+                  Close
+                </Button>
+                <Button 
+                  onClick={() => {
+                    handleExport('excel');
+                    toast({
+                      title: "Timesheet Exported",
+                      description: `Timesheet for ${selectedEmployee.name} has been downloaded as Excel file.`,
+                    });
+                  }}
+                  className="rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 w-full sm:w-auto"
+                >
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Export to Excel
+                </Button>
+                <Button 
+                  onClick={() => {
+                    handleExport('pdf');
+                    toast({
+                      title: "Timesheet Exported",
+                      description: `Timesheet for ${selectedEmployee.name} has been downloaded as PDF.`,
+                    });
+                  }}
+                  className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 w-full sm:w-auto"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Export to PDF
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>
