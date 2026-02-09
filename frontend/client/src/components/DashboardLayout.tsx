@@ -27,6 +27,9 @@ import {
   Bell,
   Plus,
   LogIn,
+  LogOut,
+  Coffee,
+  Clock,
   Smile,
   Send,
   X,
@@ -85,6 +88,14 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSearchIndex, setSelectedSearchIndex] = useState(0);
+  
+  // Attendance tracking states
+  const [attendanceStatus, setAttendanceStatus] = useState<'checked-out' | 'checked-in' | 'on-break'>('checked-out');
+  const [checkInTime, setCheckInTime] = useState<string | null>(null);
+  const [checkOutTime, setCheckOutTime] = useState<string | null>(null);
+  const [breakStartTime, setBreakStartTime] = useState<string | null>(null);
+  const [attendanceType, setAttendanceType] = useState('office');
+  const [attendanceNote, setAttendanceNote] = useState('');
 
   // Refs for scroll position persistence
   const sidebarScrollRef = useRef<HTMLDivElement>(null);
@@ -308,6 +319,41 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
 
       return newState;
     });
+  };
+
+  // Attendance handler functions
+  const handleCheckIn = () => {
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setCheckInTime(currentTime);
+    setAttendanceStatus('checked-in');
+    setAttendanceNote('');
+    // Keep dialog open to show status change
+    // Here you can add API call to save check-in to backend
+  };
+
+  const handleCheckOut = () => {
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setCheckOutTime(currentTime);
+    setAttendanceStatus('checked-out');
+    setCheckInTime(null);
+    setBreakStartTime(null);
+    setCheckInDialogOpen(false);
+    // Here you can add API call to save check-out to backend
+  };
+
+  const handleBreakStart = () => {
+    const currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setBreakStartTime(currentTime);
+    setAttendanceStatus('on-break');
+    // Keep dialog open to show status change
+    // Here you can add API call to save break start to backend
+  };
+
+  const handleBreakEnd = () => {
+    setBreakStartTime(null);
+    setAttendanceStatus('checked-in');
+    // Keep dialog open to show status change
+    // Here you can add API call to save break end to backend
   };
 
   // Auto-expand parent menu based on current location
@@ -934,14 +980,25 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
                 <span className="absolute top-1 right-1 h-2 w-2 bg-green-500 rounded-full"></span>
               </Button>
 
-              {/* Check-in Button */}
+              {/* Attendance Button */}
               <Button
-                variant="ghost"
+                variant={attendanceStatus === 'checked-in' ? 'default' : attendanceStatus === 'on-break' ? 'outline' : 'ghost'}
                 size="icon"
-                className="h-10 w-10 rounded-full hover:bg-slate-100"
+                className={`h-10 w-10 rounded-full relative ${
+                  attendanceStatus === 'checked-in' 
+                    ? 'bg-green-100 hover:bg-green-200 text-green-700' 
+                    : attendanceStatus === 'on-break'
+                    ? 'bg-orange-100 hover:bg-orange-200 text-orange-700 border-orange-300'
+                    : 'hover:bg-slate-100'
+                }`}
                 onClick={() => setCheckInDialogOpen(true)}
               >
-                <LogIn size={18} className="text-slate-600" />
+                <Clock size={18} />
+                {attendanceStatus !== 'checked-out' && (
+                  <span className={`absolute top-0 right-0 h-3 w-3 rounded-full ${
+                    attendanceStatus === 'checked-in' ? 'bg-green-500' : 'bg-orange-500 animate-pulse'
+                  }`}></span>
+                )}
               </Button>
 
               {/* Notifications Button */}
@@ -1164,49 +1221,204 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         </DialogContent>
       </Dialog>
 
-      {/* Check-in Dialog */}
+      {/* Enhanced Attendance Dialog */}
       <Dialog open={checkInDialogOpen} onOpenChange={setCheckInDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Check In</DialogTitle>
-            <DialogDescription>Record your attendance for today</DialogDescription>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <div className={`p-2 rounded-lg ${
+                attendanceStatus === 'checked-out' 
+                  ? 'bg-gradient-to-br from-green-100 to-emerald-100'
+                  : attendanceStatus === 'on-break'
+                  ? 'bg-gradient-to-br from-orange-100 to-amber-100'
+                  : 'bg-gradient-to-br from-blue-100 to-indigo-100'
+              }`}>
+                {attendanceStatus === 'checked-out' ? (
+                  <LogIn className="text-green-600" size={24} />
+                ) : attendanceStatus === 'on-break' ? (
+                  <Coffee className="text-orange-600" size={24} />
+                ) : (
+                  <Clock className="text-blue-600" size={24} />
+                )}
+              </div>
+              {attendanceStatus === 'checked-out' ? 'Attendance' : attendanceStatus === 'on-break' ? 'On Break' : 'Working'}
+            </DialogTitle>
+            <DialogDescription>
+              {attendanceStatus === 'checked-out' 
+                ? 'Start your workday by checking in' 
+                : attendanceStatus === 'on-break'
+                ? 'You are currently on a break'
+                : 'You are currently checked in'}
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="text-center p-6 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg">
-              <div className="text-4xl font-bold text-indigo-600">
-                {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          
+          <div className="space-y-6">
+            {/* Time Display */}
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-[2px]">
+              <div className="relative bg-white rounded-2xl p-6 text-center">
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 rounded-2xl"></div>
+                <div className="relative">
+                  <div className="text-5xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                  <div className="mt-3 flex items-center justify-center gap-2 text-sm font-medium text-slate-600">
+                    <Clock size={14} />
+                    {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </div>
+                </div>
               </div>
-              <p className="text-sm text-gray-600 mt-2">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              </p>
             </div>
+
+            {/* Status Display if Checked In or On Break */}
+            {attendanceStatus !== 'checked-out' && (
+              <div className="space-y-3">
+                {checkInTime && (
+                  <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <LogIn size={18} className="text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700">Checked In</p>
+                        <p className="text-xs text-slate-500">{attendanceType.charAt(0).toUpperCase() + attendanceType.slice(1)}</p>
+                      </div>
+                    </div>
+                    <span className="text-lg font-bold text-green-700">{checkInTime}</span>
+                  </div>
+                )}
+                
+                {breakStartTime && (
+                  <div className="flex items-center justify-between p-4 bg-orange-50 rounded-xl border border-orange-200">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <Coffee size={18} className="text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700">Break Started</p>
+                        <p className="text-xs text-slate-500">Currently on break</p>
+                      </div>
+                    </div>
+                    <span className="text-lg font-bold text-orange-700">{breakStartTime}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Check-in Form (Only when checked out) */}
+            {attendanceStatus === 'checked-out' && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-semibold text-slate-700">Check-in Type</Label>
+                  <Select value={attendanceType} onValueChange={setAttendanceType}>
+                    <SelectTrigger className="mt-1.5 h-11 border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="office">
+                        <div className="flex items-center gap-2">
+                          <Building2 size={16} className="text-blue-600" />
+                          <span>Office</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="remote">
+                        <div className="flex items-center gap-2">
+                          <Monitor size={16} className="text-green-600" />
+                          <span>Remote / Work From Home</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="field">
+                        <div className="flex items-center gap-2">
+                          <MapPin size={16} className="text-orange-600" />
+                          <span>Field Work</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label className="text-sm font-semibold text-slate-700">Note (Optional)</Label>
+                  <Textarea 
+                    placeholder="Add a note about your work today..." 
+                    className="mt-1.5 min-h-[80px] border-slate-300 focus:border-indigo-500 focus:ring-indigo-500 resize-none"
+                    value={attendanceNote}
+                    onChange={(e) => setAttendanceNote(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
             <div className="space-y-3">
-              <div>
-                <Label>Check-in Type</Label>
-                <Select defaultValue="office">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="office">Office</SelectItem>
-                    <SelectItem value="remote">Remote</SelectItem>
-                    <SelectItem value="field">Field</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Note (Optional)</Label>
-                <Textarea placeholder="Add a note..." />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button className="flex-1 bg-green-600 hover:bg-green-700">
-                <LogIn size={16} className="mr-2" />
-                Check In
-              </Button>
-              <Button variant="outline" className="flex-1" onClick={() => setCheckInDialogOpen(false)}>
-                Cancel
-              </Button>
+              {attendanceStatus === 'checked-out' ? (
+                // Check In Button
+                <div className="flex gap-3">
+                  <Button 
+                    className="flex-1 h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all text-base font-semibold"
+                    onClick={handleCheckIn}
+                  >
+                    <LogIn size={18} className="mr-2" />
+                    Check In Now
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="h-12 border-2 hover:bg-slate-50" 
+                    onClick={() => setCheckInDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : attendanceStatus === 'checked-in' ? (
+                // Break and Check Out Buttons
+                <>
+                  <Button 
+                    className="w-full h-12 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg hover:shadow-xl transition-all text-base font-semibold"
+                    onClick={handleBreakStart}
+                  >
+                    <Coffee size={18} className="mr-2" />
+                    Start Break
+                  </Button>
+                  <Button 
+                    className="w-full h-12 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white shadow-lg hover:shadow-xl transition-all text-base font-semibold"
+                    onClick={handleCheckOut}
+                  >
+                    <LogOut size={18} className="mr-2" />
+                    Check Out
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-10 border-2 hover:bg-slate-50" 
+                    onClick={() => setCheckInDialogOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </>
+              ) : (
+                // End Break and Check Out Buttons
+                <>
+                  <Button 
+                    className="w-full h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg hover:shadow-xl transition-all text-base font-semibold"
+                    onClick={handleBreakEnd}
+                  >
+                    <Clock size={18} className="mr-2" />
+                    End Break
+                  </Button>
+                  <Button 
+                    className="w-full h-12 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white shadow-lg hover:shadow-xl transition-all text-base font-semibold"
+                    onClick={handleCheckOut}
+                  >
+                    <LogOut size={18} className="mr-2" />
+                    Check Out
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-10 border-2 hover:bg-slate-50" 
+                    onClick={() => setCheckInDialogOpen(false)}
+                  >
+                    Close
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </DialogContent>
