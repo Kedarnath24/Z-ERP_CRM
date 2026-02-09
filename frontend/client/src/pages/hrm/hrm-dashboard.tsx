@@ -19,7 +19,8 @@ import {
   CalendarDays,
   CheckCircle2,
   ChevronRight,
-  GitBranch
+  GitBranch,
+  Package
 } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
@@ -82,6 +83,15 @@ export default function HRMDashboard() {
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50',
       accent: 'border-indigo-200'
+    },
+    {
+      icon: Package,
+      title: 'Assets',
+      description: 'Track company assets, assignments, and inventory',
+      route: '/hrm/assets',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      accent: 'border-blue-200'
     },
     {
       icon: TrendingUp,

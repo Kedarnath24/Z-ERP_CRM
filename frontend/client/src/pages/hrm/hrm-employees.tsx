@@ -309,7 +309,11 @@ export default function HRMEmployees() {
                           status: 'pending',
                           priority: 'high',
                           assignedTo: 'Direct Manager',
-                          dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+                          dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+                          details: 'Manager approval for exit request',
+                          documents: [],
+                          completedAt: undefined,
+                          completedBy: undefined
                         },
                         {
                           id: 2,
@@ -317,7 +321,10 @@ export default function HRMEmployees() {
                           department: 'Human Resources',
                           status: 'not_started',
                           priority: 'medium',
-                          assignedTo: 'Emily Davis'
+                          assignedTo: 'Emily Davis',
+                          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                          details: 'Prepare exit documentation and paperwork',
+                          documents: []
                         },
                         {
                           id: 3,
@@ -325,7 +332,10 @@ export default function HRMEmployees() {
                           department: 'IT Department',
                           status: 'not_started',
                           priority: 'high',
-                          assignedTo: 'IT Admin'
+                          assignedTo: 'IT Admin',
+                          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+                          details: 'Return all IT equipment and assets',
+                          documents: []
                         }
                       ],
                       assets: [
@@ -576,7 +586,10 @@ export default function HRMEmployees() {
                   priority: 'high',
                   assignedTo: 'Direct Manager',
                   dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-                  details: 'Manager approval for exit request'
+                  details: 'Manager approval for exit request',
+                  documents: [],
+                  completedAt: undefined,
+                  completedBy: undefined
                 },
                 {
                   id: 2,
@@ -584,7 +597,10 @@ export default function HRMEmployees() {
                   department: 'Human Resources',
                   status: 'not_started',
                   priority: 'medium',
-                  assignedTo: exitFormData.assignedHR === 'emily_davis' ? 'Emily Davis' : 'HR Team'
+                  assignedTo: exitFormData.assignedHR === 'emily_davis' ? 'Emily Davis' : 'HR Team',
+                  dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                  details: '',
+                  documents: []
                 },
                 {
                   id: 3,
@@ -592,7 +608,10 @@ export default function HRMEmployees() {
                   department: emp.department,
                   status: 'not_started',
                   priority: 'high',
-                  assignedTo: 'Team Lead'
+                  assignedTo: 'Team Lead',
+                  dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+                  details: '',
+                  documents: []
                 },
                 {
                   id: 4,
@@ -600,7 +619,10 @@ export default function HRMEmployees() {
                   department: 'IT Department',
                   status: 'not_started',
                   priority: 'high',
-                  assignedTo: 'IT Admin'
+                  assignedTo: 'IT Admin',
+                  dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+                  details: '',
+                  documents: []
                 },
                 {
                   id: 5,
@@ -608,7 +630,10 @@ export default function HRMEmployees() {
                   department: 'Finance',
                   status: 'not_started',
                   priority: 'medium',
-                  assignedTo: 'Finance Team'
+                  assignedTo: 'Finance Team',
+                  dueDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
+                  details: '',
+                  documents: []
                 }
               ],
               assets: [

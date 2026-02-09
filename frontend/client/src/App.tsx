@@ -18,6 +18,7 @@ import HRMEmployees from "@/pages/hrm/hrm-employees";
 import HRMAttendance from "@/pages/hrm/hrm-attendance";
 import HRMPayroll from "@/pages/hrm/hrm-payroll";
 import HRMInsurance from "@/pages/hrm/hrm-insurance";
+import HRMAssets from "@/pages/hrm/hrm-assets";
 import HRMPerformance from "@/pages/hrm/hrm-performance";
 import HRMLetters from "@/pages/hrm/hrm-letters";
 import HRMTravelExpense from "@/pages/hrm/hrm-travel-expense";
@@ -68,9 +69,9 @@ import ExpenseCategories from "@/pages/finance/ExpenseCategories";
 
 // Setup Module
 import StaffSetup from "@/pages/setup/StaffSetup";
-import GroupsSetup from "@/pages/setup/GroupsSetup";
-import LeadSetup from "@/pages/setup/LeadSetup";
-import WebToLead from "@/pages/setup/WebToLead";
+import GroupsPage from "@/pages/setup/groups";
+import PermissionsPage from "@/pages/setup/permissions";
+import RolesPage from "@/pages/setup/roles";
 
 // Customer Groups
 import CustomerGroups from "@/pages/customers/customer-groups";
@@ -123,6 +124,7 @@ function AppRouter() {
       <Route path="/hrm/attendance" component={HRMAttendance} />
       <Route path="/hrm/payroll" component={HRMPayroll} />
       <Route path="/hrm/insurance" component={HRMInsurance} />
+      <Route path="/hrm/assets" component={HRMAssets} />
       <Route path="/hrm/performance" component={HRMPerformance} />
       <Route path="/hrm/letters" component={HRMLetters} />
       <Route path="/hrm/travel-expense" component={HRMTravelExpense} />
@@ -163,7 +165,11 @@ function AppRouter() {
       <Route path="/dashboard/finance/*" component={TaxRates} />
       
       {/* Setup Module */}
+      <Route path="/dashboard/setup/groups" component={GroupsPage} />
+      <Route path="/dashboard/setup/roles" component={RolesPage} />
+      <Route path="/dashboard/setup/permissions" component={PermissionsPage} />
       <Route path="/dashboard/setup/*" component={StaffSetup} />
+      <Route path="/dashboard/setup" component={StaffSetup} />
       
       {/* Subscription Management Module */}
       <Route path="/subscriptions/*" component={SubscriptionManagement} />
