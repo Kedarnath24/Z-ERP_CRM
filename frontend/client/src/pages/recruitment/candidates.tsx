@@ -15,7 +15,9 @@ import {
   Building,
   MapPin,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  CalendarClock,
+  X
 } from 'lucide-react';
 import {
   Select,
@@ -40,6 +42,14 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
+import type { Job } from './recruitment-dashboard';
+
+interface Props {
+  filterByJob: string | null;
+  onScheduleInterview: (candidateName: string, position: string) => void;
+  onClearFilter: () => void;
+  jobs: Job[];
+}
 
 const CANDIDATES_DATA = [
   {
@@ -84,7 +94,7 @@ const CANDIDATES_DATA = [
   }
 ];
 
-export default function CandidatesModule() {
+export default function CandidatesModule({ filterByJob, onScheduleInterview, onClearFilter, jobs }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
@@ -101,7 +111,8 @@ export default function CandidatesModule() {
                          c.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || c.status.toLowerCase() === statusFilter.toLowerCase();
     const matchesSource = sourceFilter === 'all' || c.source.toLowerCase() === sourceFilter.toLowerCase();
-    return matchesSearch && matchesStatus && matchesSource;
+    const matchesJob = !filterByJob || c.position.toLowerCase() === filterByJob.toLowerCase();
+    return matchesSearch && matchesStatus && matchesSource && matchesJob;
   });
 
   const getStatusColor = (status: string) => {
@@ -116,6 +127,23 @@ export default function CandidatesModule() {
 
   return (
     <div className="space-y-6">
+      {/* Job Filter Banner */}
+      {filterByJob && (
+        <Card className="bg-purple-50 border-purple-200">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Building className="h-4 w-4 text-purple-600" />
+              <span className="text-sm font-medium text-purple-800">
+                Showing candidates for: <strong>{filterByJob}</strong>
+              </span>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClearFilter} className="text-purple-600 hover:text-purple-800 hover:bg-purple-100">
+              <X className="h-4 w-4 mr-1" /> Clear Filter
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-2xl font-bold">Candidate Pipeline</CardTitle>
@@ -194,9 +222,9 @@ export default function CandidatesModule() {
                           <SelectValue placeholder="Select position" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">Senior Full Stack Developer</SelectItem>
-                          <SelectItem value="2">Product Manager</SelectItem>
-                          <SelectItem value="3">UX Designer</SelectItem>
+                          {jobs.map(j => (
+                            <SelectItem key={j.id} value={String(j.id)}>{j.title}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -256,10 +284,29 @@ export default function CandidatesModule() {
                 </div>
 
                 <div className="flex items-center gap-2 justify-end">
-                  <Button variant="outline" size="sm">View CV</Button>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="text-purple-600 border-purple-200 hover:bg-purple-50"
+                    onClick={() => onScheduleInterview(candidate.name, candidate.position)}
+                  >
+                    <CalendarClock className="h-3.5 w-3.5 mr-1.5" />
+                    Schedule Interview
                   </Button>
+                  <Button variant="outline" size="sm">View CV</Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => updateStatus(candidate.id, 'Screening')}>Move to Screening</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateStatus(candidate.id, 'Interviewing')}>Move to Interviewing</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => updateStatus(candidate.id, 'Offer Sent')}>Send Offer</DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600" onClick={() => updateStatus(candidate.id, 'Rejected')}>Reject</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
               

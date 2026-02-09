@@ -1,8 +1,9 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -16,7 +17,9 @@ import {
   CheckCircle2,
   Clock3,
   AlertCircle,
-  CalendarDays
+  CalendarDays,
+  Plus,
+  X
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -33,6 +36,13 @@ import {
   DialogFooter,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -42,6 +52,13 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import type { Job } from './recruitment-dashboard';
+
+interface Props {
+  schedulingFor: { candidate: string; position: string } | null;
+  onClearScheduling: () => void;
+  jobs: Job[];
+}
 
 const INTERVIEWS_DATA = [
   {
@@ -79,18 +96,75 @@ const INTERVIEWS_DATA = [
   }
 ];
 
-export default function InterviewScheduleModule() {
+export default function InterviewScheduleModule({ schedulingFor, onClearScheduling, jobs }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [date, setDate] = useState<Date | undefined>(undefined);
   const [interviews, setInterviews] = useState(INTERVIEWS_DATA);
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [scheduleNewOpen, setScheduleNewOpen] = useState(false);
   const [selectedInterview, setSelectedInterview] = useState<typeof INTERVIEWS_DATA[0] | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState<Date | undefined>(undefined);
   const [rescheduleTime, setRescheduleTime] = useState('');
   const [feedbackText, setFeedbackText] = useState('');
+  // New interview form
+  const [newCandidateName, setNewCandidateName] = useState('');
+  const [newPosition, setNewPosition] = useState('');
+  const [newDate, setNewDate] = useState<Date | undefined>(undefined);
+  const [newTime, setNewTime] = useState('');
+  const [newType, setNewType] = useState('');
+  const [newRound, setNewRound] = useState('');
   const { toast } = useToast();
+
+  // Auto-open schedule dialog when navigating from candidates
+  useEffect(() => {
+    if (schedulingFor) {
+      setNewCandidateName(schedulingFor.candidate);
+      setNewPosition(schedulingFor.position);
+      setNewDate(undefined);
+      setNewTime('');
+      setNewType('');
+      setNewRound('Initial');
+      setScheduleNewOpen(true);
+      onClearScheduling();
+    }
+  }, [schedulingFor]);
+
+  const scheduleNewInterview = () => {
+    if (!newCandidateName.trim()) {
+      toast({ title: 'Missing candidate', description: 'Please enter the candidate name.' });
+      return;
+    }
+    if (!newDate) {
+      toast({ title: 'Missing date', description: 'Please select a date.' });
+      return;
+    }
+    if (!newTime.trim()) {
+      toast({ title: 'Missing time', description: 'Please enter the time.' });
+      return;
+    }
+    const newInterview = {
+      id: Date.now(),
+      candidate: newCandidateName,
+      position: newPosition || 'Not specified',
+      date: newDate,
+      time: newTime,
+      type: newType || 'Video',
+      status: 'Scheduled',
+      round: newRound || 'Initial',
+      feedback: '',
+    };
+    setInterviews(prev => [newInterview, ...prev]);
+    setScheduleNewOpen(false);
+    setNewCandidateName('');
+    setNewPosition('');
+    setNewDate(undefined);
+    setNewTime('');
+    setNewType('');
+    setNewRound('');
+    toast({ title: 'Interview scheduled!', description: `Interview with ${newInterview.candidate} has been scheduled.` });
+  };
 
   const filteredInterviews = interviews.filter(i => {
     const matchesSearch = i.candidate.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -173,6 +247,87 @@ export default function InterviewScheduleModule() {
             </div>
             
             <div className="flex items-center gap-2">
+              <Dialog open={scheduleNewOpen} onOpenChange={setScheduleNewOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Schedule Interview
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Schedule New Interview</DialogTitle>
+                    <DialogDescription>Book an interview slot for a candidate.</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label>Candidate Name</Label>
+                      <Input placeholder="Enter candidate name" value={newCandidateName} onChange={(e) => setNewCandidateName(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Position</Label>
+                      <Select value={newPosition} onValueChange={setNewPosition}>
+                        <SelectTrigger><SelectValue placeholder="Select position" /></SelectTrigger>
+                        <SelectContent>
+                          {jobs.map(j => (
+                            <SelectItem key={j.id} value={j.title}>{j.title}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className={`w-full justify-start text-left font-normal ${!newDate ? 'text-muted-foreground' : ''}`}>
+                              <CalendarDays className="h-4 w-4 mr-2" />
+                              {newDate ? format(newDate, 'PPP') : 'Pick a date'}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar mode="single" selected={newDate} onSelect={setNewDate} initialFocus />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Time</Label>
+                        <Input type="time" value={newTime} onChange={(e) => setNewTime(e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Interview Type</Label>
+                        <Select value={newType} onValueChange={setNewType}>
+                          <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Video">Video Call</SelectItem>
+                            <SelectItem value="Phone">Phone Call</SelectItem>
+                            <SelectItem value="Onsite">In Person</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Round</Label>
+                        <Select value={newRound} onValueChange={setNewRound}>
+                          <SelectTrigger><SelectValue placeholder="Select round" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Initial">Initial Screening</SelectItem>
+                            <SelectItem value="Technical">Technical</SelectItem>
+                            <SelectItem value="Cultural Fit">Cultural Fit</SelectItem>
+                            <SelectItem value="Final">Final Round</SelectItem>
+                            <SelectItem value="HR">HR Round</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setScheduleNewOpen(false)}>Cancel</Button>
+                    <Button onClick={scheduleNewInterview} className="bg-purple-600 text-white hover:bg-purple-700">Schedule</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={!date ? "text-muted-foreground" : ""}>

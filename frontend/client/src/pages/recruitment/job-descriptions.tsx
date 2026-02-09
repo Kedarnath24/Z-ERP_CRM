@@ -16,7 +16,10 @@ import {
   Calendar,
   Eye,
   Edit,
-  Trash
+  Trash,
+  Briefcase,
+  GraduationCap,
+  Target
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -33,62 +36,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { Job } from './recruitment-dashboard';
 
-const JOBS_DATA = [
-  {
-    id: 1,
-    title: 'Senior Full Stack Developer',
-    department: 'Engineering',
-    location: 'Remote',
-    type: 'Full-time',
-    salary: ' - ',
-    applicants: 45,
-    status: 'Active',
-    postedDate: '2 days ago'
-  },
-  {
-    id: 2,
-    title: 'Product Marketing Manager',
-    department: 'Marketing',
-    location: 'New York, NY',
-    type: 'Full-time',
-    salary: ' - ',
-    applicants: 28,
-    status: 'Active',
-    postedDate: '5 days ago'
-  },
-  {
-    id: 3,
-    title: 'UI/UX Designer',
-    department: 'Product',
-    location: 'Remote',
-    type: 'Contract',
-    salary: ' -  / hr',
-    applicants: 56,
-    status: 'Closing Soon',
-    postedDate: '1 week ago'
-  },
-  {
-    id: 4,
-    title: 'Sales Representative',
-    department: 'Sales',
-    location: 'Chicago, IL',
-    type: 'Full-time',
-    salary: ' + Commission',
-    applicants: 12,
-    status: 'Active',
-    postedDate: '1 day ago'
-  }
-];
+interface Props {
+  jobs: Job[];
+  onViewApplicants: (jobTitle: string) => void;
+}
 
-export default function JobDescriptionsModule() {
+export default function JobDescriptionsModule({ jobs, onViewApplicants }: Props) {
   const [searchTerm, setSearchTerm] = useState('');
   const [deptFilter, setDeptFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
 
-  const filteredJobs = JOBS_DATA.filter(job => {
+  const filteredJobs = jobs.filter(job => {
     const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         job.department.toLowerCase().includes(searchTerm.toLowerCase());
+                         job.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         job.skills.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesDept = deptFilter === 'all' || job.department.toLowerCase() === deptFilter.toLowerCase();
     const matchesType = typeFilter === 'all' || job.type.toLowerCase() === typeFilter.toLowerCase();
     return matchesSearch && matchesDept && matchesType;
@@ -194,6 +157,9 @@ export default function JobDescriptionsModule() {
                     <DropdownMenuItem className="flex items-center">
                       <Users className="h-4 w-4 mr-2" /> View Applicants
                     </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center" onClick={() => onViewApplicants(job.title)}>
+                      <Eye className="h-4 w-4 mr-2" /> View Candidates
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-red-600 flex items-center">
                       <Trash className="h-4 w-4 mr-2" /> Close Position
@@ -202,24 +168,54 @@ export default function JobDescriptionsModule() {
                 </DropdownMenu>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-y-3 gap-x-4 mb-4">
+                  <div className="grid grid-cols-2 gap-y-3 gap-x-4 mb-4">
                   <div className="flex items-center text-sm text-slate-600">
                     <MapPin className="h-4 w-4 mr-2 text-slate-400" />
                     {job.location}
                   </div>
                   <div className="flex items-center text-sm text-slate-600">
                     <Clock className="h-4 w-4 mr-2 text-slate-400" />
-                    {job.type}
+                    {job.type} {job.workMode && job.workMode !== 'Not specified' && `• ${job.workMode}`}
                   </div>
                   <div className="flex items-center text-sm text-slate-600">
                     <DollarSign className="h-4 w-4 mr-2 text-slate-400" />
-                    {job.salary}
+                    {job.salaryMin && job.salaryMax ? `$${job.salaryMin} - $${job.salaryMax}` : 'Not specified'}
                   </div>
                   <div className="flex items-center text-sm text-slate-600">
                     <Calendar className="h-4 w-4 mr-2 text-slate-400" />
                     Posted {job.postedDate}
                   </div>
+                  <div className="flex items-center text-sm text-slate-600">
+                    <Briefcase className="h-4 w-4 mr-2 text-slate-400" />
+                    {job.experience}
+                  </div>
+                  <div className="flex items-center text-sm text-slate-600">
+                    <GraduationCap className="h-4 w-4 mr-2 text-slate-400" />
+                    {job.education}
+                  </div>
+                  {job.duration && (
+                    <div className="flex items-center text-sm text-slate-600">
+                      <Target className="h-4 w-4 mr-2 text-slate-400" />
+                      {job.duration}
+                    </div>
+                  )}
+                  {job.openings > 0 && (
+                    <div className="flex items-center text-sm text-slate-600">
+                      <Users className="h-4 w-4 mr-2 text-slate-400" />
+                      {job.openings} opening{job.openings > 1 ? 's' : ''}
+                    </div>
+                  )}
                 </div>
+
+                {job.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {job.skills.map(skill => (
+                      <Badge key={skill} variant="secondary" className="bg-purple-50 text-purple-700 text-[11px] px-2 py-0.5 border-0">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-4 border-t">
                   <div className="flex items-center gap-2">
@@ -231,7 +227,9 @@ export default function JobDescriptionsModule() {
                       {job.applicants} applicants
                     </div>
                   </div>
-                  <Button variant="link" className="p-0 h-auto text-purple-600 font-semibold hover:no-underline">Details</Button>
+                  <Button variant="link" className="p-0 h-auto text-purple-600 font-semibold hover:no-underline" onClick={() => onViewApplicants(job.title)}>
+                    View Candidates
+                  </Button>
                 </div>
               </CardContent>
             </Card>

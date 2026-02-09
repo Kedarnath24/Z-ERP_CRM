@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   Dialog,
@@ -25,13 +27,11 @@ import {
   FileText,
   CalendarClock,
   UserCheck,
-  Sparkles,
   Plus,
+  X,
   BarChart3,
   TrendingUp,
   Clock,
-  AlertCircle,
-  MoreVertical,
   ArrowRight
 } from 'lucide-react';
 import { 
@@ -49,7 +49,123 @@ import {
 import JobDescriptionsModule from './job-descriptions';
 import InterviewScheduleModule from './interview-schedule';
 import CandidatesModule from './candidates';
-import AIMatchingModule from './ai-matching';
+
+// ─── Shared Types ──────────────────────────────────
+export interface Job {
+  id: number;
+  title: string;
+  department: string;
+  location: string;
+  type: string;
+  workMode: string;
+  salaryMin: string;
+  salaryMax: string;
+  description: string;
+  skills: string[];
+  duration: string;
+  experience: string;
+  openings: number;
+  deadline: string;
+  responsibilities: string;
+  requirements: string;
+  benefits: string;
+  education: string;
+  applicants: number;
+  status: string;
+  postedDate: string;
+}
+
+const DEPT_MAP: Record<string, string> = {
+  eng: 'Engineering', mkt: 'Marketing', prod: 'Product', sales: 'Sales',
+  hr: 'Human Resources', finance: 'Finance', ops: 'Operations', design: 'Design',
+};
+
+const TYPE_MAP: Record<string, string> = {
+  full: 'Full-time', part: 'Part-time', contract: 'Contract', intern: 'Internship',
+};
+
+const INITIAL_JOBS: Job[] = [
+  {
+    id: 1, title: 'Senior Full Stack Developer', department: 'Engineering',
+    location: 'Remote', type: 'Full-time', workMode: 'Remote',
+    salaryMin: '120,000', salaryMax: '180,000',
+    description: 'Build and maintain scalable web applications using modern technologies.',
+    skills: ['React', 'Node.js', 'TypeScript', 'PostgreSQL', 'AWS'],
+    duration: 'Permanent', experience: 'Senior (5+ yrs)', openings: 2,
+    deadline: '2026-03-15',
+    responsibilities: 'Lead technical architecture decisions\nMentor junior developers\nConduct code reviews',
+    requirements: '5+ years full-stack experience\nProficiency in React & Node.js\nCloud services experience',
+    benefits: 'Health & dental insurance\nFlexible PTO\nRemote work\n401k matching',
+    education: "Bachelor's Degree", applicants: 45, status: 'Active', postedDate: '2 days ago',
+  },
+  {
+    id: 2, title: 'Product Marketing Manager', department: 'Marketing',
+    location: 'New York, NY', type: 'Full-time', workMode: 'Hybrid',
+    salaryMin: '90,000', salaryMax: '130,000',
+    description: 'Drive product marketing strategy and go-to-market plans for SaaS products.',
+    skills: ['Content Strategy', 'SEO', 'Analytics', 'Campaign Management'],
+    duration: 'Permanent', experience: 'Mid (3-5 yrs)', openings: 1,
+    deadline: '2026-03-01',
+    responsibilities: 'Develop go-to-market strategies\nCreate marketing collateral\nAnalyze campaign performance',
+    requirements: '3+ years in product marketing\nB2B SaaS experience\nStrong analytical skills',
+    benefits: 'Health insurance\nAnnual bonus\nProfessional development budget',
+    education: "Bachelor's Degree", applicants: 28, status: 'Active', postedDate: '5 days ago',
+  },
+  {
+    id: 3, title: 'UI/UX Designer', department: 'Product',
+    location: 'Remote', type: 'Contract', workMode: 'Remote',
+    salaryMin: '60/hr', salaryMax: '85/hr',
+    description: 'Design intuitive user interfaces and conduct user research.',
+    skills: ['Figma', 'User Research', 'Prototyping', 'Design Systems', 'Accessibility'],
+    duration: '6 months', experience: 'Mid (3-5 yrs)', openings: 1,
+    deadline: '2026-02-28',
+    responsibilities: 'Create wireframes and prototypes\nConduct user research\nMaintain design system',
+    requirements: '3+ years UX design experience\nProficiency in Figma\nPortfolio required',
+    benefits: 'Flexible hours\nRemote work\nEquipment stipend',
+    education: "Bachelor's Degree", applicants: 56, status: 'Closing Soon', postedDate: '1 week ago',
+  },
+  {
+    id: 4, title: 'Sales Representative', department: 'Sales',
+    location: 'Chicago, IL', type: 'Full-time', workMode: 'On-site',
+    salaryMin: '55,000', salaryMax: '75,000',
+    description: 'Drive new business development and manage client relationships.',
+    skills: ['CRM', 'Negotiation', 'Cold Calling', 'Pipeline Management'],
+    duration: 'Permanent', experience: 'Entry (0-2 yrs)', openings: 3,
+    deadline: '2026-03-20',
+    responsibilities: 'Prospect and qualify leads\nConduct product demos\nMeet quarterly sales targets',
+    requirements: '1+ years sales experience preferred\nExcellent communication skills\nSelf-motivated',
+    benefits: 'Base + Commission\nHealth insurance\nSales training program',
+    education: 'High School Diploma', applicants: 12, status: 'Active', postedDate: '1 day ago',
+  },
+];
+
+interface JobFormData {
+  title: string;
+  department: string;
+  employmentType: string;
+  location: string;
+  workMode: string;
+  experience: string;
+  openings: string;
+  deadline: string;
+  duration: string;
+  education: string;
+  salaryMin: string;
+  salaryMax: string;
+  skills: string[];
+  description: string;
+  responsibilities: string;
+  requirements: string;
+  benefits: string;
+}
+
+const emptyForm: JobFormData = {
+  title: '', department: '', employmentType: '', location: '',
+  workMode: '', experience: '', openings: '1', deadline: '',
+  duration: '', education: '', salaryMin: '', salaryMax: '',
+  skills: [], description: '', responsibilities: '',
+  requirements: '', benefits: '',
+};
 
 const PIPELINE_DATA = [
   { name: 'Applied', value: 145, color: '#94a3b8' },
@@ -66,33 +182,103 @@ const RECENT_ACTIVITY = [
 ];
 
 export default function RecruitmentDashboard() {
+  // Shared state
+  const [jobs, setJobs] = useState<Job[]>(INITIAL_JOBS);
   const [activeTab, setActiveTab] = useState('jobs');
+  const [selectedJobFilter, setSelectedJobFilter] = useState<string | null>(null);
+  const [schedulingFor, setSchedulingFor] = useState<{ candidate: string; position: string } | null>(null);
+
+  // Form state
   const [isPostJobOpen, setIsPostJobOpen] = useState(false);
-  const [isScheduleInterviewOpen, setIsScheduleInterviewOpen] = useState(false);
-  const [activeJobsCount, setActiveJobsCount] = useState(12);
-  const [jobTitle, setJobTitle] = useState('');
-  const [department, setDepartment] = useState('');
-  const [employmentType, setEmploymentType] = useState('');
-  const [location, setLocation] = useState('');
-  const [salaryRange, setSalaryRange] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
+  const [form, setForm] = useState<JobFormData>(emptyForm);
+  const [skillInput, setSkillInput] = useState('');
   const { toast } = useToast();
 
+  const updateForm = (field: keyof JobFormData, value: string | string[]) => {
+    setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addSkill = () => {
+    const trimmed = skillInput.trim();
+    if (trimmed && !form.skills.includes(trimmed)) {
+      updateForm('skills', [...form.skills, trimmed]);
+      setSkillInput('');
+    }
+  };
+
+  const removeSkill = (skill: string) => {
+    updateForm('skills', form.skills.filter(s => s !== skill));
+  };
+
+  const handleSkillKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addSkill();
+    }
+  };
+
   const publishJob = () => {
-    if (!jobTitle.trim()) {
-      toast({ title: 'Missing title', description: 'Please provide a job title.' });
+    if (!form.title.trim()) {
+      toast({ title: 'Missing required field', description: 'Please provide a job title.' });
       return;
     }
-    setActiveJobsCount((c) => c + 1);
+    if (!form.department) {
+      toast({ title: 'Missing required field', description: 'Please select a department.' });
+      return;
+    }
+    if (!form.employmentType) {
+      toast({ title: 'Missing required field', description: 'Please select employment type.' });
+      return;
+    }
+
+    const newJob: Job = {
+      id: Date.now(),
+      title: form.title,
+      department: DEPT_MAP[form.department] || form.department,
+      location: form.location || 'Not specified',
+      type: TYPE_MAP[form.employmentType] || form.employmentType,
+      workMode: form.workMode || 'Not specified',
+      salaryMin: form.salaryMin,
+      salaryMax: form.salaryMax,
+      description: form.description,
+      skills: form.skills,
+      duration: form.duration || 'Permanent',
+      experience: form.experience || 'Not specified',
+      openings: parseInt(form.openings) || 1,
+      deadline: form.deadline,
+      responsibilities: form.responsibilities,
+      requirements: form.requirements,
+      benefits: form.benefits,
+      education: form.education || 'Not specified',
+      applicants: 0,
+      status: 'Active',
+      postedDate: 'Just now',
+    };
+
+    setJobs(prev => [newJob, ...prev]);
     setIsPostJobOpen(false);
-    // Reset form
-    setJobTitle('');
-    setDepartment('');
-    setEmploymentType('');
-    setLocation('');
-    setSalaryRange('');
-    setJobDescription('');
-    toast({ title: 'Job posted', description: `${jobTitle} has been published.` });
+    setForm(emptyForm);
+    setSkillInput('');
+    setActiveTab('jobs');
+    toast({ title: 'Job posted successfully!', description: `"${form.title}" has been published and is now live.` });
+  };
+
+  const handleViewApplicants = (jobTitle: string) => {
+    setSelectedJobFilter(jobTitle);
+    setActiveTab('candidates');
+  };
+
+  const handleScheduleInterview = (candidateName: string, position: string) => {
+    setSchedulingFor({ candidate: candidateName, position });
+    setActiveTab('interviews');
+  };
+
+  const handleClearJobFilter = () => {
+    setSelectedJobFilter(null);
+  };
+
+  const handleClearScheduling = () => {
+    setSchedulingFor(null);
   };
 
   return (
@@ -110,69 +296,6 @@ export default function RecruitmentDashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Dialog open={isScheduleInterviewOpen} onOpenChange={setIsScheduleInterviewOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="border-slate-200">
-                  <CalendarClock className="h-4 w-4 mr-2 text-slate-500" />
-                  Schedule Interview
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Schedule Interview</DialogTitle>
-                  <DialogDescription>
-                    Book a new interview slot for a candidate.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="space-y-2">
-                    <Label>Candidate Name</Label>
-                    <Input placeholder="Enter candidate name..." />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Job Position</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select position" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="fullstack">Senior Full Stack Developer</SelectItem>
-                        <SelectItem value="pm">Product Manager</SelectItem>
-                        <SelectItem value="ux">UX Designer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Date</Label>
-                      <Input type="date" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Time</Label>
-                      <Input type="time" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Interview Type</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="video">Video Call</SelectItem>
-                        <SelectItem value="phone">Phone Call</SelectItem>
-                        <SelectItem value="inperson">In Person</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsScheduleInterviewOpen(false)}>Cancel</Button>
-                  <Button onClick={() => setIsScheduleInterviewOpen(false)} className="bg-purple-600 text-white hover:bg-purple-700">Schedule</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
             <Dialog open={isPostJobOpen} onOpenChange={setIsPostJobOpen}>
               <DialogTrigger asChild>
                 <Button className="bg-purple-600 hover:bg-purple-700 text-white px-6">
@@ -180,69 +303,202 @@ export default function RecruitmentDashboard() {
                   Post New Job
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-xl">
+              <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
                 <DialogHeader>
                   <DialogTitle>Post New Job Opening</DialogTitle>
                   <DialogDescription>
-                    Create a new job listing to attract top talent.
+                    Fill in all the details to create a comprehensive job listing.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Job Title</Label>
-                      <Input placeholder="e.g. Senior Full Stack Developer" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} />
+                <ScrollArea className="h-[60vh] pr-4">
+                  <div className="grid gap-6 py-4">
+                    {/* ── Basic Information ── */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider border-b pb-2">Basic Information</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Job Title <span className="text-red-500">*</span></Label>
+                          <Input placeholder="e.g. Senior Full Stack Developer" value={form.title} onChange={(e) => updateForm('title', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Department <span className="text-red-500">*</span></Label>
+                          <Select value={form.department} onValueChange={(v) => updateForm('department', v)}>
+                            <SelectTrigger><SelectValue placeholder="Select department" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="eng">Engineering</SelectItem>
+                              <SelectItem value="mkt">Marketing</SelectItem>
+                              <SelectItem value="prod">Product</SelectItem>
+                              <SelectItem value="sales">Sales</SelectItem>
+                              <SelectItem value="hr">Human Resources</SelectItem>
+                              <SelectItem value="finance">Finance</SelectItem>
+                              <SelectItem value="ops">Operations</SelectItem>
+                              <SelectItem value="design">Design</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Employment Type <span className="text-red-500">*</span></Label>
+                          <Select value={form.employmentType} onValueChange={(v) => updateForm('employmentType', v)}>
+                            <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="full">Full-time</SelectItem>
+                              <SelectItem value="part">Part-time</SelectItem>
+                              <SelectItem value="contract">Contract</SelectItem>
+                              <SelectItem value="intern">Internship</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Work Mode</Label>
+                          <Select value={form.workMode} onValueChange={(v) => updateForm('workMode', v)}>
+                            <SelectTrigger><SelectValue placeholder="Select mode" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Remote">Remote</SelectItem>
+                              <SelectItem value="Hybrid">Hybrid</SelectItem>
+                              <SelectItem value="On-site">On-site</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Location</Label>
+                          <Input placeholder="e.g. Remote, New York, NY" value={form.location} onChange={(e) => updateForm('location', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Experience Level</Label>
+                          <Select value={form.experience} onValueChange={(v) => updateForm('experience', v)}>
+                            <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Entry (0-2 yrs)">Entry Level (0-2 years)</SelectItem>
+                              <SelectItem value="Mid (3-5 yrs)">Mid Level (3-5 years)</SelectItem>
+                              <SelectItem value="Senior (5+ yrs)">Senior (5+ years)</SelectItem>
+                              <SelectItem value="Lead (8+ yrs)">Lead (8+ years)</SelectItem>
+                              <SelectItem value="Executive">Executive</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label>No. of Openings</Label>
+                          <Input type="number" min="1" placeholder="1" value={form.openings} onChange={(e) => updateForm('openings', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Application Deadline</Label>
+                          <Input type="date" value={form.deadline} onChange={(e) => updateForm('deadline', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Duration</Label>
+                          <Input placeholder="e.g. 6 months, Permanent" value={form.duration} onChange={(e) => updateForm('duration', e.target.value)} />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Department</Label>
-                      <Select value={department} onValueChange={setDepartment}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="eng">Engineering</SelectItem>
-                          <SelectItem value="mkt">Marketing</SelectItem>
-                          <SelectItem value="prod">Product</SelectItem>
-                          <SelectItem value="sales">Sales</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                    {/* ── Compensation ── */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider border-b pb-2">Compensation</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Salary Min ($)</Label>
+                          <Input placeholder="e.g. 80,000" value={form.salaryMin} onChange={(e) => updateForm('salaryMin', e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Salary Max ($)</Label>
+                          <Input placeholder="e.g. 120,000" value={form.salaryMax} onChange={(e) => updateForm('salaryMax', e.target.value)} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* ── Skills & Qualifications ── */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider border-b pb-2">Skills & Qualifications</h3>
+                      <div className="space-y-2">
+                        <Label>Required Skills</Label>
+                        {form.skills.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {form.skills.map(skill => (
+                              <Badge key={skill} variant="secondary" className="flex items-center gap-1 px-3 py-1">
+                                {skill}
+                                <X className="h-3 w-3 cursor-pointer hover:text-red-500" onClick={() => removeSkill(skill)} />
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Type a skill and press Enter..."
+                            value={skillInput}
+                            onChange={(e) => setSkillInput(e.target.value)}
+                            onKeyDown={handleSkillKeyDown}
+                            className="flex-1"
+                          />
+                          <Button type="button" variant="outline" onClick={addSkill}>Add</Button>
+                        </div>
+                        <p className="text-xs text-slate-400">Press Enter or comma to add skills</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Education Level</Label>
+                        <Select value={form.education} onValueChange={(v) => updateForm('education', v)}>
+                          <SelectTrigger><SelectValue placeholder="Select education" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="High School Diploma">High School Diploma</SelectItem>
+                            <SelectItem value="Associate's Degree">Associate's Degree</SelectItem>
+                            <SelectItem value="Bachelor's Degree">Bachelor's Degree</SelectItem>
+                            <SelectItem value="Master's Degree">Master's Degree</SelectItem>
+                            <SelectItem value="PhD">PhD / Doctorate</SelectItem>
+                            <SelectItem value="Not Required">Not Required</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* ── Job Details ── */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider border-b pb-2">Job Details</h3>
+                      <div className="space-y-2">
+                        <Label>Job Description <span className="text-red-500">*</span></Label>
+                        <Textarea
+                          placeholder="Provide a comprehensive overview of the role..."
+                          className="min-h-[100px]"
+                          value={form.description}
+                          onChange={(e) => updateForm('description', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Key Responsibilities</Label>
+                        <Textarea
+                          placeholder="List the main responsibilities (one per line)..."
+                          className="min-h-[80px]"
+                          value={form.responsibilities}
+                          onChange={(e) => updateForm('responsibilities', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Requirements</Label>
+                        <Textarea
+                          placeholder="List required qualifications and experience..."
+                          className="min-h-[80px]"
+                          value={form.requirements}
+                          onChange={(e) => updateForm('requirements', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Benefits & Perks</Label>
+                        <Textarea
+                          placeholder="List benefits offered (health insurance, PTO, etc.)..."
+                          className="min-h-[80px]"
+                          value={form.benefits}
+                          onChange={(e) => updateForm('benefits', e.target.value)}
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Employment Type</Label>
-                      <Select value={employmentType} onValueChange={setEmploymentType}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="full">Full-time</SelectItem>
-                          <SelectItem value="part">Part-time</SelectItem>
-                          <SelectItem value="contract">Contract</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Location</Label>
-                      <Input placeholder="e.g. Remote, New York, NY" value={location} onChange={(e) => setLocation(e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Salary Range</Label>
-                    <Input placeholder="e.g. ,000 - ,000" value={salaryRange} onChange={(e) => setSalaryRange(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Job Description</Label>
-                    <Textarea 
-                      placeholder="Enter detailed job description, requirements and benefits..." 
-                      className="min-h-[120px]"
-                      value={jobDescription}
-                      onChange={(e) => setJobDescription(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setIsPostJobOpen(false)}>Cancel</Button>
+                </ScrollArea>
+                <DialogFooter className="pt-4 border-t">
+                  <Button variant="outline" onClick={() => { setIsPostJobOpen(false); setForm(emptyForm); setSkillInput(''); }}>Cancel</Button>
                   <Button onClick={publishJob} className="bg-purple-600 hover:bg-purple-700 text-white">Publish Position</Button>
                 </DialogFooter>
               </DialogContent>
@@ -259,7 +515,7 @@ export default function RecruitmentDashboard() {
               </div>
               <div>
                 <p className="text-sm text-slate-500 font-medium whitespace-nowrap">Active Jobs</p>
-                <h3 className="text-2xl font-bold">{activeJobsCount}</h3>
+                <h3 className="text-2xl font-bold">{jobs.filter(j => j.status === 'Active').length}</h3>
               </div>
               <div className="ml-auto flex items-center text-xs text-green-600 font-medium">
                 <TrendingUp className="h-3 w-3 mr-1" />
@@ -401,26 +657,27 @@ export default function RecruitmentDashboard() {
             <TabsTrigger value="interviews" className="data-[state=active]:bg-white data-[state=active]:text-purple-600 data-[state=active]:shadow-sm px-6">
               Interviews
             </TabsTrigger>
-            <TabsTrigger value="ai-match" className="data-[state=active]:bg-white data-[state=active]:text-purple-600 data-[state=active]:shadow-sm px-6 flex items-center gap-2">
-              <Sparkles className="h-4 w-4" />
-              AI Matching
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="jobs" className="mt-0">
-            <JobDescriptionsModule />
+            <JobDescriptionsModule jobs={jobs} onViewApplicants={handleViewApplicants} />
           </TabsContent>
 
           <TabsContent value="candidates" className="mt-0">
-            <CandidatesModule />
+            <CandidatesModule
+              filterByJob={selectedJobFilter}
+              onScheduleInterview={handleScheduleInterview}
+              onClearFilter={handleClearJobFilter}
+              jobs={jobs}
+            />
           </TabsContent>
 
           <TabsContent value="interviews" className="mt-0">
-            <InterviewScheduleModule />
-          </TabsContent>
-
-          <TabsContent value="ai-match" className="mt-0">
-            <AIMatchingModule />
+            <InterviewScheduleModule
+              schedulingFor={schedulingFor}
+              onClearScheduling={handleClearScheduling}
+              jobs={jobs}
+            />
           </TabsContent>
         </Tabs>
       </div>
