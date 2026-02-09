@@ -311,9 +311,7 @@ export default function HRMEmployees() {
                           assignedTo: 'Direct Manager',
                           dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
                           details: 'Manager approval for exit request',
-                          documents: [],
-                          completedAt: undefined,
-                          completedBy: undefined
+                          documents: []
                         },
                         {
                           id: 2,
@@ -452,7 +450,7 @@ export default function HRMEmployees() {
             email: editingEmployee.email.trim().toLowerCase(),
             phone: editingEmployee.phone.trim(),
             joining: editingEmployee.joining,
-            avatar: editingEmployee.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+            avatar: editingEmployee.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2)
           }
         : emp
     );
@@ -689,7 +687,11 @@ export default function HRMEmployees() {
                 exitInterviewScheduled: true,
                 exitInterviewDate: `${interviewFormData.date}T${interviewFormData.time}:00Z`,
                 interviewer: interviewFormData.interviewer,
-                meetingType: interviewFormData.meetingType
+                meetingType: interviewFormData.meetingType,
+                steps: emp.exitWorkflow.steps.map(step => ({
+                  ...step,
+                  documents: step.documents || []
+                }))
               }
             }
           : emp
@@ -910,7 +912,8 @@ export default function HRMEmployees() {
             assignedTo: 'Emily Davis',
             dueDate: '2024-02-10T17:00:00Z',
             priority: 'medium',
-            details: 'Final paperwork and clearance documents'
+            details: 'Final paperwork and clearance documents',
+            documents: [] as string[]
           },
           {
             id: 4,
@@ -920,7 +923,8 @@ export default function HRMEmployees() {
             assignedTo: 'Finance Team',
             dueDate: '2024-02-15T17:00:00Z',
             priority: 'medium',
-            details: 'Final salary, benefits, and reimbursements'
+            details: 'Final salary, benefits, and reimbursements',
+            documents: [] as string[]
           },
           {
             id: 5,
@@ -930,7 +934,8 @@ export default function HRMEmployees() {
             assignedTo: 'Security Team',
             dueDate: '2024-02-20T17:00:00Z',
             priority: 'high',
-            details: 'Revoke all system and building access'
+            details: 'Revoke all system and building access',
+            documents: [] as string[]
           }
         ],
         assets: [
@@ -980,7 +985,8 @@ export default function HRMEmployees() {
             completedAt: '2024-01-26T11:00:00Z',
             completedBy: 'Lisa Anderson',
             priority: 'high',
-            details: 'Active campaigns transferred to team'
+            details: 'Active campaigns transferred to team',
+            documents: [] as string[]
           },
           {
             id: 2,
@@ -990,7 +996,8 @@ export default function HRMEmployees() {
             assignedTo: 'Alex Wilson',
             dueDate: '2024-02-05T17:00:00Z',
             priority: 'high',
-            details: 'Transfer client relationships and ongoing projects'
+            details: 'Transfer client relationships and ongoing projects',
+            documents: [] as string[]
           },
           {
             id: 3,
@@ -1000,7 +1007,8 @@ export default function HRMEmployees() {
             assignedTo: 'Emily Davis',
             dueDate: '2024-02-20T17:00:00Z',
             priority: 'medium',
-            details: 'Complete exit documentation'
+            details: 'Complete exit documentation',
+            documents: [] as string[]
           }
         ],
         assets: [
@@ -1092,7 +1100,8 @@ export default function HRMEmployees() {
         aadhaar: newEmployee.aadhaarDoc?.name,
         pan: newEmployee.panDoc?.name,
         resume: newEmployee.resume?.name
-      }
+      },
+      exitWorkflow: null
     };
 
     setEmployees([employeeToAdd, ...employees]);
