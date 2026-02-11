@@ -268,7 +268,7 @@ export default function HRMAutomation() {
                               {log.message && <p className="text-[10px] text-rose-500 mt-1 font-bold italic">{log.message}</p>}
                             </div>
                           </div>
-                          <Badge variant="ghost" className="text-[9px] font-black uppercase tracking-tighter text-slate-400">ID: {log.id.toString().slice(-4)}</Badge>
+                          <Badge variant="secondary" className="text-[9px] font-black uppercase tracking-tighter text-slate-400">ID: {log.id.toString().slice(-4)}</Badge>
                         </div>
                       ))}
                     </div>

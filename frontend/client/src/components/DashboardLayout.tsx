@@ -789,23 +789,32 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
           <div className="flex items-center gap-3">
             <motion.div
               layout
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-lg p-1.5"
+              className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 via-white to-slate-50 shadow-[0_4px_12px_rgba(0,0,0,0.15),0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.8)] p-[3px] ring-1 ring-white/50"
             >
-              {orgLogo ? (
-                <img src={orgLogo} alt="Logo" className="h-full w-full rounded-lg object-cover" />
-              ) : (
-                <img src="/favicon.png" alt="Z-ERP" className="h-full w-full object-contain" />
-              )}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/5 via-blue-500/5 to-emerald-500/5" />
+              <div className="relative h-full w-full rounded-xl bg-white/80 backdrop-blur-sm p-1.5 shadow-inner">
+                {orgLogo ? (
+                  <img src={orgLogo} alt="Logo" className="h-full w-full rounded-lg object-cover" />
+                ) : (
+                  <img src="/favicon.png" alt="Z-ERP" className="h-full w-full object-contain" />
+                )}
+              </div>
             </motion.div>
             {expanded && (
-              <div className="bg-gradient-to-br from-white via-slate-50 to-slate-100 rounded-xl px-4 py-3 shadow-[0_8px_16px_rgba(0,0,0,0.3),0_2px_4px_rgba(0,0,0,0.2)] border border-slate-300/50 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none" />
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="relative rounded-2xl bg-gradient-to-br from-white via-slate-50 to-slate-100 px-5 py-3 shadow-[0_8px_20px_rgba(0,0,0,0.25),0_3px_6px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.9)] ring-1 ring-white/60 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-slate-100/30 pointer-events-none" />
+                <div className="absolute -top-10 -right-10 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl" />
+                <div className="absolute -bottom-10 -left-10 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl" />
                 <div className="flex items-center justify-center relative z-10">
-                  <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 bg-clip-text text-transparent tracking-tight drop-shadow-sm">
                     Z-ERP
                   </div>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
@@ -852,17 +861,22 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
           >
             <div className="flex items-center justify-between px-5 py-6">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-lg p-1.5">
-                  {orgLogo ? (
-                    <img src={orgLogo} alt="Logo" className="h-full w-full rounded-lg object-cover" />
-                  ) : (
-                    <img src="/favicon.png" alt="Z-ERP" className="h-full w-full object-contain" />
-                  )}
+                <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 via-white to-slate-50 shadow-[0_4px_12px_rgba(0,0,0,0.15),0_2px_4px_rgba(0,0,0,0.1),inset_0_1px_2px_rgba(255,255,255,0.8)] p-[3px] ring-1 ring-white/50">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/5 via-blue-500/5 to-emerald-500/5" />
+                  <div className="relative h-full w-full rounded-xl bg-white/80 backdrop-blur-sm p-1.5 shadow-inner">
+                    {orgLogo ? (
+                      <img src={orgLogo} alt="Logo" className="h-full w-full rounded-lg object-cover" />
+                    ) : (
+                      <img src="/favicon.png" alt="Z-ERP" className="h-full w-full object-contain" />
+                    )}
+                  </div>
                 </div>
-                <div className="bg-gradient-to-br from-white via-slate-50 to-slate-100 rounded-xl px-4 py-3 shadow-[0_8px_16px_rgba(0,0,0,0.3),0_2px_4px_rgba(0,0,0,0.2)] border border-slate-300/50 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-white/40 to-transparent pointer-events-none" />
+                <div className="relative rounded-2xl bg-gradient-to-br from-white via-slate-50 to-slate-100 px-5 py-3 shadow-[0_8px_20px_rgba(0,0,0,0.25),0_3px_6px_rgba(0,0,0,0.15),inset_0_1px_2px_rgba(255,255,255,0.9)] ring-1 ring-white/60 overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-slate-100/30 pointer-events-none" />
+                  <div className="absolute -top-10 -right-10 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl" />
+                  <div className="absolute -bottom-10 -left-10 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl" />
                   <div className="flex items-center justify-center relative z-10">
-                    <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                    <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-700 bg-clip-text text-transparent tracking-tight drop-shadow-sm">
                       Z-ERP
                     </div>
                   </div>

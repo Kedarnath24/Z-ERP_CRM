@@ -306,182 +306,219 @@ export default function PaymentsTab() {
             </Dialog>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-slate-50/50">
               <TableRow>
-                <TableHead>Payment Number</TableHead>
-                <TableHead>Invoice</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Amount</TableHead>
+                <TableHead className="px-6">Payment #</TableHead>
+                <TableHead>Invoice #</TableHead>
                 <TableHead>Payment Mode</TableHead>
                 <TableHead>Transaction ID</TableHead>
+                <TableHead>Customer</TableHead>
+                <TableHead>Amount</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredPayments.map((payment) => (
-                <TableRow key={payment.id} className="hover:bg-slate-50 transition-colors group">
-                  <TableCell className="font-mono text-sm font-semibold">{payment.id}</TableCell>
-                  <TableCell className="font-medium text-blue-600 cursor-pointer hover:underline">
-                    {payment.invoice}
-                  </TableCell>
-                  <TableCell className="font-medium">{payment.customer}</TableCell>
-                  <TableCell className="font-semibold text-green-700">{payment.amount}</TableCell>
-                  <TableCell className="text-sm">
-                    <Badge variant="outline" className="bg-slate-100/50 text-slate-700 border-slate-200">
-                      {payment.mode}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">{payment.transactionId}</TableCell>
-                  <TableCell className="text-sm">{payment.date}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={cn("capitalize font-medium shadow-sm", statusConfig[payment.status].class)}>
-                      {statusConfig[payment.status].label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-blue-600 hover:bg-blue-50"
-                        onClick={() => {
-                          setSelectedPayment(payment);
-                          setShowReceiptView(true);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-slate-600 hover:bg-slate-100"
-                        onClick={() => toast({ title: "Edit Payment", description: `Loading ${payment.id}...` })}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuLabel>Payment Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                            <Download className="mr-2 h-4 w-4 text-purple-600" /> Download Receipt
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toast({ title: "Emailed", description: "Receipt sent to customer." })}>
-                            <FileCheck className="mr-2 h-4 w-4 text-blue-500" /> Email Receipt
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600" onClick={() => {
-                            setPayments(payments.filter(p => p.id !== payment.id));
-                            toast({ title: "Deleted", description: "Payment record removed.", variant: "destructive" });
-                          }}>
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete Record
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+              {filteredPayments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-32 text-center text-slate-500">
+                    No entries found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredPayments.map((payment) => (
+                  <TableRow key={payment.id} className="hover:bg-slate-50 transition-colors group">
+                    <TableCell className="px-6">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm font-semibold text-slate-900">{payment.id}</span>
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs">
+                          <button 
+                            className="text-blue-600 hover:text-blue-800 hover:underline"
+                            onClick={() => {
+                              setSelectedPayment(payment);
+                              setShowReceiptView(true);
+                            }}
+                          >
+                            View
+                          </button>
+                          <span className="text-slate-300 mx-1">|</span>
+                          <button 
+                            className="text-red-600 hover:text-red-800 hover:underline"
+                            onClick={() => {
+                              setPayments(payments.filter(p => p.id !== payment.id));
+                              toast({ title: "Deleted", description: "Payment record removed.", variant: "destructive" });
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium text-blue-600 cursor-pointer hover:underline">
+                      {payment.invoice}
+                    </TableCell>
+                    <TableCell className="text-sm">{payment.mode}</TableCell>
+                    <TableCell className="font-mono text-xs text-slate-600">{payment.transactionId}</TableCell>
+                    <TableCell className="font-medium">{payment.customer}</TableCell>
+                    <TableCell className="font-semibold text-green-700">{payment.amount}</TableCell>
+                    <TableCell className="text-sm text-slate-600">{payment.date}</TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
+          
+          {/* Pagination Footer */}
+          {filteredPayments.length > 0 && (
+            <div className="flex items-center justify-between px-6 py-4 border-t bg-slate-50/30">
+              <span className="text-sm text-slate-600">
+                Showing 1 to {filteredPayments.length} of {filteredPayments.length} entries
+              </span>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled>
+                  Previous
+                </Button>
+                <Button variant="outline" size="sm" disabled>
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Payment Receipt View Modal */}
       <Dialog open={showReceiptView} onOpenChange={setShowReceiptView}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Payment Receipt</DialogTitle>
-            <DialogDescription>PAY-001 - Acme Corporation</DialogDescription>
+            <DialogTitle>Payment for Invoice {selectedPayment?.invoice || 'INV-000001'}</DialogTitle>
           </DialogHeader>
-          <div className="space-y-6 py-4">
-            {/* Receipt Header */}
-            <div className="text-center pb-4 border-b">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+          <div className="grid grid-cols-2 gap-6 py-4">
+            {/* Left Column - Payment Details Form */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-slate-600">Amount Received</Label>
+                <Input 
+                  value={selectedPayment?.amount || '$45,000.00'} 
+                  disabled 
+                  className="bg-slate-50"
+                />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">Payment Received</h2>
-              <p className="text-sm text-slate-600 mt-1">Thank you for your payment</p>
+              
+              <div className="space-y-2">
+                <Label className="text-slate-600">Payment Date</Label>
+                <Input 
+                  value={selectedPayment?.date || '2026-01-10'} 
+                  disabled 
+                  className="bg-slate-50"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-slate-600">Payment Mode</Label>
+                <Input 
+                  value={selectedPayment?.mode || 'Bank Transfer'} 
+                  disabled 
+                  className="bg-slate-50"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-slate-600">Payment Method</Label>
+                <Input 
+                  value="Primary Account" 
+                  disabled 
+                  className="bg-slate-50"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-slate-600">Transaction ID</Label>
+                <Input 
+                  value={selectedPayment?.transactionId || 'TXN-2026-001'} 
+                  disabled 
+                  className="bg-slate-50"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-slate-600">Note</Label>
+                <Textarea 
+                  value="Payment received in full." 
+                  disabled 
+                  rows={3}
+                  className="bg-slate-50"
+                />
+              </div>
             </div>
-
-            {/* Receipt Details */}
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-xs text-slate-600 mb-1">Receipt Number</p>
-                <p className="font-mono font-semibold">PAY-001</p>
+            
+            {/* Right Column - Payment Receipt Preview */}
+            <div className="border rounded-lg p-6 bg-white shadow-sm">
+              <div className="text-center mb-6">
+                <h3 className="text-lg font-bold text-slate-900">Payment Receipt</h3>
+                <p className="text-sm text-slate-500">{selectedPayment?.id || 'PAY-001'}</p>
               </div>
-              <div>
-                <p className="text-xs text-slate-600 mb-1">Payment Date</p>
-                <p className="font-semibold">January 10, 2026</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-600 mb-1">Invoice Number</p>
-                <p className="font-mono font-semibold text-blue-600">INV-001</p>
-              </div>
-              <div>
-                <p className="text-xs text-slate-600 mb-1">Transaction ID</p>
-                <p className="font-mono text-sm">TXN-2026-001</p>
-              </div>
-            </div>
-
-            {/* Customer & Payment Info */}
-            <div className="grid grid-cols-2 gap-6 pt-4 border-t">
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Received From:</h3>
-                <p className="text-sm font-semibold">Acme Corporation</p>
-                <p className="text-sm text-slate-600">456 Client Avenue</p>
-                <p className="text-sm text-slate-600">San Francisco, CA 94102</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-2">Payment Method:</h3>
-                <div className="flex items-center gap-2 mb-2">
-                  <CreditCard className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm font-medium">Bank Transfer</span>
+              
+              {/* Receipt Content */}
+              <div className="space-y-4">
+                <div className="border-b pb-4">
+                  <div className="text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 mb-3">
+                      <CheckCircle className="h-6 w-6 text-green-600" />
+                    </div>
+                    <h4 className="text-lg font-semibold text-green-700">Payment Received</h4>
+                  </div>
                 </div>
-                <p className="text-sm text-slate-600">Account: ****5678</p>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-slate-500">Receipt Number</p>
+                    <p className="font-semibold">{selectedPayment?.id || 'PAY-001'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Date</p>
+                    <p className="font-semibold">{selectedPayment?.date || '2026-01-10'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Invoice</p>
+                    <p className="font-semibold text-blue-600">{selectedPayment?.invoice || 'INV-001'}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Transaction ID</p>
+                    <p className="font-mono text-xs">{selectedPayment?.transactionId || 'TXN-2026-001'}</p>
+                  </div>
+                </div>
+                
+                <div className="border-t pt-4">
+                  <p className="text-slate-500 text-sm">Received From</p>
+                  <p className="font-semibold">{selectedPayment?.customer || 'Acme Corporation'}</p>
+                </div>
+                
+                <div className="border-t pt-4">
+                  <p className="text-slate-500 text-sm">Payment Method</p>
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-slate-400" />
+                    <span className="font-semibold">{selectedPayment?.mode || 'Bank Transfer'}</span>
+                  </div>
+                </div>
+                
+                <div className="bg-slate-50 rounded-lg p-4 mt-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600">Amount Paid</span>
+                    <span className="text-2xl font-bold text-green-700">{selectedPayment?.amount || '$45,000.00'}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Amount Details */}
-            <div className="p-6 bg-slate-50 rounded-lg space-y-3">
-              <div className="flex justify-between">
-                <span className="text-slate-600">Invoice Amount:</span>
-                <span className="font-semibold">$45,000.00</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-600">Previously Paid:</span>
-                <span className="font-semibold">$0.00</span>
-              </div>
-              <div className="flex justify-between text-lg font-bold pt-3 border-t">
-                <span>Amount Paid:</span>
-                <span className="text-green-700">$45,000.00</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-600">Balance Due:</span>
-                <span className="font-semibold">$0.00</span>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div className="pt-4 border-t">
-              <h3 className="font-semibold text-slate-900 mb-2">Notes</h3>
-              <p className="text-sm text-slate-600">Payment received in full for Invoice INV-001. Thank you for your business!</p>
             </div>
           </div>
           <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowReceiptView(false)}>
+              Close
+            </Button>
             <Button variant="outline">
               <Printer className="h-4 w-4 mr-2" />
-              Print Receipt
+              Print
             </Button>
             <Button>
               <Download className="h-4 w-4 mr-2" />

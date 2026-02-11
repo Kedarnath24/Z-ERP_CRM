@@ -77,7 +77,7 @@ export default function ProjectOverviewTab({ project }: ProjectOverviewTabProps)
     { name: 'Budget_Plan.xlsx', size: '856 KB', uploadedBy: 'John Smith', date: '2026-01-11' }
   ];
 
-  const statusConfig = {
+  const statusConfig: Record<string, { label: string; class: string }> = {
     completed: { label: 'Completed', class: 'bg-green-100 text-green-700 border-green-200' },
     'in-progress': { label: 'In Progress', class: 'bg-blue-100 text-blue-700 border-blue-200' },
     pending: { label: 'Pending', class: 'bg-slate-100 text-slate-700 border-slate-200' }
