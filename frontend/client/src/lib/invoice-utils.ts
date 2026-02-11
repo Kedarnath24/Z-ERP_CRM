@@ -65,6 +65,8 @@ export function createInvoice(invoiceData: Omit<Invoice, 'invoiceId' | 'dateIssu
   }));
 
   // Auto-send email to customer (async, don't wait)
+  // NOTE: Email service integration pending - uncomment when email-service module is implemented
+  /*
   if (invoice.status === 'Paid' && invoice.customer.email) {
     import('./email-service').then(({ sendInvoiceEmail, logInvoiceEmail }) => {
       sendInvoiceEmail({
@@ -73,7 +75,7 @@ export function createInvoice(invoiceData: Omit<Invoice, 'invoiceId' | 'dateIssu
         invoiceId: invoice.invoiceId,
         amount: invoice.amount,
         currency: invoice.currency,
-      }).then(success => {
+      }).then((success: boolean) => {
         if (success) {
           logInvoiceEmail(invoice.invoiceId, invoice.customer.email);
           console.log('✅ Invoice email sent automatically to:', invoice.customer.email);
@@ -81,6 +83,7 @@ export function createInvoice(invoiceData: Omit<Invoice, 'invoiceId' | 'dateIssu
       });
     });
   }
+  */
 
   return invoice;
 }

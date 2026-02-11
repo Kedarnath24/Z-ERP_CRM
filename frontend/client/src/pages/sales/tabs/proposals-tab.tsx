@@ -8,6 +8,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Plus, 
   Download, 
@@ -24,7 +26,10 @@ import {
   Mail,
   X,
   Calendar as CalendarIcon,
-  Trash2
+  Trash2,
+  Link as LinkIcon,
+  Check,
+  Building2
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -45,6 +50,7 @@ export default function ProposalsTab() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showFilterDialog, setShowFilterDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const { toast } = useToast();
 
   // Mock data
@@ -94,6 +100,145 @@ export default function ProposalsTab() {
   const [selectedProposal, setSelectedProposal] = useState<any>(null);
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+
+  // Edit Form State
+  const [editCustomer, setEditCustomer] = useState('');
+  const [editProject, setEditProject] = useState('');
+  const [editBillTo, setEditBillTo] = useState({ address: '', city: '' });
+  const [editShipTo, setEditShipTo] = useState({ address: '', city: '' });
+  const [editTags, setEditTags] = useState('');
+  const [editCurrency, setEditCurrency] = useState('usd');
+  const [editStatus, setEditStatus] = useState('accepted');
+  const [editReference, setEditReference] = useState('');
+  const [editSaleAgent, setEditSaleAgent] = useState('zeruns-erp-admin');
+  const [editDiscountType, setEditDiscountType] = useState('no-discount');
+  const [editAdminNote, setEditAdminNote] = useState('');
+  const [editEstimateNumber, setEditEstimateNumber] = useState('000001');
+  const [editEstimatePrefix, setEditEstimatePrefix] = useState('EST-');
+  const [editEstimateDate, setEditEstimateDate] = useState('');
+  const [editExpiryDate, setEditExpiryDate] = useState('');
+  const [editClientNote, setEditClientNote] = useState('');
+  const [editTerms, setEditTerms] = useState('');
+  const [editItems, setEditItems] = useState([
+    { id: 1, description: '', longDescription: '', qty: 1, rate: 0, tax: 'No Tax', amount: 0 }
+  ]);
+  const [editDiscount, setEditDiscount] = useState(0);
+  const [editAdjustment, setEditAdjustment] = useState(0);
+  const [showQtyAs, setShowQtyAs] = useState<'qty' | 'hours' | 'both'>('qty');
+
+  // Load proposal data into edit form
+  const loadProposalForEdit = (proposal: any) => {
+    setSelectedProposal(proposal);
+    setEditCustomer(proposal.customer || '');
+    setEditProject(proposal.project || '');
+    setEditBillTo({ address: 'Industrial Ave, Abhu Dhabi', city: 'AE' });
+    setEditShipTo({ address: '', city: '' });
+    setEditTags('tag');
+    setEditCurrency('usd');
+    setEditStatus(proposal.status || 'draft');
+    setEditReference('');
+    setEditSaleAgent('zeruns-erp-admin');
+    setEditDiscountType('no-discount');
+    setEditAdminNote('');
+    setEditEstimateNumber(proposal.id?.split('-')[1] || '000001');
+    setEditEstimatePrefix('EST-');
+    setEditEstimateDate(proposal.date || new Date().toISOString().split('T')[0]);
+    setEditExpiryDate(proposal.validUntil || '');
+    setEditClientNote('');
+    setEditTerms('');
+    setEditItems([
+      { id: 1, description: '', longDescription: '', qty: 1, rate: 0, tax: 'No Tax', amount: 0 },
+      { id: 2, description: 'Brochure', longDescription: 'A3 Size one side lamination', qty: 100, rate: 9, tax: 'No Tax', amount: 900 }
+    ]);
+    setEditDiscount(0);
+    setEditAdjustment(0);
+    setIsEditOpen(true);
+  };
+
+  // Calculate edit form totals
+  const calculateEditTotals = () => {
+    const subTotal = editItems.reduce((sum, item) => sum + (item.qty * item.rate), 0);
+    const discountAmount = editDiscountType === 'percent' ? (subTotal * editDiscount / 100) : editDiscount;
+    const total = subTotal - discountAmount + editAdjustment;
+    return { subTotal, discountAmount, total };
+  };
+
+  const addEditItem = () => {
+    setEditItems([...editItems, { 
+      id: editItems.length + 1, 
+      description: '', 
+      longDescription: '', 
+      qty: 1, 
+      rate: 0, 
+      tax: 'No Tax', 
+      amount: 0 
+    }]);
+  };
+
+  const removeEditItem = (id: number) => {
+    if (editItems.length > 1) {
+      setEditItems(editItems.filter(item => item.id !== id));
+    }
+  };
+
+  const updateEditItem = (id: number, field: string, value: any) => {
+    setEditItems(editItems.map(item => {
+      if (item.id === id) {
+        const updated = { ...item, [field]: value };
+        if (field === 'qty' || field === 'rate') {
+          updated.amount = updated.qty * updated.rate;
+        }
+        return updated;
+      }
+      return item;
+    }));
+  };
+
+  // New Proposal Form State
+  const [allowComments, setAllowComments] = useState(false);
+  const [proposalItems, setProposalItems] = useState([
+    { id: 1, description: '', longDescription: '', qty: 1, rate: 0, tax: 'No Tax', amount: 0 }
+  ]);
+  const [discount, setDiscount] = useState(0);
+  const [discountType, setDiscountType] = useState('%');
+  const [adjustment, setAdjustment] = useState(0);
+
+  // Calculate totals
+  const calculateTotals = () => {
+    const subTotal = proposalItems.reduce((sum, item) => sum + (item.qty * item.rate), 0);
+    const discountAmount = discountType === '%' ? (subTotal * discount / 100) : discount;
+    const total = subTotal - discountAmount + adjustment;
+    return { subTotal, discountAmount, total };
+  };
+
+  const addProposalItem = () => {
+    setProposalItems([...proposalItems, { 
+      id: proposalItems.length + 1, 
+      description: '', 
+      longDescription: '', 
+      qty: 1, 
+      rate: 0, 
+      tax: 'No Tax', 
+      amount: 0 
+    }]);
+  };
+
+  const removeProposalItem = (id: number) => {
+    setProposalItems(proposalItems.filter(item => item.id !== id));
+  };
+
+  const updateProposalItem = (id: number, field: string, value: any) => {
+    setProposalItems(proposalItems.map(item => {
+      if (item.id === id) {
+        const updated = { ...item, [field]: value };
+        if (field === 'qty' || field === 'rate') {
+          updated.amount = updated.qty * updated.rate;
+        }
+        return updated;
+      }
+      return item;
+    }));
+  };
 
   const filteredProposals = useMemo(() => {
     return proposals.filter(prop => {
@@ -206,146 +351,399 @@ export default function ProposalsTab() {
                 New Proposal
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create New Proposal</DialogTitle>
-                <DialogDescription>Fill in the proposal details</DialogDescription>
+                <DialogTitle className="text-xl">New Proposal</DialogTitle>
               </DialogHeader>
+              
               <div className="space-y-6 py-4">
-                {/* Header Info */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-slate-900">Header Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                {/* Two Column Layout */}
+                <div className="grid grid-cols-2 gap-6">
+                  {/* Left Column */}
+                  <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="prop-number">Proposal Number</Label>
-                      <Input id="prop-number" placeholder="PROP-001" />
+                      <Label htmlFor="subject" className="text-sm">* Subject</Label>
+                      <Input id="subject" placeholder="Enter proposal subject" className="h-10" />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="prop-date">Date</Label>
-                      <Input id="prop-date" type="date" />
-                    </div>
-                  </div>
-                </div>
 
-                {/* Customer Details */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-slate-900">Customer Details</h3>
-                  <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="prop-customer">Customer</Label>
-                      <Select>
-                        <SelectTrigger id="prop-customer">
-                          <SelectValue placeholder="Select customer" />
+                      <Label htmlFor="related" className="text-sm">* Related</Label>
+                      <Select defaultValue="not-selected">
+                        <SelectTrigger id="related" className="h-10">
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="acme">Acme Corporation</SelectItem>
-                          <SelectItem value="techstart">TechStart Inc.</SelectItem>
-                          <SelectItem value="global">Global Brands Ltd.</SelectItem>
+                          <SelectItem value="not-selected">Not selected</SelectItem>
+                          <SelectItem value="project-1">Project Alpha</SelectItem>
+                          <SelectItem value="project-2">Project Beta</SelectItem>
+                          <SelectItem value="lead-1">Lead - Acme Corp</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="date" className="text-sm">* Date</Label>
+                        <Input id="date" type="date" defaultValue="2026-02-09" className="h-10" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="open-till" className="text-sm">Open Till</Label>
+                        <Input id="open-till" type="date" defaultValue="2026-02-16" className="h-10" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="currency" className="text-sm">* Currency</Label>
+                        <Select defaultValue="usd">
+                          <SelectTrigger id="currency" className="h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="usd">USD $</SelectItem>
+                            <SelectItem value="eur">EUR €</SelectItem>
+                            <SelectItem value="gbp">GBP £</SelectItem>
+                            <SelectItem value="inr">INR ₹</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="discount-type" className="text-sm">Discount Type</Label>
+                        <Select defaultValue="no-discount" onValueChange={(val) => setDiscountType(val === 'percent' ? '%' : '$')}>
+                          <SelectTrigger id="discount-type" className="h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="no-discount">No discount</SelectItem>
+                            <SelectItem value="percent">Percent (%)</SelectItem>
+                            <SelectItem value="fixed">Fixed Amount ($)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="prop-project">Project</Label>
-                      <Select>
-                        <SelectTrigger id="prop-project">
-                          <SelectValue placeholder="Select project" />
+                      <Label htmlFor="tags" className="text-sm flex items-center gap-1">
+                        Tags
+                      </Label>
+                      <Input id="tags" placeholder="Add tags..." className="h-10" />
+                    </div>
+
+                    <div className="flex items-center justify-between py-2">
+                      <Label htmlFor="allow-comments" className="text-sm font-medium">Allow Comments</Label>
+                      <Switch
+                        id="allow-comments"
+                        checked={allowComments}
+                        onCheckedChange={setAllowComments}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Column */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="status" className="text-sm">Status</Label>
+                      <Select defaultValue="draft">
+                        <SelectTrigger id="status" className="h-10">
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="web">Web Development</SelectItem>
-                          <SelectItem value="mobile">Mobile App</SelectItem>
-                          <SelectItem value="marketing">Marketing</SelectItem>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="sent">Sent</SelectItem>
+                          <SelectItem value="open">Open</SelectItem>
+                          <SelectItem value="accepted">Accepted</SelectItem>
+                          <SelectItem value="declined">Declined</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="prop-subject">Subject</Label>
-                    <Input id="prop-subject" placeholder="Proposal subject" />
-                  </div>
-                </div>
 
-                {/* Executive Summary */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-slate-900">Executive Summary</h3>
-                  <Textarea 
-                    placeholder="Brief overview of the proposal..." 
-                    rows={4}
-                    className="resize-none"
-                  />
-                </div>
-
-                {/* Scope & Deliverables */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                    <CheckSquare className="h-4 w-4" />
-                    Scope & Deliverables
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
-                      <input type="checkbox" className="rounded" />
-                      <Input placeholder="Add deliverable item" className="flex-1" />
+                    <div className="space-y-2">
+                      <Label htmlFor="assigned" className="text-sm">Assigned</Label>
+                      <Select defaultValue="zeruns-erp-admin">
+                        <SelectTrigger id="assigned" className="h-10">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="zeruns-erp-admin">Zeruns ERP Admin</SelectItem>
+                          <SelectItem value="john-doe">John Doe</SelectItem>
+                          <SelectItem value="jane-smith">Jane Smith</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <Button variant="outline" size="sm" className="w-full">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Deliverable
+
+                    <div className="space-y-2">
+                      <Label htmlFor="to" className="text-sm">* To</Label>
+                      <Input id="to" placeholder="Recipient name" className="h-10" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="address" className="text-sm">Address</Label>
+                      <Textarea 
+                        id="address" 
+                        placeholder="Enter address..." 
+                        rows={3}
+                        className="resize-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="city" className="text-sm">City</Label>
+                        <Input id="city" placeholder="City" className="h-10" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="state" className="text-sm">State</Label>
+                        <Input id="state" placeholder="State" className="h-10" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="country" className="text-sm">Country</Label>
+                        <Select defaultValue="not-selected">
+                          <SelectTrigger id="country" className="h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="not-selected">Not selected</SelectItem>
+                            <SelectItem value="us">United States</SelectItem>
+                            <SelectItem value="uk">United Kingdom</SelectItem>
+                            <SelectItem value="ca">Canada</SelectItem>
+                            <SelectItem value="in">India</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="zip" className="text-sm">Zip Code</Label>
+                        <Input id="zip" placeholder="Zip Code" className="h-10" />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="email" className="text-sm">* Email</Label>
+                        <Input id="email" type="email" placeholder="email@example.com" className="h-10" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone" className="text-sm">Phone</Label>
+                        <Input id="phone" type="tel" placeholder="Phone number" className="h-10" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Items Section */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-base">Items</h3>
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <span>Show quantity as:</span>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs">
+                        Qty
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs">
+                        Hours
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 text-xs">
+                        Qty/Hours
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Select>
+                      <SelectTrigger className="w-48 h-10">
+                        <SelectValue placeholder="Add items" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="custom">Custom Item</SelectItem>
+                        <SelectItem value="service-1">Consulting Service</SelectItem>
+                        <SelectItem value="service-2">Development Service</SelectItem>
+                        <SelectItem value="product-1">Software License</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button size="sm" variant="outline" onClick={addProposalItem}>
+                      <Plus className="h-4 w-4" />
                     </Button>
                   </div>
+
+                  {/* Items Table */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-slate-50">
+                        <TableRow>
+                          <TableHead className="w-8"></TableHead>
+                          <TableHead className="w-32">Item</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="w-24">Qty</TableHead>
+                          <TableHead className="w-32">Rate</TableHead>
+                          <TableHead className="w-32">Tax</TableHead>
+                          <TableHead className="w-32 text-right">Amount</TableHead>
+                          <TableHead className="w-12"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {proposalItems.map((item, index) => (
+                          <TableRow key={item.id}>
+                            <TableCell></TableCell>
+                            <TableCell>
+                              <Input 
+                                placeholder="Description"
+                                value={item.description}
+                                onChange={(e) => updateProposalItem(item.id, 'description', e.target.value)}
+                                className="h-9"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Textarea
+                                placeholder="Long description"
+                                value={item.longDescription}
+                                onChange={(e) => updateProposalItem(item.id, 'longDescription', e.target.value)}
+                                className="min-h-[60px] resize-none text-sm"
+                                rows={2}
+                              />
+                              <Button variant="link" size="sm" className="h-6 px-0 text-xs text-blue-600">
+                                Link
+                              </Button>
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                value={item.qty}
+                                onChange={(e) => updateProposalItem(item.id, 'qty', parseFloat(e.target.value) || 0)}
+                                className="h-9"
+                                min="0"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                placeholder="Rate"
+                                value={item.rate}
+                                onChange={(e) => updateProposalItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
+                                className="h-9"
+                                min="0"
+                                step="0.01"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Select value={item.tax} onValueChange={(val) => updateProposalItem(item.id, 'tax', val)}>
+                                <SelectTrigger className="h-9">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="No Tax">No Tax</SelectItem>
+                                  <SelectItem value="GST 18%">GST 18%</SelectItem>
+                                  <SelectItem value="VAT 10%">VAT 10%</SelectItem>
+                                  <SelectItem value="Sales Tax 8%">Sales Tax 8%</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              ${item.amount.toFixed(2)}
+                            </TableCell>
+                            <TableCell>
+                              {proposalItems.length > 1 && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeProposalItem(item.id)}
+                                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
 
-                {/* Timeline */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-slate-900">Timeline & Milestones</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="prop-start">Start Date</Label>
-                      <Input id="prop-start" type="date" />
+                {/* Totals Section */}
+                <div className="flex justify-end pt-4">
+                  <div className="w-96 space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-600">Sub Total :</span>
+                      <span className="font-semibold">${calculateTotals().subTotal.toFixed(2)}</span>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="prop-end">End Date</Label>
-                      <Input id="prop-end" type="date" />
+                    <div className="flex justify-between items-center gap-3">
+                      <span className="text-slate-600 text-sm">Discount</span>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={discount}
+                          onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
+                          className="w-24 h-9"
+                          min="0"
+                        />
+                        <Select value={discountType} onValueChange={setDiscountType}>
+                          <SelectTrigger className="w-20 h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="%">%</SelectItem>
+                            <SelectItem value="$">$</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <span className="font-semibold w-24 text-right">${calculateTotals().discountAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center gap-3">
+                      <span className="text-slate-600 text-sm">Adjustment</span>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={adjustment}
+                          onChange={(e) => setAdjustment(parseFloat(e.target.value) || 0)}
+                          className="w-24 h-9"
+                        />
+                        <span className="font-semibold w-24 text-right">${adjustment.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center text-base font-bold pt-2 border-t">
+                      <span>Total :</span>
+                      <span>${calculateTotals().total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Terms & Conditions */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-slate-900">Terms & Conditions</h3>
-                  <Textarea 
-                    placeholder="Payment terms, cancellation policy, etc..." 
-                    rows={3}
-                    className="resize-none"
-                  />
-                </div>
-
-                {/* Attachments */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                    <Paperclip className="h-4 w-4" />
-                    Attachments
-                  </h3>
-                  <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
-                    <Input type="file" className="hidden" id="prop-files" />
-                    <label htmlFor="prop-files" className="cursor-pointer">
-                      <Paperclip className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                      <p className="text-sm text-slate-600">Click to upload files or drag and drop</p>
-                    </label>
-                  </div>
-                </div>
-
-                {/* Signature Block */}
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-slate-900">Signature</h3>
-                  <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
-                    <p className="text-sm text-slate-600">Digital signature will be added here</p>
-                  </div>
+                {/* Bottom Note */}
+                <div className="text-xs text-slate-500 pt-4 border-t">
+                  Include proposal items with merge field anywhere in proposal content as <span className="font-mono bg-slate-100 px-1 rounded">{'{'}proposal_items{'}'}</span>
                 </div>
               </div>
-              <div className="flex justify-end gap-2">
+
+              {/* Footer Actions */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button variant="outline">Save as Draft</Button>
-                <Button>
-                  <Send className="h-4 w-4 mr-2" />
-                  Send Proposal
-                </Button>
+                <div className="relative inline-flex">
+                  <Button className="rounded-r-none">
+                    Save
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button className="rounded-l-none border-l border-white/20 px-2">
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem>
+                        <Send className="h-4 w-4 mr-2" />
+                        Save & Send
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <Mail className="h-4 w-4 mr-2" />
+                        Save and Send Later
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <CheckSquare className="h-4 w-4 mr-2" />
+                        Save & Record Payment
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </DialogContent>
           </Dialog>
@@ -353,68 +751,76 @@ export default function ProposalsTab() {
       </CardHeader>
       <CardContent>
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-slate-50/80">
             <TableRow>
-              <TableHead>Proposal Number</TableHead>
+              <TableHead className="w-[140px]">
+                <div className="flex items-center gap-1">
+                  Proposal #
+                  <ChevronDown className="h-4 w-4 text-slate-400" />
+                </div>
+              </TableHead>
               <TableHead>Subject</TableHead>
               <TableHead>Customer</TableHead>
-              <TableHead>Total Amount</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Valid Until</TableHead>
+              <TableHead className="w-[120px]">Total Amount</TableHead>
+              <TableHead className="w-[110px]">Date</TableHead>
+              <TableHead className="w-[110px]">Valid Until</TableHead>
               <TableHead>Project</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="w-[100px]">Status</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProposals.map((proposal) => (
-              <TableRow key={proposal.id} className="hover:bg-slate-50 transition-colors">
-                <TableCell className="font-mono text-sm font-semibold">{proposal.id}</TableCell>
+            {filteredProposals.map((proposal, index) => (
+              <TableRow 
+                key={`${proposal.id}-${index}`}
+                className="hover:bg-slate-50/50 group"
+                onMouseEnter={() => setHoveredRow(index)}
+                onMouseLeave={() => setHoveredRow(null)}
+              >
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-blue-600 hover:underline cursor-pointer font-medium font-mono text-sm">
+                      {proposal.id}
+                    </span>
+                    {hoveredRow === index && (
+                      <div className="flex items-center gap-2 text-xs text-blue-600 animate-in fade-in duration-200">
+                        <button 
+                          className="hover:underline"
+                          onClick={() => handleAction('view', proposal)}
+                        >
+                          View
+                        </button>
+                        <span className="text-slate-300">|</span>
+                        <button 
+                          className="hover:underline"
+                          onClick={() => loadProposalForEdit(proposal)}
+                        >
+                          Edit
+                        </button>
+                        <span className="text-slate-300">|</span>
+                        <button 
+                          className="hover:underline text-green-600"
+                          onClick={() => handleAction('send', proposal)}
+                        >
+                          Send
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="font-medium">{proposal.subject}</TableCell>
-                <TableCell>{proposal.customer}</TableCell>
+                <TableCell>
+                  {proposal.customer && (
+                    <span className="text-blue-600 hover:underline cursor-pointer">{proposal.customer}</span>
+                  )}
+                </TableCell>
                 <TableCell className="font-semibold text-green-700">{proposal.totalAmount}</TableCell>
-                <TableCell className="text-sm">{proposal.date}</TableCell>
-                <TableCell className="text-sm">{proposal.validUntil}</TableCell>
-                <TableCell className="text-sm">{proposal.project}</TableCell>
+                <TableCell className="text-sm text-slate-600">{proposal.date}</TableCell>
+                <TableCell className="text-sm text-slate-600">{proposal.validUntil}</TableCell>
+                <TableCell className="text-sm text-slate-600">{proposal.project}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className={cn("capitalize", statusConfig[proposal.status].class)}>
                     {statusConfig[proposal.status].label}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" onClick={() => handleAction('view', proposal)}>
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-slate-600 hover:text-slate-700 hover:bg-slate-50" onClick={() => handleAction('edit', proposal)}>
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-green-600 hover:text-green-700 hover:bg-green-50" onClick={() => handleAction('send', proposal)}>
-                      <Send className="h-4 w-4 mr-1" />
-                      Send
-                    </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleAction('view', proposal)}>
-                          <Download className="mr-2 h-4 w-4 text-slate-500" /> Download PDF
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600" onClick={() => {
-                          setProposals(proposals.filter(p => p.id !== proposal.id));
-                          toast({ title: "Deleted", description: "Proposal removed.", variant: "destructive" });
-                        }}>
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -477,51 +883,462 @@ export default function ProposalsTab() {
           </DialogContent>
         </Dialog>
 
-        {/* Edit Dialog */}
+        {/* Edit Dialog - Enhanced matching EST form layout */}
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent className="max-w-xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-indigo-600" />
-                Edit Proposal - {selectedProposal?.id}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Proposal Subject</Label>
-                <Input defaultValue={selectedProposal?.subject} className="font-medium" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Total Value</Label>
-                  <Input defaultValue={selectedProposal?.totalAmount} />
-                </div>
-                <div className="space-y-2">
-                  <Label>Current Status</Label>
-                  <Select defaultValue={selectedProposal?.status}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Draft (Unsent)</SelectItem>
-                      <SelectItem value="sent">Sent to Client</SelectItem>
-                      <SelectItem value="accepted">Accepted / Won</SelectItem>
-                      <SelectItem value="declined">Declined / Lost</SelectItem>
-                    </SelectContent>
-                  </Select>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-hidden p-0">
+            <ScrollArea className="max-h-[95vh]">
+              {/* Header */}
+              <div className="sticky top-0 z-10 bg-white border-b px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <DialogTitle className="text-lg font-semibold text-blue-600">{editEstimatePrefix}{editEstimateNumber}</DialogTitle>
+                  <Badge className={cn("capitalize", statusConfig[editStatus]?.class || 'bg-green-100 text-green-700')}>
+                    {editStatus.charAt(0).toUpperCase() + editStatus.slice(1)}
+                  </Badge>
                 </div>
               </div>
-              <div className="pt-4 flex justify-end gap-2">
-                <Button variant="ghost" onClick={() => setIsEditOpen(false)}>Cancel</Button>
-                <Button className="bg-slate-900 text-white" onClick={() => {
-                  setIsEditOpen(false);
-                  toast({ title: "Proposal Updated", description: "Changes have been successfully saved." });
-                }}>
-                  <CheckSquare className="h-4 w-4 mr-2" />
-                  Update Proposal
+
+              <div className="p-6 space-y-6">
+                {/* Two Column Layout - Top Section */}
+                <div className="grid grid-cols-2 gap-8">
+                  {/* Left Column */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm text-red-500">* Customer</Label>
+                      <Select value={editCustomer} onValueChange={setEditCustomer}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Select customer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Greeen Dot">Greeen Dot</SelectItem>
+                          <SelectItem value="Acme Corporation">Acme Corporation</SelectItem>
+                          <SelectItem value="TechStart Inc.">TechStart Inc.</SelectItem>
+                          <SelectItem value="Global Brands Ltd.">Global Brands Ltd.</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm">Project</Label>
+                      <Select value={editProject} onValueChange={setEditProject}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Select and begin typing" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Web Development">Web Development</SelectItem>
+                          <SelectItem value="Mobile App">Mobile App</SelectItem>
+                          <SelectItem value="Marketing">Marketing</SelectItem>
+                          <SelectItem value="ERP">ERP</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm text-slate-500">Bill To</Label>
+                        <div className="text-sm">
+                          <p className="font-medium">Dubai</p>
+                          <p className="text-slate-600">{editBillTo.address}</p>
+                          <p className="text-slate-600">{editBillTo.city}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm text-slate-500">Ship To</Label>
+                        <div className="text-sm text-slate-400">-,--<br />-,--</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm text-red-500">* Estimate Number</Label>
+                        <div className="flex gap-2">
+                          <Select value={editEstimatePrefix} onValueChange={setEditEstimatePrefix}>
+                            <SelectTrigger className="w-20 h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="EST-">EST-</SelectItem>
+                              <SelectItem value="PROP-">PROP-</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input 
+                            value={editEstimateNumber}
+                            onChange={(e) => setEditEstimateNumber(e.target.value)}
+                            className="h-9 flex-1"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm text-red-500">* Estimate Date</Label>
+                        <div className="relative">
+                          <Input 
+                            type="date"
+                            value={editEstimateDate}
+                            onChange={(e) => setEditEstimateDate(e.target.value)}
+                            className="h-9"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm">Expiry Date</Label>
+                        <div className="relative">
+                          <Input 
+                            type="date"
+                            value={editExpiryDate}
+                            onChange={(e) => setEditExpiryDate(e.target.value)}
+                            className="h-9"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm flex items-center gap-1">
+                          <span className="text-slate-500">●</span> Tags
+                        </Label>
+                        <Input 
+                          value={editTags}
+                          onChange={(e) => setEditTags(e.target.value)}
+                          placeholder="tag"
+                          className="h-9"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm text-red-500">* Currency</Label>
+                        <Select value={editCurrency} onValueChange={setEditCurrency}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="usd">USD $</SelectItem>
+                            <SelectItem value="eur">EUR €</SelectItem>
+                            <SelectItem value="inr">INR ₹</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm">Status</Label>
+                        <Select value={editStatus} onValueChange={setEditStatus}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="sent">Sent</SelectItem>
+                            <SelectItem value="accepted">Accepted</SelectItem>
+                            <SelectItem value="declined">Declined</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm">Reference #</Label>
+                      <Input 
+                        value={editReference}
+                        onChange={(e) => setEditReference(e.target.value)}
+                        className="h-9"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-sm">Sale Agent</Label>
+                        <Select value={editSaleAgent} onValueChange={setEditSaleAgent}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="zeruns-erp-admin">Zeruns ERP Admin</SelectItem>
+                            <SelectItem value="john-doe">John Doe</SelectItem>
+                            <SelectItem value="jane-smith">Jane Smith</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-sm">Discount type</Label>
+                        <Select value={editDiscountType} onValueChange={setEditDiscountType}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="no-discount">No discount</SelectItem>
+                            <SelectItem value="percent">Percent (%)</SelectItem>
+                            <SelectItem value="fixed">Fixed Amount</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-sm">Admin Note</Label>
+                      <Textarea 
+                        value={editAdminNote}
+                        onChange={(e) => setEditAdminNote(e.target.value)}
+                        placeholder="Admin note..."
+                        rows={3}
+                        className="resize-none text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Items Section */}
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Select>
+                        <SelectTrigger className="w-32 h-9">
+                          <SelectValue placeholder="Add Item" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="custom">Custom Item</SelectItem>
+                          <SelectItem value="brochure">Brochure</SelectItem>
+                          <SelectItem value="flyer">Flyer</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button size="sm" variant="outline" onClick={addEditItem} className="h-9 w-9 p-0">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-500">
+                      <span>Show quantity as:</span>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="qty-type" 
+                          checked={showQtyAs === 'qty'}
+                          onChange={() => setShowQtyAs('qty')}
+                          className="w-3 h-3"
+                        />
+                        <span className="text-xs">Qty</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="qty-type" 
+                          checked={showQtyAs === 'hours'}
+                          onChange={() => setShowQtyAs('hours')}
+                          className="w-3 h-3"
+                        />
+                        <span className="text-xs">Hours</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="qty-type" 
+                          checked={showQtyAs === 'both'}
+                          onChange={() => setShowQtyAs('both')}
+                          className="w-3 h-3"
+                        />
+                        <span className="text-xs">Qty/Hours</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Items Table */}
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-slate-50">
+                        <TableRow>
+                          <TableHead className="w-8 text-center">●</TableHead>
+                          <TableHead className="w-40">Item</TableHead>
+                          <TableHead>Description</TableHead>
+                          <TableHead className="w-24 text-center">Qty</TableHead>
+                          <TableHead className="w-28">Rate</TableHead>
+                          <TableHead className="w-28">Tax</TableHead>
+                          <TableHead className="w-28 text-right">Amount</TableHead>
+                          <TableHead className="w-16"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {editItems.map((item, index) => (
+                          <TableRow key={item.id} className="hover:bg-slate-50/50">
+                            <TableCell className="text-center">
+                              <div className="w-3 h-3 rounded-full border-2 border-slate-300"></div>
+                            </TableCell>
+                            <TableCell>
+                              <Textarea
+                                placeholder="Description"
+                                value={item.description}
+                                onChange={(e) => updateEditItem(item.id, 'description', e.target.value)}
+                                className="min-h-[60px] resize-none text-sm border-dashed"
+                                rows={2}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Textarea
+                                placeholder="Long description"
+                                value={item.longDescription}
+                                onChange={(e) => updateEditItem(item.id, 'longDescription', e.target.value)}
+                                className="min-h-[60px] resize-none text-sm border-dashed"
+                                rows={2}
+                              />
+                              <button className="text-xs text-blue-600 hover:underline mt-1 flex items-center gap-1">
+                                <LinkIcon className="h-3 w-3" />
+                                Link
+                              </button>
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                value={item.qty}
+                                onChange={(e) => updateEditItem(item.id, 'qty', parseFloat(e.target.value) || 0)}
+                                className="h-9 text-center text-sm"
+                                min="0"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                placeholder="Rate"
+                                value={item.rate || ''}
+                                onChange={(e) => updateEditItem(item.id, 'rate', parseFloat(e.target.value) || 0)}
+                                className="h-9 text-sm"
+                                min="0"
+                                step="0.01"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Select value={item.tax} onValueChange={(val) => updateEditItem(item.id, 'tax', val)}>
+                                <SelectTrigger className="h-9 text-sm">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="No Tax">No Tax</SelectItem>
+                                  <SelectItem value="GST 18%">GST 18%</SelectItem>
+                                  <SelectItem value="VAT 10%">VAT 10%</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-sm">
+                              ${item.amount.toFixed(2)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                >
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                                {editItems.length > 1 && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => removeEditItem(item.id)}
+                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+
+                {/* Totals Section */}
+                <div className="flex justify-end pt-2">
+                  <div className="w-96 space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-600">Sub Total:</span>
+                      <span className="font-semibold">${calculateEditTotals().subTotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center gap-3">
+                      <span className="text-slate-600 text-sm">Discount</span>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={editDiscount}
+                          onChange={(e) => setEditDiscount(parseFloat(e.target.value) || 0)}
+                          className="w-24 h-9 text-sm text-blue-600"
+                          min="0"
+                          placeholder="0.00"
+                        />
+                        <Select value={editDiscountType === 'percent' ? '%' : '$'}>
+                          <SelectTrigger className="w-16 h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="%">%</SelectItem>
+                            <SelectItem value="$">$</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <span className="font-semibold w-24 text-right text-sm">${calculateEditTotals().discountAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center gap-3">
+                      <span className="text-slate-600 text-sm">Adjustment</span>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={editAdjustment}
+                          onChange={(e) => setEditAdjustment(parseFloat(e.target.value) || 0)}
+                          className="w-24 h-9 text-sm text-blue-600"
+                          placeholder="0.00"
+                        />
+                        <span className="font-semibold w-24 text-right text-sm">${editAdjustment.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center text-base font-bold pt-2 border-t">
+                      <span>Total:</span>
+                      <span>${calculateEditTotals().total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Client Note */}
+                <div className="space-y-2 pt-4">
+                  <Label className="text-sm font-semibold">Client Note</Label>
+                  <Textarea 
+                    value={editClientNote}
+                    onChange={(e) => setEditClientNote(e.target.value)}
+                    placeholder="Notes visible to the customer..." 
+                    rows={3} 
+                    className="resize-none text-sm"
+                  />
+                </div>
+
+                {/* Terms & Conditions */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Terms & Conditions</Label>
+                  <Textarea 
+                    value={editTerms}
+                    onChange={(e) => setEditTerms(e.target.value)}
+                    placeholder="Payment terms, conditions, etc..." 
+                    rows={3} 
+                    className="resize-none text-sm"
+                  />
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="sticky bottom-0 bg-white border-t px-6 py-4 flex justify-end gap-2">
+                <Button 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => {
+                    setIsEditOpen(false);
+                    toast({ title: "Saved", description: "Estimate/Proposal has been updated successfully." });
+                  }}
+                >
+                  Save
                 </Button>
               </div>
-            </div>
+            </ScrollArea>
           </DialogContent>
         </Dialog>
       </CardContent>

@@ -32,7 +32,7 @@ export default function ProjectClientPortalTab({ projectId }: ProjectClientPorta
     { name: 'Budget_Breakdown.xlsx', status: 'rejected', uploadedBy: 'John Smith', date: '2026-01-13' }
   ];
 
-  const statusConfig = {
+  const statusConfig: Record<string, { label: string; class: string; icon: React.ComponentType<{ className?: string }> }> = {
     approved: { label: 'Approved', class: 'bg-green-100 text-green-700 border-green-200', icon: CheckCircle },
     pending: { label: 'Pending', class: 'bg-yellow-100 text-yellow-700 border-yellow-200', icon: Clock },
     rejected: { label: 'Rejected', class: 'bg-red-100 text-red-700 border-red-200', icon: XCircle }

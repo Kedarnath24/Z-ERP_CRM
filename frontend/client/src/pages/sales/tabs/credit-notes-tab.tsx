@@ -23,7 +23,11 @@ import {
   Building2,
   Calendar,
   FileSpreadsheet,
-  Undo2
+  Undo2,
+  ChevronDown,
+  Send,
+  Mail,
+  CheckSquare
 } from 'lucide-react';
 import { 
   DropdownMenu, 
@@ -53,7 +57,9 @@ export default function CreditNotesTab() {
       id: 'CN-001',
       invoice: 'INV-001',
       client: 'Acme Corporation',
-      amount: '-$5,000',
+      amount: '-$5,000.00',
+      remainingAmount: '$0.00',
+      reference: 'REF-001',
       reason: 'Product Return',
       date: '2026-01-12',
       project: 'Web Development',
@@ -63,7 +69,9 @@ export default function CreditNotesTab() {
       id: 'CN-002',
       invoice: 'INV-005',
       client: 'TechStart Inc.',
-      amount: '-$2,500',
+      amount: '-$2,500.00',
+      remainingAmount: '$2,500.00',
+      reference: 'REF-002',
       reason: 'Service Adjustment',
       date: '2026-01-14',
       project: 'Mobile App',
@@ -73,7 +81,9 @@ export default function CreditNotesTab() {
       id: 'CN-003',
       invoice: 'INV-007',
       client: 'Global Brands Ltd.',
-      amount: '-$1,200',
+      amount: '-$1,200.00',
+      remainingAmount: '$1,200.00',
+      reference: 'REF-003',
       reason: 'Billing Error',
       date: '2026-01-16',
       project: 'Marketing',
@@ -83,7 +93,9 @@ export default function CreditNotesTab() {
       id: 'CN-004',
       invoice: 'INV-009',
       client: 'Enterprise Solutions',
-      amount: '-$15,000',
+      amount: '-$15,000.00',
+      remainingAmount: '$0.00',
+      reference: 'REF-004',
       reason: 'Scope Change',
       date: '2026-01-18',
       project: 'ERP',
@@ -148,6 +160,7 @@ export default function CreditNotesTab() {
   ];
 
   return (
+    <>
     <Card className="border-none shadow-none">
       <CardHeader className="flex flex-row items-center justify-between border-b bg-slate-50/50 px-6 py-4">
         <div className="flex flex-col gap-1">
@@ -208,167 +221,231 @@ export default function CreditNotesTab() {
                 New Credit Note
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Create Credit Note</DialogTitle>
-                <DialogDescription>Issue a credit note against an invoice</DialogDescription>
+                <DialogTitle className="text-xl font-bold">Create New Credit Note</DialogTitle>
               </DialogHeader>
               <div className="space-y-6 py-4">
-                {/* Header Section */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cn-number">Credit Note Number</Label>
-                    <Input id="cn-number" placeholder="CN-001" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cn-date">Date</Label>
-                    <Input id="cn-date" type="date" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cn-status">Status</Label>
-                    <Select>
-                      <SelectTrigger id="cn-status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="issued">Issued</SelectItem>
-                        <SelectItem value="applied">Applied</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Invoice Reference */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="cn-invoice">Invoice Reference</Label>
-                    <Select>
-                      <SelectTrigger id="cn-invoice">
-                        <SelectValue placeholder="Select invoice" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="inv-001">INV-001 - Acme Corp - $45,000</SelectItem>
-                        <SelectItem value="inv-002">INV-002 - TechStart - $85,000</SelectItem>
-                        <SelectItem value="inv-003">INV-003 - Global Brands - $25,000</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cn-customer">Customer</Label>
-                    <Input id="cn-customer" placeholder="Auto-filled from invoice" disabled />
-                  </div>
-                </div>
-
-                {/* Reason */}
+                {/* Customer Selection */}
                 <div className="space-y-2">
-                  <Label htmlFor="cn-reason">Reason for Credit Note</Label>
+                  <Label htmlFor="cn-customer">Customer</Label>
                   <Select>
-                    <SelectTrigger id="cn-reason">
-                      <SelectValue placeholder="Select reason" />
+                    <SelectTrigger id="cn-customer">
+                      <SelectValue placeholder="Select Customer" />
                     </SelectTrigger>
                     <SelectContent>
-                      {reasonOptions.map((reason) => (
-                        <SelectItem key={reason} value={reason.toLowerCase().replace(/\s+/g, '-')}>
-                          {reason}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="acme">Acme Corporation</SelectItem>
+                      <SelectItem value="techstart">TechStart Inc.</SelectItem>
+                      <SelectItem value="global">Global Brands Ltd.</SelectItem>
+                      <SelectItem value="enterprise">Enterprise Solutions</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Line Items Table */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-slate-900">Line Items</h3>
-                    <Badge variant="outline" className="bg-blue-100 text-blue-700 border-blue-200">
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                      Items from Invoice INV-001
-                    </Badge>
+                {/* Bill To / Ship To */}
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="font-semibold">Bill To</Label>
+                    <Textarea 
+                      placeholder="Enter billing address..." 
+                      rows={4}
+                      className="resize-none"
+                    />
                   </div>
-                  <div className="border rounded-lg p-4 space-y-3">
-                    <div className="grid grid-cols-12 gap-2 text-xs font-medium text-slate-600">
-                      <div className="col-span-5">Item / Description</div>
-                      <div className="col-span-2">Original Qty</div>
-                      <div className="col-span-2">Credit Qty</div>
-                      <div className="col-span-1">Rate</div>
-                      <div className="col-span-2">Credit Amount</div>
-                    </div>
-                    <div className="grid grid-cols-12 gap-2">
-                      <Input className="col-span-5" value="Website Design" disabled />
-                      <Input className="col-span-2" value="1" disabled />
-                      <Input className="col-span-2" type="number" placeholder="0" />
-                      <Input className="col-span-1" value="$20,000" disabled />
-                      <Input className="col-span-2" disabled value="$0.00" />
-                    </div>
-                    <div className="grid grid-cols-12 gap-2">
-                      <Input className="col-span-5" value="Development Services" disabled />
-                      <Input className="col-span-2" value="1" disabled />
-                      <Input className="col-span-2" type="number" placeholder="0" />
-                      <Input className="col-span-1" value="$20,000" disabled />
-                      <Input className="col-span-2" disabled value="$0.00" />
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="font-semibold">Ship To</Label>
+                    <Textarea 
+                      placeholder="Enter shipping address..." 
+                      rows={4}
+                      className="resize-none"
+                    />
                   </div>
                 </div>
 
-                {/* Tax Adjustment */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Currency & Discount Type */}
+                <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="cn-tax-adjustment">Tax Adjustment (%)</Label>
-                    <Input id="cn-tax-adjustment" type="number" placeholder="10" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cn-adjustment-reason">Adjustment Note</Label>
-                    <Input id="cn-adjustment-reason" placeholder="Optional" />
-                  </div>
-                </div>
-
-                {/* Summary */}
-                <div className="p-4 bg-slate-50 rounded-lg space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Subtotal Credit:</span>
-                    <span className="font-semibold text-red-600">-$0.00</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-600">Tax Credit (10%):</span>
-                    <span className="font-semibold text-red-600">-$0.00</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold pt-2 border-t">
-                    <span>Total Credit Amount:</span>
-                    <span className="text-red-700">-$0.00</span>
-                  </div>
-                </div>
-
-                {/* Refund Options */}
-                <div className="space-y-4 p-4 border rounded-lg bg-blue-50">
-                  <h3 className="font-semibold text-slate-900 flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4 text-blue-600" />
-                    Credit Application
-                  </h3>
-                  <div className="space-y-2">
-                    <Label htmlFor="cn-application">How should this credit be applied?</Label>
+                    <Label htmlFor="cn-currency">Currency</Label>
                     <Select>
-                      <SelectTrigger id="cn-application">
-                        <SelectValue placeholder="Select option" />
+                      <SelectTrigger id="cn-currency">
+                        <SelectValue placeholder="USD - US Dollar" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="refund">Refund to Customer</SelectItem>
-                        <SelectItem value="credit">Apply to Customer Account</SelectItem>
-                        <SelectItem value="next-invoice">Apply to Next Invoice</SelectItem>
+                        <SelectItem value="usd">USD - US Dollar</SelectItem>
+                        <SelectItem value="eur">EUR - Euro</SelectItem>
+                        <SelectItem value="gbp">GBP - British Pound</SelectItem>
+                        <SelectItem value="inr">INR - Indian Rupee</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cn-discount-type">Discount type</Label>
+                    <Select>
+                      <SelectTrigger id="cn-discount-type">
+                        <SelectValue placeholder="Select Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="percent">Percentage (%)</SelectItem>
+                        <SelectItem value="fixed">Fixed Amount</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
 
-                {/* Notes */}
+                {/* Credit Note Date, Number & Reference */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="cn-date">Credit Note Date</Label>
+                    <Input id="cn-date" type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cn-number">Credit Note #</Label>
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-slate-300 bg-slate-50 text-slate-500 text-sm">
+                        CN-
+                      </span>
+                      <Input 
+                        id="cn-number" 
+                        placeholder="000001" 
+                        className="rounded-l-none"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cn-reference">Reference #</Label>
+                    <Input id="cn-reference" placeholder="Enter reference number" />
+                  </div>
+                </div>
+
+                {/* Admin Note */}
                 <div className="space-y-2">
-                  <Label htmlFor="cn-notes">Additional Notes</Label>
-                  <Textarea id="cn-notes" placeholder="Enter any additional notes or explanations..." rows={3} />
+                  <Label htmlFor="cn-admin-note">Admin Note</Label>
+                  <Textarea 
+                    id="cn-admin-note" 
+                    placeholder="Internal admin notes (not visible to client)..." 
+                    rows={2}
+                    className="resize-none"
+                  />
+                </div>
+
+                {/* Items Table */}
+                <div className="space-y-4">
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader className="bg-slate-50">
+                        <TableRow>
+                          <TableHead className="w-[40%]">Item Description/Name</TableHead>
+                          <TableHead className="text-center">Qty</TableHead>
+                          <TableHead className="text-center">Rate</TableHead>
+                          <TableHead className="text-center">Taxes</TableHead>
+                          <TableHead className="text-right">Amount</TableHead>
+                          <TableHead className="w-10"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <TableRow>
+                          <TableCell>
+                            <Input placeholder="Enter item description" />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" placeholder="1" className="text-center w-20" />
+                          </TableCell>
+                          <TableCell>
+                            <Input type="number" placeholder="0.00" className="text-center w-24" />
+                          </TableCell>
+                          <TableCell>
+                            <Select>
+                              <SelectTrigger className="w-24">
+                                <SelectValue placeholder="Tax" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">No Tax</SelectItem>
+                                <SelectItem value="gst-5">GST 5%</SelectItem>
+                                <SelectItem value="gst-12">GST 12%</SelectItem>
+                                <SelectItem value="gst-18">GST 18%</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold">$0.00</TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Item
+                  </Button>
+                </div>
+
+                {/* Totals Section */}
+                <div className="flex justify-end">
+                  <div className="w-80 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Discount</span>
+                      <Input 
+                        type="number" 
+                        placeholder="0.00" 
+                        className="w-32 h-8 text-right"
+                      />
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-600">Adjustment</span>
+                      <Input 
+                        type="number" 
+                        placeholder="0.00" 
+                        className="w-32 h-8 text-right"
+                      />
+                    </div>
+                    <div className="flex justify-between text-sm pt-2 border-t">
+                      <span className="text-slate-600">Sub Total</span>
+                      <span className="font-semibold">$0.00</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                      <span>Total</span>
+                      <span className="text-rose-700">$0.00</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Client Note */}
+                <div className="space-y-2">
+                  <Label htmlFor="cn-client-note">Client Note</Label>
+                  <Textarea 
+                    id="cn-client-note" 
+                    placeholder="Notes visible to the client..." 
+                    rows={3}
+                    className="resize-none"
+                  />
+                </div>
+
+                {/* Terms & Conditions */}
+                <div className="space-y-2">
+                  <Label htmlFor="cn-terms">Terms & Conditions</Label>
+                  <Textarea 
+                    id="cn-terms" 
+                    placeholder="Enter terms and conditions..." 
+                    rows={3}
+                    className="resize-none"
+                  />
                 </div>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline">Save as Draft</Button>
-                <Button>Issue Credit Note</Button>
+              
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline">
+                  Cancel
+                </Button>
+                <Button variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                  <Send className="h-4 w-4 mr-2" />
+                  Save & Send
+                </Button>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  Save
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -378,84 +455,193 @@ export default function CreditNotesTab() {
         <Table>
           <TableHeader className="bg-slate-50/50">
             <TableRow>
-              <TableHead className="px-6">Note #</TableHead>
-              <TableHead>Invoice</TableHead>
-              <TableHead>Client</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead className="px-6">Credit Note #</TableHead>
+              <TableHead>Credit Note Date</TableHead>
+              <TableHead>Customer</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right px-6">Actions</TableHead>
+              <TableHead>Project</TableHead>
+              <TableHead>Reference #</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Remaining Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredNotes.map((note) => (
-              <TableRow key={note.id} className="hover:bg-slate-50 transition-colors group">
-                <TableCell className="font-mono text-sm font-bold px-6">{note.id}</TableCell>
-                <TableCell className="font-medium text-blue-600 cursor-pointer hover:underline">{note.invoice}</TableCell>
-                <TableCell>
-                   <div className="flex flex-col">
-                      <span className="font-medium text-slate-900">{note.client}</span>
-                      <span className="text-xs text-slate-500">{note.project}</span>
-                   </div>
-                </TableCell>
-                <TableCell className="font-bold text-rose-600">{note.amount}</TableCell>
-                <TableCell className="text-sm font-medium">{note.date}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={cn("capitalize font-medium shadow-sm", statusConfig[note.status].class)}>
-                    {statusConfig[note.status].label}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right px-6">
-                  <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-blue-600 hover:bg-blue-50"
-                      onClick={() => {
-                        setSelectedNote(note);
-                        toast({ title: "View Note", description: `Loading ${note.id}...` });
-                      }}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-slate-600 hover:bg-slate-100"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>Credit Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => handleExport('pdf')}>
-                          <Download className="mr-2 h-4 w-4 text-purple-600" /> Download PDF
-                        </DropdownMenuItem>
-                        {note.status === 'issued' && (
-                          <DropdownMenuItem>
-                            <Undo2 className="mr-2 h-4 w-4 text-emerald-600" /> Apply Credit
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
-                          <Trash2 className="mr-2 h-4 w-4" /> Delete Note
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+            {filteredNotes.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="h-32 text-center text-slate-500">
+                  No entries found
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredNotes.map((note) => (
+                <TableRow key={note.id} className="hover:bg-slate-50 transition-colors group">
+                  <TableCell className="px-6">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm font-bold text-slate-900">{note.id}</span>
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs">
+                        <button 
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                          onClick={() => {
+                            setSelectedNote(note);
+                            setShowNoteView(true);
+                          }}
+                        >
+                          View
+                        </button>
+                        <span className="text-slate-300 mx-1">|</span>
+                        <button 
+                          className="text-red-600 hover:text-red-800 hover:underline"
+                          onClick={() => {
+                            setCreditNotes(creditNotes.filter(n => n.id !== note.id));
+                            toast({ title: "Deleted", description: "Credit note removed.", variant: "destructive" });
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-slate-600">{note.date}</TableCell>
+                  <TableCell className="font-medium text-slate-900">{note.client}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={cn("capitalize font-medium shadow-sm", statusConfig[note.status].class)}>
+                      {statusConfig[note.status].label}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-slate-600">{note.project}</TableCell>
+                  <TableCell className="font-mono text-sm text-slate-600">{note.reference}</TableCell>
+                  <TableCell className="font-bold text-rose-600">{note.amount}</TableCell>
+                  <TableCell className="font-semibold text-slate-700">{note.remainingAmount}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
+        
+        {/* Pagination Footer */}
+        {filteredNotes.length > 0 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t bg-slate-50/30">
+            <span className="text-sm text-slate-600">
+              Showing 1 to {filteredNotes.length} of {filteredNotes.length} entries
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" disabled>
+                Previous
+              </Button>
+              <Button variant="outline" size="sm" disabled>
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
+
+    {/* Credit Note View Dialog */}
+    <Dialog open={showNoteView} onOpenChange={setShowNoteView}>
+      <DialogContent className="max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>Credit Note Details</DialogTitle>
+        </DialogHeader>
+        <div className="grid grid-cols-2 gap-6 py-4">
+          {/* Left Column - Credit Note Details */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-500">Credit Note #</Label>
+                <p className="font-mono font-semibold">{selectedNote?.id || 'CN-001'}</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-500">Date</Label>
+                <p className="font-semibold">{selectedNote?.date || '2026-01-12'}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-500">Customer</Label>
+              <p className="font-semibold">{selectedNote?.client || 'Acme Corporation'}</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-500">Project</Label>
+                <p className="font-medium text-slate-700">{selectedNote?.project || 'Web Development'}</p>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-slate-500">Reference #</Label>
+                <p className="font-mono text-sm">{selectedNote?.reference || 'REF-001'}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-500">Reason</Label>
+              <p className="text-sm text-slate-600">{selectedNote?.reason || 'Product Return'}</p>
+            </div>
+            
+            <div className="space-y-1">
+              <Label className="text-xs text-slate-500">Status</Label>
+              <Badge 
+                variant="outline" 
+                className={cn(
+                  "capitalize font-medium", 
+                  selectedNote?.status ? statusConfig[selectedNote.status]?.class : statusConfig['issued'].class
+                )}
+              >
+                {selectedNote?.status ? statusConfig[selectedNote.status]?.label : 'Issued'}
+              </Badge>
+            </div>
+          </div>
+          
+          {/* Right Column - Amount Summary */}
+          <div className="border rounded-lg p-6 bg-slate-50">
+            <h3 className="text-lg font-bold text-center mb-4">Credit Summary</h3>
+            
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Credit Amount</span>
+                <span className="font-bold text-rose-600 text-lg">{selectedNote?.amount || '-$5,000.00'}</span>
+              </div>
+              
+              <div className="flex justify-between text-sm border-t pt-3">
+                <span className="text-slate-600">Applied Amount</span>
+                <span className="font-semibold text-green-600">
+                  {selectedNote?.remainingAmount === '$0.00' ? selectedNote?.amount : '$0.00'}
+                </span>
+              </div>
+              
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Remaining Balance</span>
+                <span className="font-semibold">{selectedNote?.remainingAmount || '$5,000.00'}</span>
+              </div>
+            </div>
+            
+            {selectedNote?.status === 'issued' && (
+              <div className="mt-6 p-3 bg-blue-50 rounded-lg">
+                <p className="text-xs text-blue-700 text-center">
+                  This credit note is available to be applied to future invoices
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={() => setShowNoteView(false)}>
+            Close
+          </Button>
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Download PDF
+          </Button>
+          {selectedNote?.status === 'issued' && (
+            <Button className="bg-emerald-600 hover:bg-emerald-700">
+              <Undo2 className="h-4 w-4 mr-2" />
+              Apply Credit
+            </Button>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
