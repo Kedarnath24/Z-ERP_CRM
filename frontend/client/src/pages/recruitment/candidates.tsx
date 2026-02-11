@@ -187,58 +187,9 @@ export default function CandidatesModule({ filterByJob, onScheduleInterview, onC
                 </SelectContent>
               </Select>
 
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                Filters
-              </Button>
+              
 
-              <Dialog open={isAddCandidateOpen} onOpenChange={setIsAddCandidateOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-slate-900 text-white hover:bg-slate-800">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Candidate
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Add New Candidate</DialogTitle>
-                    <DialogDescription>
-                      Manually add a candidate to the pipeline.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                      <Label>Full Name</Label>
-                      <Input placeholder="John Doe" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Email Address</Label>
-                      <Input type="email" placeholder="john@example.com" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Target Position</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select position" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {jobs.map(j => (
-                            <SelectItem key={j.id} value={String(j.id)}>{j.title}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>CV / Resume</Label>
-                      <Input type="file" />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsAddCandidateOpen(false)}>Cancel</Button>
-                    <Button onClick={() => setIsAddCandidateOpen(false)} className="bg-slate-900 text-white">Save Candidate</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              
             </div>
           </div>
         </CardContent>

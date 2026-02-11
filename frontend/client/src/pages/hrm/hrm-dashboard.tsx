@@ -145,10 +145,7 @@ export default function HRMDashboard() {
             <p className="text-slate-500 font-medium mt-1">Operational overview and strategic HR management</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="rounded-xl border-slate-200 font-bold text-slate-600 hover:bg-slate-50">
-              <Activity className="h-4 w-4 mr-2" />
-              Live Feed
-            </Button>
+            
             <Button 
               onClick={() => setIsCreateDialogOpen(true)}
               className="rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 font-bold px-6"
