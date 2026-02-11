@@ -56,12 +56,12 @@ export default function SettingsDashboard() {
     },
     {
       title: "Leads Settings",
-      description: "Configure lead capture, scoring, assignment rules, and nurturing",
+      description: "Configure lead capture and assignment rules",
       icon: Target,
       color: "text-amber-600",
       bgColor: "bg-amber-50",
       path: "/dashboard/settings/leads",
-      features: ["Lead Capture", "Scoring Rules", "Auto Assignment", "Nurture Campaigns"]
+      features: ["Lead Capture", "Auto Assignment"]
     }
   ];
 
@@ -107,17 +107,7 @@ export default function SettingsDashboard() {
               </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-amber-600" />
-                <div>
-                  <p className="text-sm text-muted-foreground">Lead Scoring</p>
-                  <p className="text-lg font-semibold text-green-600">Enabled</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          
         </div>
 
         {/* Settings Categories */}
@@ -185,10 +175,7 @@ export default function SettingsDashboard() {
                 <span className="text-blue-600 mt-0.5">•</span>
                 <span>Configure <strong>Finance Settings</strong> before creating invoices and processing payments</span>
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-blue-600 mt-0.5">•</span>
-                <span>Enable <strong>Leads Settings</strong> for automated lead scoring and assignment</span>
-              </li>
+              
             </ul>
           </CardContent>
         </Card>
