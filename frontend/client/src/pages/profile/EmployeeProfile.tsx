@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Download, Edit, Calendar as CalendarIcon, Clock, CheckCircle, XCircle, FileText, Shield, Briefcase, Activity, CheckSquare } from 'lucide-react';
+import { Download, Edit, Calendar as CalendarIcon, Clock, CheckCircle, XCircle, FileText, Shield, Briefcase, Activity, CheckSquare, Save, Home, Building2, Laptop, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,6 +28,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Calendar } from '@/components/ui/calendar';
 import StatsCard from '@/components/StatsCard';
+import { useToast } from '@/hooks/use-toast';
 
 interface LeaveRequest {
   id: string;
@@ -44,6 +45,10 @@ interface AttendanceRecord {
   status: 'Present' | 'Absent' | 'Leave' | 'Holiday';
   checkIn?: string;
   checkOut?: string;
+  breakStart?: string;
+  breakEnd?: string;
+  breakDuration?: string;
+  workMode?: 'office' | 'remote' | 'hybrid' | 'onsite';
 }
 
 interface PayrollRecord {
@@ -69,6 +74,25 @@ export default function EmployeeProfile() {
   const [leavePreviewUrl, setLeavePreviewUrl] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  
+  const { toast } = useToast();
+
+  // Handlers for profile actions
+  const handleSaveProfile = () => {
+    setShowEditModal(false);
+    toast({
+      title: "Profile Updated",
+      description: "Your profile information has been saved successfully."
+    });
+  };
+
+  const handleSubmitLeave = () => {
+    setShowLeaveModal(false);
+    toast({
+      title: "Leave Request Submitted",
+      description: "Your leave request has been submitted for approval."
+    });
+  };
 
   useEffect(() => {
     return () => {
@@ -189,50 +213,89 @@ export default function EmployeeProfile() {
       status: 'Present',
       checkIn: '09:00 AM',
       checkOut: '05:30 PM',
+      breakStart: '12:00 PM',
+      breakEnd: '12:45 PM',
+      breakDuration: '0h 45m',
+      workMode: 'office',
     },
     {
       date: '2026-02-05',
       status: 'Present',
       checkIn: '09:15 AM',
       checkOut: '05:45 PM',
+      breakStart: '12:30 PM',
+      breakEnd: '01:00 PM',
+      breakDuration: '0h 30m',
+      workMode: 'remote',
     },
     {
       date: '2026-02-04',
       status: 'Present',
       checkIn: '08:50 AM',
       checkOut: '05:20 PM',
+      breakStart: '12:15 PM',
+      breakEnd: '01:00 PM',
+      breakDuration: '0h 45m',
+      workMode: 'hybrid',
     },
     {
       date: '2026-02-03',
       status: 'Present',
       checkIn: '09:05 AM',
       checkOut: '05:35 PM',
+      breakStart: '12:00 PM',
+      breakEnd: '12:30 PM',
+      breakDuration: '0h 30m',
+      workMode: 'onsite',
     },
     {
       date: '2026-01-31',
       status: 'Leave',
       checkIn: '-',
       checkOut: '-',
+      breakStart: '-',
+      breakEnd: '-',
+      breakDuration: '-',
     },
     {
       date: '2026-01-30',
       status: 'Present',
       checkIn: '09:10 AM',
       checkOut: '05:40 PM',
+      breakStart: '12:00 PM',
+      breakEnd: '12:45 PM',
+      breakDuration: '0h 45m',
+      workMode: 'office',
     },
     {
       date: '2026-01-29',
       status: 'Present',
       checkIn: '09:00 AM',
       checkOut: '06:00 PM',
+      breakStart: '12:30 PM',
+      breakEnd: '01:15 PM',
+      breakDuration: '0h 45m',
+      workMode: 'remote',
     },
     {
       date: '2026-01-28',
       status: 'Present',
       checkIn: '08:55 AM',
       checkOut: '05:25 PM',
+      breakStart: '12:00 PM',
+      breakEnd: '12:30 PM',
+      breakDuration: '0h 30m',
+      workMode: 'office',
     },
   ];
+
+  // Work mode configuration
+  const workModeConfig = {
+    office: { label: 'Office', icon: Building2, color: 'bg-blue-100 text-blue-700' },
+    remote: { label: 'Remote', icon: Home, color: 'bg-green-100 text-green-700' },
+    hybrid: { label: 'Hybrid', icon: Laptop, color: 'bg-purple-100 text-purple-700' },
+    onsite: { label: 'On-site', icon: Users, color: 'bg-orange-100 text-orange-700' },
+  };
 
   // Leave balance data
   const leaveBalance = {
@@ -295,7 +358,10 @@ export default function EmployeeProfile() {
           <Button variant="outline" onClick={() => setShowEditModal(false)}>
             Cancel
           </Button>
-          <Button onClick={() => setShowEditModal(false)}>Save Changes</Button>
+          <Button onClick={handleSaveProfile} className="bg-blue-600 hover:bg-blue-700">
+            <Save className="h-4 w-4 mr-2" />
+            Save Changes
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -448,11 +514,13 @@ export default function EmployeeProfile() {
           </Button>
           <Button
             onClick={() => {
-              setShowLeaveModal(false);
-                setLeaveFile(null);
-                setLeavePreviewUrl(null);
+              handleSubmitLeave();
+              setLeaveFile(null);
+              setLeavePreviewUrl(null);
             }}
+            className="bg-blue-600 hover:bg-blue-700"
           >
+            <CheckCircle className="h-4 w-4 mr-2" />
             Submit Request
           </Button>
         </DialogFooter>
@@ -671,8 +739,12 @@ export default function EmployeeProfile() {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Work Mode</TableHead>
                     <TableHead>Check In</TableHead>
                     <TableHead>Check Out</TableHead>
+                    <TableHead>Break Start</TableHead>
+                    <TableHead>Break End</TableHead>
+                    <TableHead>Break Duration</TableHead>
                     <TableHead>Work Hours</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -693,6 +765,18 @@ export default function EmployeeProfile() {
                           </Badge>
                         </TableCell>
                         <TableCell>
+                          {record.workMode ? (() => {
+                            const config = workModeConfig[record.workMode];
+                            const Icon = config.icon;
+                            return (
+                              <Badge className={config.color}>
+                                <Icon className="w-3 h-3 mr-1" />
+                                {config.label}
+                              </Badge>
+                            );
+                          })() : '-'}
+                        </TableCell>
+                        <TableCell>
                           <div className="flex items-center gap-2">
                             {record.checkIn !== '-' && <CheckCircle className="w-4 h-4 text-green-600" />}
                             {record.checkIn}
@@ -703,6 +787,27 @@ export default function EmployeeProfile() {
                             {record.checkOut !== '-' && <XCircle className="w-4 h-4 text-red-600" />}
                             {record.checkOut}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {record.breakStart && record.breakStart !== '-' && <Clock className="w-4 h-4 text-amber-600" />}
+                            {record.breakStart || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {record.breakEnd && record.breakEnd !== '-' && <Clock className="w-4 h-4 text-orange-600" />}
+                            {record.breakEnd || '-'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {record.breakDuration && record.breakDuration !== '-' ? (
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                              {record.breakDuration}
+                            </Badge>
+                          ) : (
+                            '-'
+                          )}
                         </TableCell>
                         <TableCell>{calculateWorkHours()}</TableCell>
                       </TableRow>

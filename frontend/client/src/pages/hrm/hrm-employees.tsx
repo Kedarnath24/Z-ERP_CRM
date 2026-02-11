@@ -72,7 +72,6 @@ export default function HRMEmployees() {
   const [isExporting, setIsExporting] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isBulkImportDialogOpen, setIsBulkImportDialogOpen] = useState(false);
   const [isExitDialogOpen, setIsExitDialogOpen] = useState(false);
   const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -118,11 +117,6 @@ export default function HRMEmployees() {
     panDoc: null as File | null,
     resume: null as File | null
   });
-  
-  // Bulk import state
-  const [importData, setImportData] = useState<any[]>([]);
-  const [importProgress, setImportProgress] = useState(0);
-  const [importErrors, setImportErrors] = useState<string[]>([]);
   
   const { toast } = useToast();
 
@@ -463,89 +457,6 @@ export default function HRMEmployees() {
       title: "✅ Employee Updated Successfully",
       description: `${editingEmployee.name}'s information has been updated.`,
     });
-  };
-
-  // Bulk import handler
-  const handleBulkImport = (file: File) => {
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        
-        // Validate and process data
-        const processedData = jsonData.map((row: any, index) => {
-          const errors: string[] = [];
-          
-          if (!row.Name) errors.push(`Row ${index + 2}: Name is required`);
-          if (!row.Designation) errors.push(`Row ${index + 2}: Designation is required`);
-          if (!row.Department) errors.push(`Row ${index + 2}: Department is required`);
-          if (!row.Email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.Email)) {
-            errors.push(`Row ${index + 2}: Valid email is required`);
-          }
-          
-          return {
-            data: row,
-            errors,
-            processed: errors.length === 0
-          };
-        });
-        
-        const validRows = processedData.filter(item => item.processed);
-        const errorRows = processedData.filter(item => !item.processed);
-        
-        if (errorRows.length > 0) {
-          setImportErrors(errorRows.flatMap(item => item.errors));
-        }
-        
-        if (validRows.length > 0) {
-          // Process valid employees
-          const newEmployees = validRows.map((item, index) => {
-            const row = item.data;
-            const empNumber = String(employees.length + index + 1).padStart(3, '0');
-            
-            return {
-              id: `EMP${empNumber}`,
-              name: row.Name.trim(),
-              designation: row.Designation.trim(),
-              department: row.Department,
-              location: row.Location || 'Not Specified',
-              joining: row['Joining Date'] || new Date().toISOString().split('T')[0],
-              status: 'active' as const,
-              avatar: row.Name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2),
-              email: row.Email.trim().toLowerCase(),
-              phone: row.Phone || 'Not Provided',
-              exitWorkflow: null
-            };
-          });
-          
-          setEmployees(prev => [...prev, ...newEmployees]);
-          
-          toast({
-            title: `✅ Successfully Imported ${newEmployees.length} Employees`,
-            description: errorRows.length > 0 
-              ? `${errorRows.length} rows had errors and were skipped.`
-              : "All employees imported successfully!"
-          });
-        }
-        
-        setImportData(processedData);
-        setIsBulkImportDialogOpen(true);
-        
-      } catch (error) {
-        toast({
-          title: "❌ Import Failed",
-          description: "Failed to process the file. Please check the format.",
-          variant: "destructive"
-        });
-      }
-    };
-    
-    reader.readAsArrayBuffer(file);
   };
 
   // Create exit workflow
@@ -1198,28 +1109,6 @@ export default function HRMEmployees() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Bulk Import Button */}
-              <div>
-                <input
-                  type="file"
-                  id="bulk-import"
-                  accept=".xlsx,.xls,.csv"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleBulkImport(file);
-                  }}
-                  className="hidden"
-                />
-                <Button 
-                  onClick={() => document.getElementById('bulk-import')?.click()}
-                  variant="outline"
-                  className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 shadow-sm rounded-xl font-bold"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Bulk Import
-                </Button>
-              </div>
 
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
@@ -2902,55 +2791,6 @@ export default function HRMEmployees() {
         </DialogContent>
       </Dialog>
 
-      {/* Bulk Import Progress Dialog */}
-      <Dialog open={isBulkImportDialogOpen} onOpenChange={setIsBulkImportDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-slate-900 flex items-center gap-2">
-              <Upload className="h-5 w-5 text-emerald-600" />
-              Bulk Import Results
-            </DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            {importData.length > 0 && (
-              <div className="space-y-4">
-                <div className="text-sm text-slate-600">
-                  <p><strong>Total Rows:</strong> {importData.length}</p>
-                  <p><strong>Successfully Imported:</strong> {importData.filter(item => item.processed).length}</p>
-                  <p><strong>Errors:</strong> {importData.filter(item => !item.processed).length}</p>
-                </div>
-                
-                {importErrors.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <h4 className="text-sm font-medium text-red-800 mb-2">Import Errors:</h4>
-                    <ul className="text-xs text-red-600 space-y-1">
-                      {importErrors.slice(0, 5).map((error, index) => (
-                        <li key={index}>• {error}</li>
-                      ))}
-                      {importErrors.length > 5 && (
-                        <li>• ...and {importErrors.length - 5} more errors</li>
-                      )}
-                    </ul>
-                  </div>
-                )}
-                
-                <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg">
-                  <p><strong>Expected CSV/Excel Format:</strong></p>
-                  <p>Name, Designation, Department, Email, Phone, Location, Joining Date</p>
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button 
-              onClick={() => setIsBulkImportDialogOpen(false)}
-              className="rounded-lg"
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }

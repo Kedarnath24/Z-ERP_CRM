@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Search, 
   Filter, 
@@ -17,7 +19,9 @@ import {
   ExternalLink,
   ChevronRight,
   CalendarClock,
-  X
+  X,
+  Eye,
+  Download
 } from 'lucide-react';
 import {
   Select,
@@ -41,6 +45,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import type { Job } from './recruitment-dashboard';
 
@@ -99,7 +104,67 @@ export default function CandidatesModule({ filterByJob, onScheduleInterview, onC
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [isAddCandidateOpen, setIsAddCandidateOpen] = useState(false);
+  const [isViewCVOpen, setIsViewCVOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<typeof CANDIDATES_DATA[0] | null>(null);
   const [candidates, setCandidates] = useState(CANDIDATES_DATA);
+  const { toast } = useToast();
+
+  // New candidate form state
+  const [newCandidate, setNewCandidate] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    position: '',
+    experience: '',
+    source: 'LinkedIn',
+    skills: '',
+    resume: ''
+  });
+
+  const handleAddCandidate = () => {
+    if (!newCandidate.name || !newCandidate.email || !newCandidate.position) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const candidate = {
+      id: candidates.length + 1,
+      name: newCandidate.name,
+      position: newCandidate.position,
+      status: 'Screening',
+      source: newCandidate.source,
+      experience: newCandidate.experience || '0 years',
+      email: newCandidate.email,
+      skills: newCandidate.skills.split(',').map(s => s.trim()).filter(Boolean)
+    };
+
+    setCandidates(prev => [...prev, candidate]);
+    setIsAddCandidateOpen(false);
+    setNewCandidate({
+      name: '',
+      email: '',
+      phone: '',
+      position: '',
+      experience: '',
+      source: 'LinkedIn',
+      skills: '',
+      resume: ''
+    });
+    
+    toast({
+      title: "Candidate Added",
+      description: `${candidate.name} has been added to the pipeline.`
+    });
+  };
+
+  const handleViewCV = (candidate: typeof CANDIDATES_DATA[0]) => {
+    setSelectedCandidate(candidate);
+    setIsViewCVOpen(true);
+  };
 
   const updateStatus = (id: number, status: string) => {
     setCandidates(prev => prev.map(c => c.id === id ? { ...c, status } : c));
@@ -187,13 +252,242 @@ export default function CandidatesModule({ filterByJob, onScheduleInterview, onC
                 </SelectContent>
               </Select>
 
-              
-
-              
+              <Button 
+                onClick={() => setIsAddCandidateOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Candidate
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Add Candidate Dialog */}
+      <Dialog open={isAddCandidateOpen} onOpenChange={setIsAddCandidateOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Add New Candidate</DialogTitle>
+            <DialogDescription>Enter candidate details to add them to the pipeline</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cand-name">Full Name *</Label>
+                <Input 
+                  id="cand-name" 
+                  placeholder="John Doe"
+                  value={newCandidate.name}
+                  onChange={(e) => setNewCandidate(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cand-email">Email *</Label>
+                <Input 
+                  id="cand-email" 
+                  type="email" 
+                  placeholder="john@example.com"
+                  value={newCandidate.email}
+                  onChange={(e) => setNewCandidate(prev => ({ ...prev, email: e.target.value }))}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cand-phone">Phone</Label>
+                <Input 
+                  id="cand-phone" 
+                  placeholder="+1 555-0100"
+                  value={newCandidate.phone}
+                  onChange={(e) => setNewCandidate(prev => ({ ...prev, phone: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cand-position">Position Applied *</Label>
+                <Select 
+                  value={newCandidate.position}
+                  onValueChange={(value) => setNewCandidate(prev => ({ ...prev, position: value }))}
+                >
+                  <SelectTrigger id="cand-position">
+                    <SelectValue placeholder="Select position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {jobs.map(job => (
+                      <SelectItem key={job.id} value={job.title}>{job.title}</SelectItem>
+                    ))}
+                    <SelectItem value="Senior Full Stack Developer">Senior Full Stack Developer</SelectItem>
+                    <SelectItem value="Product Manager">Product Manager</SelectItem>
+                    <SelectItem value="UX Designer">UX Designer</SelectItem>
+                    <SelectItem value="DevOps Engineer">DevOps Engineer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cand-exp">Experience</Label>
+                <Select 
+                  value={newCandidate.experience}
+                  onValueChange={(value) => setNewCandidate(prev => ({ ...prev, experience: value }))}
+                >
+                  <SelectTrigger id="cand-exp">
+                    <SelectValue placeholder="Select experience" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0-1 years">0-1 years</SelectItem>
+                    <SelectItem value="1-3 years">1-3 years</SelectItem>
+                    <SelectItem value="3-5 years">3-5 years</SelectItem>
+                    <SelectItem value="5-7 years">5-7 years</SelectItem>
+                    <SelectItem value="7+ years">7+ years</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cand-source">Source</Label>
+                <Select 
+                  value={newCandidate.source}
+                  onValueChange={(value) => setNewCandidate(prev => ({ ...prev, source: value }))}
+                >
+                  <SelectTrigger id="cand-source">
+                    <SelectValue placeholder="Select source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                    <SelectItem value="Indeed">Indeed</SelectItem>
+                    <SelectItem value="Referral">Referral</SelectItem>
+                    <SelectItem value="Career Site">Career Site</SelectItem>
+                    <SelectItem value="Job Fair">Job Fair</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cand-skills">Skills (comma separated)</Label>
+              <Input 
+                id="cand-skills" 
+                placeholder="React, Node.js, TypeScript..."
+                value={newCandidate.skills}
+                onChange={(e) => setNewCandidate(prev => ({ ...prev, skills: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Resume/CV</Label>
+              <div className="border-2 border-dashed rounded-lg p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
+                <FileText className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-sm text-slate-600">Drag & drop or click to upload</p>
+                <p className="text-xs text-slate-400 mt-1">PDF, DOC, DOCX up to 10MB</p>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddCandidateOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddCandidate} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Candidate
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View CV Dialog */}
+      <Dialog open={isViewCVOpen} onOpenChange={setIsViewCVOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Candidate Profile</DialogTitle>
+            <DialogDescription>
+              Resume and application details for {selectedCandidate?.name}
+            </DialogDescription>
+          </DialogHeader>
+          {selectedCandidate && (
+            <div className="space-y-6 py-4">
+              {/* Candidate Header */}
+              <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-lg">
+                <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl">
+                  {selectedCandidate.name.split(' ').map(n => n[0]).join('')}
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold">{selectedCandidate.name}</h3>
+                  <p className="text-sm text-slate-600">{selectedCandidate.position}</p>
+                  <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
+                    <span className="flex items-center gap-1">
+                      <Mail className="h-3.5 w-3.5" />
+                      {selectedCandidate.email}
+                    </span>
+                    <span>{selectedCandidate.experience}</span>
+                  </div>
+                </div>
+                <Badge className={`${getStatusColor(selectedCandidate.status)} font-semibold border-0`}>
+                  {selectedCandidate.status}
+                </Badge>
+              </div>
+
+              {/* Skills */}
+              <div>
+                <h4 className="font-semibold mb-2">Skills & Expertise</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedCandidate.skills.map(skill => (
+                    <Badge key={skill} variant="secondary" className="bg-blue-50 text-blue-700">
+                      {skill}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Resume Preview */}
+              <div className="border rounded-lg p-6 bg-slate-50">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-semibold">Resume/CV</h4>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </div>
+                <div className="bg-white border rounded-lg p-8 text-center">
+                  <FileText className="h-16 w-16 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-600">{selectedCandidate.name.replace(' ', '_')}_Resume.pdf</p>
+                  <p className="text-sm text-slate-400 mt-1">PDF • 245 KB</p>
+                </div>
+              </div>
+
+              {/* Application Details */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-slate-500">Source</p>
+                  <p className="font-medium">{selectedCandidate.source}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-slate-500">Applied Date</p>
+                  <p className="font-medium">February 5, 2026</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewCVOpen(false)}>
+              Close
+            </Button>
+            <Button 
+              className="bg-purple-600 hover:bg-purple-700"
+              onClick={() => {
+                if (selectedCandidate) {
+                  onScheduleInterview(selectedCandidate.name, selectedCandidate.position);
+                  setIsViewCVOpen(false);
+                }
+              }}
+            >
+              <CalendarClock className="h-4 w-4 mr-2" />
+              Schedule Interview
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-4">
         {filteredCandidates.map((candidate) => (
@@ -244,10 +538,17 @@ export default function CandidatesModule({ filterByJob, onScheduleInterview, onC
                     <CalendarClock className="h-3.5 w-3.5 mr-1.5" />
                     Schedule Interview
                   </Button>
-                  <Button variant="outline" size="sm">View CV</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleViewCV(candidate)}
+                  >
+                    <Eye className="h-3.5 w-3.5 mr-1.5" />
+                    View CV
+                  </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -255,6 +556,7 @@ export default function CandidatesModule({ filterByJob, onScheduleInterview, onC
                       <DropdownMenuItem onClick={() => updateStatus(candidate.id, 'Screening')}>Move to Screening</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => updateStatus(candidate.id, 'Interviewing')}>Move to Interviewing</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => updateStatus(candidate.id, 'Offer Sent')}>Send Offer</DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-red-600" onClick={() => updateStatus(candidate.id, 'Rejected')}>Reject</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

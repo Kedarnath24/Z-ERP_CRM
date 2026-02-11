@@ -16,7 +16,8 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogTrigger,
-  DialogFooter 
+  DialogFooter,
+  DialogClose
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -561,7 +562,12 @@ export default function HRMAttendance() {
               </DropdownMenu>
 
               <Dialog>
-                
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 rounded-xl font-bold transition-all active:scale-95">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Apply Leave
+                  </Button>
+                </DialogTrigger>
                 <DialogContent className="max-w-md rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
                   <div className="h-24 bg-gradient-to-r from-blue-600 to-indigo-700 p-6">
                     <DialogTitle className="text-2xl font-bold text-white tracking-tight">Apply for Leave</DialogTitle>
@@ -609,8 +615,22 @@ export default function HRMAttendance() {
                     </div>
                   </div>
                   <div className="px-8 pb-8 flex gap-3">
-                    <Button variant="ghost" className="flex-1 rounded-xl h-11 font-bold text-slate-500 hover:bg-slate-100">Cancel</Button>
-                    <Button className="flex-1 bg-blue-600 hover:bg-blue-700 rounded-xl h-11 font-bold shadow-lg shadow-blue-100">Submit Request</Button>
+                    <DialogClose asChild>
+                      <Button variant="ghost" className="flex-1 rounded-xl h-11 font-bold text-slate-500 hover:bg-slate-100">Cancel</Button>
+                    </DialogClose>
+                    <DialogClose asChild>
+                      <Button 
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 rounded-xl h-11 font-bold shadow-lg shadow-blue-100"
+                        onClick={() => {
+                          toast({
+                            title: "Leave Request Submitted",
+                            description: "Your leave application has been sent for approval."
+                          });
+                        }}
+                      >
+                        Submit Request
+                      </Button>
+                    </DialogClose>
                   </div>
                 </DialogContent>
               </Dialog>

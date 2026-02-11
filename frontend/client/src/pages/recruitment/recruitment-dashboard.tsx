@@ -636,7 +636,11 @@ export default function RecruitmentDashboard() {
                     </div>
                   </div>
                 ))}
-                <Button variant="ghost" className="w-full text-purple-600 hover:text-purple-700 hover:bg-purple-50 text-xs gap-2">
+                <Button 
+                  variant="ghost" 
+                  className="w-full text-purple-600 hover:text-purple-700 hover:bg-purple-50 text-xs gap-2"
+                  onClick={() => setActiveTab('candidates')}
+                >
                   View All Activity
                   <ArrowRight className="h-3 w-3" />
                 </Button>

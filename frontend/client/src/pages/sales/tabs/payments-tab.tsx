@@ -304,6 +304,7 @@ export default function PaymentsTab() {
                 </div>
               </DialogContent>
             </Dialog>
+            
           </div>
         </CardHeader>
         <CardContent className="p-0">
