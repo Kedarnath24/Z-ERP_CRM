@@ -12,7 +12,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useToast } from "@/hooks/use-toast";
 
 export default function LeadsSettings() {
-  const [scoringWeight, setScoringWeight] = useState(50);
+  
   const { toast } = useToast();
 
   return (
@@ -20,7 +20,7 @@ export default function LeadsSettings() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Leads Settings</h1>
-          <p className="text-muted-foreground">Configure lead capture, scoring, and assignment rules</p>
+          <p className="text-muted-foreground">Configure lead capture and assignment rules</p>
         </div>
         <Card>
           <CardHeader>
@@ -77,65 +77,11 @@ export default function LeadsSettings() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-muted-foreground" />
-              <CardTitle>Lead Scoring</CardTitle>
-            </div>
-            <CardDescription>Configure lead scoring rules and criteria</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between py-2">
-              <div className="space-y-0.5">
-                <Label>Enable Lead Scoring</Label>
-                <p className="text-sm text-muted-foreground">Automatically score leads based on criteria</p>
-              </div>
-              <Switch defaultChecked />
-            </div>
-            <Separator />
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label>Email Engagement Weight</Label>
-                  <span className="text-sm font-semibold">{scoringWeight}%</span>
-                </div>
-                <Slider
-                  value={[scoringWeight]}
-                  onValueChange={(value) => setScoringWeight(value[0])}
-                  max={100}
-                  step={5}
-                  className="w-full"
-                />
-                <p className="text-sm text-muted-foreground mt-1">How much email opens/clicks affect score</p>
-              </div>
-              <div>
-                <Label>Score Thresholds</Label>
-                <div className="grid gap-3 mt-2">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm w-20">Hot Lead:</span>
-                    <Input type="number" defaultValue="80" className="w-24" />
-                    <span className="text-sm text-muted-foreground">points or more</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm w-20">Warm Lead:</span>
-                    <Input type="number" defaultValue="50" className="w-24" />
-                    <span className="text-sm text-muted-foreground">points or more</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm w-20">Cold Lead:</span>
-                    <span className="text-sm text-muted-foreground">Below 50 points</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardHeader>
             <CardTitle>Assignment Rules</CardTitle>
-            <CardDescription>Configure automatic lead assignment</CardDescription>
+            <CardDescription>Configure lead assignment</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">

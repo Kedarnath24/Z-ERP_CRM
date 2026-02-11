@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Target, Users, TrendingUp, Award, Plus, Search, Filter,
-  Star, Phone, Mail, Calendar, MessageCircle, Send, Clock, Edit,
+  Phone, Mail, Calendar, MessageCircle, Send, Clock, Edit,
   CheckCircle, XCircle, AlertCircle, BarChart3, Zap, User, Settings, GitBranch, Flag, MapPin
 } from "lucide-react";
 import {
@@ -34,11 +34,24 @@ interface Lead {
   phone: string;
   source: string;
   status: "new" | "qualified" | "nurturing" | "converted" | "lost";
-  score: number;
   priority: "high" | "medium" | "low";
   assignedTo: string;
   createdDate: string;
   lastContact: string;
+  tags?: string[];
+  address?: string;
+  position?: string;
+  city?: string;
+  state?: string;
+  website?: string;
+  country?: string;
+  zipCode?: string;
+  leadValue?: number;
+  defaultLanguage?: string;
+  description?: string;
+  dateContacted?: string;
+  isPublic?: boolean;
+  contactedToday?: boolean;
 }
 
 interface NurtureSequence {
@@ -57,6 +70,10 @@ export default function LeadsWorkflow() {
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   const [sequenceModalOpen, setSequenceModalOpen] = useState(false);
 
+  // Tags input state (multi-tag, linear)
+  const [tagsInput, setTagsInput] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+
   const [leads, setLeads] = useState<Lead[]>([
     {
       id: "1",
@@ -66,7 +83,7 @@ export default function LeadsWorkflow() {
       phone: "+1 (555) 123-4567",
       source: "Website",
       status: "new",
-      score: 85,
+      
       priority: "high",
       assignedTo: "Sarah J.",
       createdDate: "Jan 15, 2026",
@@ -80,7 +97,7 @@ export default function LeadsWorkflow() {
       phone: "+1 (555) 234-5678",
       source: "Referral",
       status: "qualified",
-      score: 92,
+      
       priority: "high",
       assignedTo: "Mike C.",
       createdDate: "Jan 14, 2026",
@@ -94,7 +111,7 @@ export default function LeadsWorkflow() {
       phone: "+1 (555) 345-6789",
       source: "LinkedIn",
       status: "nurturing",
-      score: 68,
+      
       priority: "medium",
       assignedTo: "Sarah J.",
       createdDate: "Jan 12, 2026",
@@ -108,7 +125,7 @@ export default function LeadsWorkflow() {
       phone: "+1 (555) 456-7890",
       source: "Trade Show",
       status: "converted",
-      score: 95,
+      
       priority: "high",
       assignedTo: "Mike C.",
       createdDate: "Jan 10, 2026",
@@ -136,6 +153,40 @@ export default function LeadsWorkflow() {
     convertLead(leadToConvert.id);
     setConfirmConvertOpen(false);
     setLeadToConvert(null);
+  };
+
+  // Sync tags when modal opens or selectedLead changes
+  useEffect(() => {
+    if (leadModalOpen) {
+      setTags(selectedLead?.tags ?? []);
+      setTagsInput("");
+    }
+  }, [leadModalOpen, selectedLead]);
+
+  const addTag = (value: string) => {
+    const v = value.trim();
+    if (!v) return;
+    if (tags.includes(v)) return;
+    setTags(prev => [...prev, v]);
+    setTagsInput("");
+  };
+
+  const removeTag = (index: number) => {
+    setTags(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      addTag(tagsInput);
+    } else if (e.key === "Backspace" && tagsInput === "") {
+      // remove last tag
+      setTags(prev => prev.slice(0, -1));
+    }
+  };
+
+  const handleTagBlur = () => {
+    if (tagsInput.trim() !== "") addTag(tagsInput);
   };
 
   const sequences: NurtureSequence[] = [
@@ -176,7 +227,6 @@ export default function LeadsWorkflow() {
   ];
 
   const additionalStats = [
-    { label: "Avg Lead Score", value: "78", icon: Star },
     { label: "Conversion Rate", value: "18.1%", icon: TrendingUp }
   ];
 
@@ -210,11 +260,7 @@ export default function LeadsWorkflow() {
     }
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-green-600";
-    if (score >= 60) return "text-amber-600";
-    return "text-red-600";
-  };
+  
 
   const filteredLeads = leads.filter(lead =>
     lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -289,11 +335,9 @@ export default function LeadsWorkflow() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="intake" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto">
-            <TabsTrigger value="intake">Lead Intake</TabsTrigger>
-            <TabsTrigger value="scoring">Scoring</TabsTrigger>
-            <TabsTrigger value="assignment">Auto Assignment</TabsTrigger>
-            <TabsTrigger value="nurture">Nurture Sequences</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 gap-1 lg:w-auto">
+            <TabsTrigger value="intake" className="text-center">Lead Intake</TabsTrigger>
+            <TabsTrigger value="assignment" className="text-center">Assignment</TabsTrigger>
           </TabsList>
 
           {/* Lead Intake Tab */}
@@ -362,15 +406,6 @@ export default function LeadsWorkflow() {
                             </div>
                           </div>
                           <div className="flex items-center gap-6">
-                            <div className="text-center">
-                              <p className="text-sm text-gray-600">Score</p>
-                              <div className="flex items-center gap-1 mt-1">
-                                <Star className={`w-4 h-4 ${getScoreColor(lead.score)}`} />
-                                <p className={`text-2xl font-bold ${getScoreColor(lead.score)}`}>
-                                  {lead.score}
-                                </p>
-                              </div>
-                            </div>
                             <div className="text-right">
                               <p className="text-sm text-gray-600">Assigned to</p>
                               <p className="font-semibold text-gray-900">{lead.assignedTo}</p>
@@ -410,86 +445,21 @@ export default function LeadsWorkflow() {
             </Card>
           </TabsContent>
 
-          {/* Scoring Tab */}
-          <TabsContent value="scoring" className="space-y-4">
-            <Card className="bg-white/70 backdrop-blur-sm border-gray-200">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="w-5 h-5 text-amber-600" />
-                  Lead Scoring Rules
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <p className="text-sm text-gray-600">
-                    Automatically score leads based on demographic, firmographic, and behavioral data
-                  </p>
-                  
-                  <div className="grid md:grid-cols-3 gap-4 mb-6">
-                    <Card className="bg-green-50">
-                      <CardContent className="p-4">
-                        <p className="text-sm text-gray-600">High Score (80-100)</p>
-                        <p className="text-2xl font-bold text-green-600 mt-1">42 leads</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="bg-amber-50">
-                      <CardContent className="p-4">
-                        <p className="text-sm text-gray-600">Medium Score (60-79)</p>
-                        <p className="text-2xl font-bold text-amber-600 mt-1">126 leads</p>
-                      </CardContent>
-                    </Card>
-                    <Card className="bg-red-50">
-                      <CardContent className="p-4">
-                        <p className="text-sm text-gray-600">Low Score (0-59)</p>
-                        <p className="text-2xl font-bold text-red-600 mt-1">174 leads</p>
-                      </CardContent>
-                    </Card>
-                  </div>
+          
 
-                  <div className="space-y-3">
-                    <h3 className="font-semibold text-gray-900">Scoring Criteria</h3>
-                    {[
-                      { criteria: "Company Size (Enterprise)", points: "+25", color: "text-green-600" },
-                      { criteria: "Job Title (Decision Maker)", points: "+20", color: "text-green-600" },
-                      { criteria: "Website Visit (Product Page)", points: "+15", color: "text-indigo-600" },
-                      { criteria: "Email Opened", points: "+10", color: "text-indigo-600" },
-                      { criteria: "Downloaded Whitepaper", points: "+15", color: "text-indigo-600" },
-                      { criteria: "Attended Webinar", points: "+20", color: "text-green-600" },
-                      { criteria: "Requested Demo", points: "+30", color: "text-green-600" },
-                      { criteria: "Email Bounced", points: "-10", color: "text-red-600" },
-                      { criteria: "Unsubscribed", points: "-20", color: "text-red-600" }
-                    ].map((rule, idx) => (
-                      <Card key={idx}>
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-900">{rule.criteria}</span>
-                            <div className="flex items-center gap-3">
-                              <span className={`text-lg font-bold ${rule.color}`}>{rule.points}</span>
-                              <Button variant="ghost" size="sm">Edit</Button>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Auto Assignment Tab */}
+          {/* Assignment Tab */}
           <TabsContent value="assignment" className="space-y-4">
             <Card className="bg-white/70 backdrop-blur-sm border-gray-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5 text-indigo-600" />
-                  Automatic Lead Assignment
+                  Lead Assignment
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
                   <p className="text-sm text-gray-600">
-                    Distribute leads automatically based on rules, territories, and workload
+                    Distribute leads based on rules, territories, and workload
                   </p>
 
                   <div className="grid md:grid-cols-3 gap-4">
@@ -605,226 +575,270 @@ export default function LeadsWorkflow() {
                     </Card>
                   </div>
 
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-3">Assignment Rules</h3>
-                    <div className="space-y-3">
-                      {[
-                        { rule: "High score leads (80+)", assignTo: "Sarah Johnson", status: "active" },
-                        { rule: "Enterprise companies", assignTo: "Mike Chen", status: "active" },
-                        { rule: "West Coast territory", assignTo: "Emily Davis", status: "active" },
-                        { rule: "Inbound demo requests", assignTo: "Round Robin", status: "active" }
-                      ].map((rule, idx) => (
-                        <Card key={idx}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="font-semibold text-gray-900">{rule.rule}</p>
-                                <p className="text-sm text-gray-500">Assign to: {rule.assignTo}</p>
-                              </div>
-                              <Badge className="bg-green-500">{rule.status}</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
+                 
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Nurture Sequences Tab */}
-          <TabsContent value="nurture" className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Automated Nurture Sequences</h2>
-              <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => setSequenceModalOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Sequence
-              </Button>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sequences.map((seq) => (
-                <Card key={seq.id} className="bg-white/70 backdrop-blur-sm border-gray-200">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          seq.channel === "email" ? "bg-blue-100" :
-                          seq.channel === "sms" ? "bg-green-100" :
-                          seq.channel === "whatsapp" ? "bg-emerald-100" :
-                          "bg-purple-100"
-                        }`}>
-                          {seq.channel === "email" ? <Mail className="w-5 h-5 text-blue-600" /> :
-                           seq.channel === "sms" ? <MessageCircle className="w-5 h-5 text-green-600" /> :
-                           seq.channel === "whatsapp" ? <MessageCircle className="w-5 h-5 text-emerald-600" /> :
-                           <Phone className="w-5 h-5 text-purple-600" />}
-                        </div>
-                      </div>
-                      <Badge className={seq.status === "active" ? "bg-green-500" : seq.status === "paused" ? "bg-amber-500" : "bg-gray-500"}>
-                        {seq.status}
-                      </Badge>
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">{seq.name}</h3>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Steps</span>
-                        <span className="font-semibold">{seq.steps}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Enrolled</span>
-                        <span className="font-semibold">{seq.enrolled}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Completed</span>
-                        <span className="font-semibold text-green-600">{seq.completed}</span>
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                      <div 
-                        className="bg-indigo-600 h-2 rounded-full"
-                        style={{ width: `${(seq.completed / seq.enrolled) * 100}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1">
-                        <Settings className="w-4 h-4" />
-                      </Button>
-                      <Button variant="outline" className="flex-1">
-                        <BarChart3 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+          
         </Tabs>
 
         {/* Lead Details Modal */}
         <Dialog open={leadModalOpen} onOpenChange={setLeadModalOpen}>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{selectedLead ? "Lead Details" : "Add New Lead"}</DialogTitle>
+              <DialogTitle>{selectedLead ? "Lead Details" : "Add new lead"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              {/* Status, Source, and Assigned Row */}
+              <div className="grid md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    <span className="text-red-500">*</span> Status
+                  </label>
+                  <div className="flex gap-2 mt-1">
+                    <Select defaultValue="New Leads">
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="New Leads">New Leads</SelectItem>
+                        <SelectItem value="Qualified">Qualified</SelectItem>
+                        <SelectItem value="Nurturing">Nurturing</SelectItem>
+                        <SelectItem value="Converted">Converted</SelectItem>
+                        <SelectItem value="Lost">Lost</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="icon" className="shrink-0">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    <span className="text-red-500">*</span> Source
+                  </label>
+                  <div className="flex gap-2 mt-1">
+                    <Select defaultValue={selectedLead?.source}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Non selected" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Website">Website</SelectItem>
+                        <SelectItem value="Referral">Referral</SelectItem>
+                        <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                        <SelectItem value="Trade Show">Trade Show</SelectItem>
+                        <SelectItem value="Cold Call">Cold Call</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="icon" className="shrink-0">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Assigned</label>
+                  <div className="mt-1">
+                    <Select defaultValue="Zedunix ERP Admin">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select assignee" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Zedunix ERP Admin">Zedunix ERP Admin</SelectItem>
+                        <SelectItem value="Sarah J.">Sarah J.</SelectItem>
+                        <SelectItem value="Mike C.">Mike C.</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tags (multi-input, linear) */}
+              <div>
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-1">Tags</label>
+                <div className="mt-1 flex items-center gap-2 overflow-x-auto border border-gray-300 rounded-md px-2 py-1 bg-white">
+                  {tags.map((t, idx) => (
+                    <span key={idx} className="inline-flex items-center px-2 py-1 bg-gray-100 text-sm rounded-full">
+                      <span className="mr-2 text-sm text-gray-700">{t}</span>
+                      <button type="button" onClick={() => removeTag(idx)} className="text-gray-500 hover:text-gray-700">
+                        <XCircle className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    value={tagsInput}
+                    onChange={(e) => setTagsInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    onBlur={handleTagBlur}
+                    placeholder="Add tag and press Enter"
+                    className="min-w-[140px] bg-transparent outline-none text-sm text-gray-700"
+                  />
+                </div>
+              </div>
+
+              {/* Name and Address Row */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Full Name</label>
-                  <Input defaultValue={selectedLead?.name} placeholder="John Doe" className="mt-1" />
+                  <label className="text-sm font-medium text-gray-700">
+                    <span className="text-red-500">*</span> Name
+                  </label>
+                  <Input defaultValue={selectedLead?.name} placeholder="" className="mt-1" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Company</label>
-                  <Input defaultValue={selectedLead?.company} placeholder="Acme Corp" className="mt-1" />
+                  <label className="text-sm font-medium text-gray-700">Address</label>
+                  <Textarea defaultValue={selectedLead?.address} placeholder="" className="mt-1" rows={1} />
+                </div>
+              </div>
+
+              {/* Position and City Row */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Position</label>
+                  <Input defaultValue={selectedLead?.position} placeholder="" className="mt-1" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Email</label>
-                  <Input defaultValue={selectedLead?.email} type="email" placeholder="john@acme.com" className="mt-1" />
+                  <label className="text-sm font-medium text-gray-700">City</label>
+                  <Input defaultValue={selectedLead?.city} placeholder="" className="mt-1" />
                 </div>
+              </div>
+
+              {/* Email Address and State Row */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Email Address</label>
+                  <Input defaultValue={selectedLead?.email} type="email" placeholder="" className="mt-1" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">State</label>
+                  <Input defaultValue={selectedLead?.state} placeholder="" className="mt-1" />
+                </div>
+              </div>
+
+              {/* Website and Country Row */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Website</label>
+                  <Input defaultValue={selectedLead?.website} placeholder="" className="mt-1" />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Country</label>
+                  <Select defaultValue="India">
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="India">India</SelectItem>
+                      <SelectItem value="USA">USA</SelectItem>
+                      <SelectItem value="UK">UK</SelectItem>
+                      <SelectItem value="Canada">Canada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Phone and Zip Code Row */}
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Phone</label>
-                  <Input defaultValue={selectedLead?.phone} type="tel" placeholder="+1 (555) 123-4567" className="mt-1" />
+                  <Input defaultValue={selectedLead?.phone} type="tel" placeholder="" className="mt-1" />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Source</label>
-                  <Select defaultValue={selectedLead?.source}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select source" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Website">Website</SelectItem>
-                      <SelectItem value="Referral">Referral</SelectItem>
-                      <SelectItem value="LinkedIn">LinkedIn</SelectItem>
-                      <SelectItem value="Trade Show">Trade Show</SelectItem>
-                      <SelectItem value="Cold Call">Cold Call</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <label className="text-sm font-medium text-gray-700">Zip Code</label>
+                  <Input defaultValue={selectedLead?.zipCode} placeholder="" className="mt-1" />
+                </div>
+              </div>
+
+              {/* Lead value and Default Language Row */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Lead value</label>
+                  <div className="flex mt-1">
+                    <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
+                      $
+                    </span>
+                    <Input 
+                      defaultValue={selectedLead?.leadValue} 
+                      type="number" 
+                      placeholder="" 
+                      className="rounded-l-none" 
+                    />
+                  </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Priority</label>
-                  <Select defaultValue={selectedLead?.priority}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select priority" />
+                  <label className="text-sm font-medium text-gray-700">Default Language</label>
+                  <Select defaultValue="System Default">
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select language" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="System Default">System Default</SelectItem>
+                      <SelectItem value="English">English</SelectItem>
+                      <SelectItem value="Spanish">Spanish</SelectItem>
+                      <SelectItem value="French">French</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
+
+              {/* Company */}
               <div>
-                <label className="text-sm font-medium text-gray-700">Notes</label>
-                <Textarea placeholder="Add notes about this lead..." className="mt-1" />
+                <label className="text-sm font-medium text-gray-700">Company</label>
+                <Input defaultValue={selectedLead?.company} placeholder="" className="mt-1" />
               </div>
+
+              {/* Description */}
+              <div>
+                <label className="text-sm font-medium text-gray-700">Description</label>
+                <Textarea defaultValue={selectedLead?.description} placeholder="" className="mt-1" rows={4} />
+              </div>
+
+              {/* Date Contacted */}
+              <div>
+                <label className="text-sm font-medium text-gray-700">Date Contacted</label>
+                <Input defaultValue={selectedLead?.dateContacted} type="date" className="mt-1" />
+              </div>
+
+              {/* Checkboxes */}
+              <div className="flex gap-6">
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="public" 
+                    defaultChecked={selectedLead?.isPublic}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                  <label htmlFor="public" className="text-sm font-medium text-gray-700">
+                    Public
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="contactedToday" 
+                    defaultChecked={selectedLead?.contactedToday}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                  <label htmlFor="contactedToday" className="text-sm font-medium text-gray-700">
+                    Contacted Today
+                  </label>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => setLeadModalOpen(false)}>
-                  Cancel
+                  Close
                 </Button>
-                <Button className="bg-indigo-600 hover:bg-indigo-700">
-                  {selectedLead ? "Update Lead" : "Create Lead"}
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  Save
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
 
-        {/* Create Sequence Modal */}
-        <Dialog open={sequenceModalOpen} onOpenChange={setSequenceModalOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Create Nurture Sequence</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700">Sequence Name</label>
-                <Input placeholder="e.g., New Lead Welcome Series" className="mt-1" />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Channel</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select channel" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="sms">SMS</SelectItem>
-                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                    <SelectItem value="call">Phone Call</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-2 block">Sequence Steps</label>
-                <div className="space-y-2">
-                  <Card>
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-3">
-                        <Badge className="bg-indigo-600">1</Badge>
-                        <Input placeholder="Step 1: Welcome email" />
-                        <Input type="number" placeholder="0" className="w-20" />
-                        <span className="text-sm text-gray-500">days</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Button variant="outline" size="sm">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Step
-                  </Button>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setSequenceModalOpen(false)}>
-                  Cancel
-                </Button>
-                <Button className="bg-indigo-600 hover:bg-indigo-700">
-                  Create Sequence
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+       
 
         {/* Confirm Convert Dialog */}
         <Dialog open={confirmConvertOpen} onOpenChange={setConfirmConvertOpen}>
