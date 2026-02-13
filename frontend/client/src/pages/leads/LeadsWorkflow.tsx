@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Target, Users, TrendingUp, Award, Plus, Search, Filter,
   Phone, Mail, Calendar, MessageCircle, Send, Clock, Edit,
-  CheckCircle, XCircle, AlertCircle, BarChart3, Zap, User, Settings, GitBranch, Flag, MapPin
+  CheckCircle, XCircle, AlertCircle, BarChart3, Zap, User, Settings, GitBranch, Flag, MapPin,
+  Paperclip, Trash2, Eye, ArrowRight, Upload, FileText
 } from "lucide-react";
 import {
   Dialog,
@@ -25,6 +26,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+
+interface Attachment {
+  id: string;
+  name: string;
+  size: string;
+  type: string;
+  addedDate: string;
+}
 
 interface Lead {
   id: string;
@@ -52,94 +61,37 @@ interface Lead {
   dateContacted?: string;
   isPublic?: boolean;
   contactedToday?: boolean;
-}
-
-interface NurtureSequence {
-  id: string;
-  name: string;
-  status: "active" | "paused" | "draft";
-  enrolled: number;
-  completed: number;
-  steps: number;
-  channel: "email" | "sms" | "whatsapp" | "call";
+  attachments?: Attachment[];
+  convertedDate?: string;
 }
 
 export default function LeadsWorkflow() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [leadModalOpen, setLeadModalOpen] = useState(false);
-  const [sequenceModalOpen, setSequenceModalOpen] = useState(false);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Tags input state (multi-tag, linear)
   const [tagsInput, setTagsInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
 
-  const [leads, setLeads] = useState<Lead[]>([
-    {
-      id: "1",
-      name: "John Doe",
-      company: "Tech Corp",
-      email: "john@techcorp.com",
-      phone: "+1 (555) 123-4567",
-      source: "Website",
-      status: "new",
-      
-      priority: "high",
-      assignedTo: "Sarah J.",
-      createdDate: "Jan 15, 2026",
-      lastContact: "Just now"
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      company: "Innovation Labs",
-      email: "jane@innovlabs.com",
-      phone: "+1 (555) 234-5678",
-      source: "Referral",
-      status: "qualified",
-      
-      priority: "high",
-      assignedTo: "Mike C.",
-      createdDate: "Jan 14, 2026",
-      lastContact: "2 hours ago"
-    },
-    {
-      id: "3",
-      name: "Bob Johnson",
-      company: "Global Solutions",
-      email: "bob@globalsol.com",
-      phone: "+1 (555) 345-6789",
-      source: "LinkedIn",
-      status: "nurturing",
-      
-      priority: "medium",
-      assignedTo: "Sarah J.",
-      createdDate: "Jan 12, 2026",
-      lastContact: "1 day ago"
-    },
-    {
-      id: "4",
-      name: "Alice Williams",
-      company: "Startup Inc",
-      email: "alice@startup.com",
-      phone: "+1 (555) 456-7890",
-      source: "Trade Show",
-      status: "converted",
-      
-      priority: "high",
-      assignedTo: "Mike C.",
-      createdDate: "Jan 10, 2026",
-      lastContact: "3 days ago"
-    }
-  ]);
+  // Form state for creating/editing leads
+  const [formData, setFormData] = useState<Partial<Lead>>({});
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [leads, setLeads] = useState<Lead[]>([]);
 
   const [confirmConvertOpen, setConfirmConvertOpen] = useState(false);
   const [leadToConvert, setLeadToConvert] = useState<Lead | null>(null);
 
   const convertLead = (id: string) => {
-    setLeads(prev => prev.map(l => l.id === id ? { ...l, status: 'converted' } : l));
+    const now = new Date();
+    const convertedDate = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, status: 'converted' as const, convertedDate } : l));
     if (selectedLead?.id === id) {
-      setSelectedLead({ ...(selectedLead as Lead), status: 'converted' });
+      setSelectedLead(prev => prev ? { ...prev, status: 'converted' as const, convertedDate } : prev);
     }
   };
 
@@ -155,10 +107,56 @@ export default function LeadsWorkflow() {
     setLeadToConvert(null);
   };
 
-  // Sync tags when modal opens or selectedLead changes
+  // Reset form when opening create modal
+  const openCreateModal = () => {
+    setSelectedLead(null);
+    setFormData({
+      status: "new",
+      priority: "medium",
+      assignedTo: "Zedunix ERP Admin",
+      source: "",
+      country: "India",
+      defaultLanguage: "System Default",
+    });
+    setTags([]);
+    setTagsInput("");
+    setLeadModalOpen(true);
+  };
+
+  // Open detail/view modal for existing lead
+  const openDetailModal = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsEditing(false);
+    setDetailModalOpen(true);
+  };
+
+  // Switch to edit mode
+  const startEditing = () => {
+    if (!selectedLead) return;
+    setFormData({ ...selectedLead });
+    setTags(selectedLead.tags ?? []);
+    setTagsInput("");
+    setIsEditing(true);
+  };
+
+  // Save edited lead
+  const saveEditedLead = () => {
+    if (!selectedLead) return;
+    const updated: Lead = {
+      ...selectedLead,
+      ...formData,
+      tags,
+      lastContact: "Just now",
+    };
+    setLeads(prev => prev.map(l => l.id === updated.id ? updated : l));
+    setSelectedLead(updated);
+    setIsEditing(false);
+  };
+
+  // Sync tags when create modal opens
   useEffect(() => {
-    if (leadModalOpen) {
-      setTags(selectedLead?.tags ?? []);
+    if (leadModalOpen && !selectedLead) {
+      setTags([]);
       setTagsInput("");
     }
   }, [leadModalOpen, selectedLead]);
@@ -180,7 +178,6 @@ export default function LeadsWorkflow() {
       e.preventDefault();
       addTag(tagsInput);
     } else if (e.key === "Backspace" && tagsInput === "") {
-      // remove last tag
       setTags(prev => prev.slice(0, -1));
     }
   };
@@ -189,80 +186,124 @@ export default function LeadsWorkflow() {
     if (tagsInput.trim() !== "") addTag(tagsInput);
   };
 
-  const sequences: NurtureSequence[] = [
-    {
-      id: "1",
-      name: "New Lead Welcome Series",
-      status: "active",
-      enrolled: 124,
-      completed: 78,
-      steps: 5,
-      channel: "email"
-    },
-    {
-      id: "2",
-      name: "Product Demo Follow-up",
-      status: "active",
-      enrolled: 56,
-      completed: 42,
-      steps: 3,
-      channel: "whatsapp"
-    },
-    {
-      id: "3",
-      name: "Re-engagement Campaign",
-      status: "paused",
-      enrolled: 89,
-      completed: 34,
-      steps: 4,
-      channel: "sms"
-    }
-  ];
+  // Save new lead
+  const saveNewLead = () => {
+    if (!formData.name || !formData.source) return;
+    const now = new Date();
+    const createdDate = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const newLead: Lead = {
+      id: String(Date.now()),
+      name: formData.name || "",
+      company: formData.company || "",
+      email: formData.email || "",
+      phone: formData.phone || "",
+      source: formData.source || "",
+      status: (formData.status as Lead["status"]) || "new",
+      priority: (formData.priority as Lead["priority"]) || "medium",
+      assignedTo: formData.assignedTo || "Zedunix ERP Admin",
+      createdDate,
+      lastContact: "Just now",
+      tags,
+      address: formData.address,
+      position: formData.position,
+      city: formData.city,
+      state: formData.state,
+      website: formData.website,
+      country: formData.country,
+      zipCode: formData.zipCode,
+      leadValue: formData.leadValue,
+      defaultLanguage: formData.defaultLanguage,
+      description: formData.description,
+      dateContacted: formData.dateContacted,
+      isPublic: formData.isPublic,
+      contactedToday: formData.contactedToday,
+      attachments: [],
+    };
+    setLeads(prev => [newLead, ...prev]);
+    setLeadModalOpen(false);
+    // Open the new lead's detail view
+    setSelectedLead(newLead);
+    setIsEditing(false);
+    setDetailModalOpen(true);
+  };
+
+  // Attachment handling
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || !selectedLead) return;
+    const newAttachments: Attachment[] = Array.from(files).map(file => ({
+      id: String(Date.now()) + Math.random().toString(36).substr(2, 9),
+      name: file.name,
+      size: file.size < 1024 ? `${file.size} B` : file.size < 1048576 ? `${(file.size / 1024).toFixed(1)} KB` : `${(file.size / 1048576).toFixed(1)} MB`,
+      type: file.type || "unknown",
+      addedDate: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    }));
+    const updatedLead: Lead = {
+      ...selectedLead,
+      attachments: [...(selectedLead.attachments || []), ...newAttachments],
+    };
+    setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
+    setSelectedLead(updatedLead);
+    e.target.value = "";
+  };
+
+  const removeAttachment = (attachmentId: string) => {
+    if (!selectedLead) return;
+    const updatedLead: Lead = {
+      ...selectedLead,
+      attachments: (selectedLead.attachments || []).filter(a => a.id !== attachmentId),
+    };
+    setLeads(prev => prev.map(l => l.id === updatedLead.id ? updatedLead : l));
+    setSelectedLead(updatedLead);
+  };
+
+  const activeLeads = leads.filter(l => l.status !== "converted");
+  const convertedLeads = leads.filter(l => l.status === "converted");
+
+  const totalLeads = leads.length;
+  const qualifiedCount = leads.filter(l => l.status === "qualified").length;
+  const nurturingCount = leads.filter(l => l.status === "nurturing").length;
+  const convertedCount = convertedLeads.length;
+  const conversionRate = totalLeads > 0 ? ((convertedCount / totalLeads) * 100).toFixed(1) : "0.0";
 
   const stats = [
-    { label: "Total Leads", value: "342", change: "+24", icon: Users, color: "text-indigo-600" },
-    { label: "Qualified", value: "124", change: "+18", icon: CheckCircle, color: "text-green-600" },
-    { label: "Nurturing", value: "156", change: "+12", icon: Target, color: "text-amber-600" },
-    { label: "Converted", value: "62", change: "+8", icon: Award, color: "text-blue-600" }
+    { label: "Total Leads", value: String(totalLeads), change: `+${totalLeads}`, icon: Users, color: "text-indigo-600" },
+    { label: "Qualified", value: String(qualifiedCount), change: `+${qualifiedCount}`, icon: CheckCircle, color: "text-green-600" },
+    { label: "Nurturing", value: String(nurturingCount), change: `+${nurturingCount}`, icon: Target, color: "text-amber-600" },
+    { label: "Converted", value: String(convertedCount), change: `+${convertedCount}`, icon: Award, color: "text-blue-600" }
   ];
 
   const additionalStats = [
-    { label: "Conversion Rate", value: "18.1%", icon: TrendingUp }
+    { label: "Conversion Rate", value: `${conversionRate}%`, icon: TrendingUp }
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "new":
-        return "bg-blue-500";
-      case "qualified":
-        return "bg-green-500";
-      case "nurturing":
-        return "bg-amber-500";
-      case "converted":
-        return "bg-purple-500";
-      case "lost":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
+      case "new": return "bg-blue-500";
+      case "qualified": return "bg-green-500";
+      case "nurturing": return "bg-amber-500";
+      case "converted": return "bg-purple-500";
+      case "lost": return "bg-red-500";
+      default: return "bg-gray-500";
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high":
-        return "text-red-600 bg-red-50";
-      case "medium":
-        return "text-amber-600 bg-amber-50";
-      case "low":
-        return "text-gray-600 bg-gray-50";
-      default:
-        return "text-gray-600 bg-gray-50";
+      case "high": return "text-red-600 bg-red-50";
+      case "medium": return "text-amber-600 bg-amber-50";
+      case "low": return "text-gray-600 bg-gray-50";
+      default: return "text-gray-600 bg-gray-50";
     }
   };
 
-  
+  const filteredActiveLeads = activeLeads.filter(lead =>
+    lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const filteredLeads = leads.filter(lead =>
+  const filteredConvertedLeads = convertedLeads.filter(lead =>
     lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
     lead.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -277,14 +318,14 @@ export default function LeadsWorkflow() {
             <h1 className="text-3xl font-bold text-gray-900">Leads & Workflow</h1>
             <p className="text-sm text-gray-500 mt-1">Intelligent lead management and automation</p>
           </div>
-          <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => setLeadModalOpen(true)}>
+          <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={openCreateModal}>
             <Plus className="w-4 h-4 mr-2" />
             Add Lead
           </Button>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
           {stats.map((stat) => (
             <Card key={stat.label} className="bg-white/70 backdrop-blur-sm border-gray-200">
               <CardContent className="p-6">
@@ -335,8 +376,14 @@ export default function LeadsWorkflow() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="intake" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 gap-1 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-3 gap-1 lg:w-auto">
             <TabsTrigger value="intake" className="text-center">Lead Intake</TabsTrigger>
+            <TabsTrigger value="converted" className="text-center">
+              Converted
+              {convertedCount > 0 && (
+                <Badge className="ml-2 bg-purple-500 text-white text-xs">{convertedCount}</Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="assignment" className="text-center">Assignment</TabsTrigger>
           </TabsList>
 
@@ -345,7 +392,7 @@ export default function LeadsWorkflow() {
             <Card className="bg-white/70 backdrop-blur-sm border-gray-200">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle>All Leads</CardTitle>
+                  <CardTitle>Active Leads</CardTitle>
                   <div className="flex gap-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -364,88 +411,222 @@ export default function LeadsWorkflow() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {filteredLeads.map((lead) => (
-                    <Card
-                      key={lead.id}
-                      className="cursor-pointer hover:shadow-lg transition-shadow"
-                      onClick={() => {
-                        setSelectedLead(lead);
-                        setLeadModalOpen(true);
-                      }}
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
-                            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                              {lead.name.split(' ').map(n => n[0]).join('')}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-semibold text-gray-900">{lead.name}</h3>
-                                <Badge className={getStatusColor(lead.status)}>
-                                  {lead.status}
-                                </Badge>
-                                <Badge variant="outline" className={getPriorityColor(lead.priority)}>
-                                  {lead.priority}
-                                </Badge>
+                {filteredActiveLeads.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-600 mb-2">No leads yet</h3>
+                    <p className="text-sm text-gray-400 mb-4">Get started by adding your first lead</p>
+                    <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={openCreateModal}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Lead
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredActiveLeads.map((lead) => (
+                      <Card
+                        key={lead.id}
+                        className="cursor-pointer hover:shadow-lg transition-shadow"
+                        onClick={() => openDetailModal(lead)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                {lead.name.split(' ').map(n => n[0]).join('')}
                               </div>
-                              <div className="flex items-center gap-4 text-sm text-gray-600">
-                                <span>{lead.company}</span>
-                                <span>•</span>
-                                <span className="flex items-center gap-1">
-                                  <Mail className="w-3 h-3" />
-                                  {lead.email}
-                                </span>
-                                <span>•</span>
-                                <span className="flex items-center gap-1">
-                                  <Phone className="w-3 h-3" />
-                                  {lead.phone}
-                                </span>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-semibold text-gray-900">{lead.name}</h3>
+                                  <Badge className={getStatusColor(lead.status)}>
+                                    {lead.status}
+                                  </Badge>
+                                  <Badge variant="outline" className={getPriorityColor(lead.priority)}>
+                                    {lead.priority}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-gray-600">
+                                  <span>{lead.company}</span>
+                                  {lead.email && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="flex items-center gap-1">
+                                        <Mail className="w-3 h-3" />
+                                        {lead.email}
+                                      </span>
+                                    </>
+                                  )}
+                                  {lead.phone && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="flex items-center gap-1">
+                                        <Phone className="w-3 h-3" />
+                                        {lead.phone}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-6">
+                              <div className="text-right">
+                                <p className="text-sm text-gray-600">Assigned to</p>
+                                <p className="font-semibold text-gray-900">{lead.assignedTo}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm text-gray-600">Last Contact</p>
+                                <p className="font-semibold text-gray-900">{lead.lastContact}</p>
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center gap-6">
-                            <div className="text-right">
-                              <p className="text-sm text-gray-600">Assigned to</p>
-                              <p className="font-semibold text-gray-900">{lead.assignedTo}</p>
+                          <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <Calendar className="w-3 h-3" />
+                              <span>Created: {lead.createdDate}</span>
+                              <span>•</span>
+                              <span>Source: {lead.source}</span>
+                              {lead.attachments && lead.attachments.length > 0 && (
+                                <>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-1">
+                                    <Paperclip className="w-3 h-3" />
+                                    {lead.attachments.length} file(s)
+                                  </span>
+                                </>
+                              )}
                             </div>
-                            <div className="text-right">
-                              <p className="text-sm text-gray-600">Last Contact</p>
-                              <p className="font-semibold text-gray-900">{lead.lastContact}</p>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); requestConvert(lead); }}
+                              >
+                                <Zap className="w-4 h-4 mr-2" />
+                                Convert
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDetailModal(lead); }}>
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
                             </div>
                           </div>
-                        </div>
-                        <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <Calendar className="w-3 h-3" />
-                            <span>Created: {lead.createdDate}</span>
-                            <span>•</span>
-                            <span>Source: {lead.source}</span>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => { e.stopPropagation(); requestConvert(lead); }}
-                            >
-                              <Zap className="w-4 h-4 mr-2" />
-                              Convert
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={(e) => e.stopPropagation()}>
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          
+          {/* Converted Leads Tab */}
+          <TabsContent value="converted" className="space-y-4">
+            <Card className="bg-white/70 backdrop-blur-sm border-gray-200">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-purple-600" />
+                    Converted Leads (Customers)
+                  </CardTitle>
+                  <div className="flex gap-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        placeholder="Search converted leads..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 w-64"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {filteredConvertedLeads.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Award className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-600 mb-2">No converted leads yet</h3>
+                    <p className="text-sm text-gray-400">Leads that are converted to customers will appear here</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredConvertedLeads.map((lead) => (
+                      <Card
+                        key={lead.id}
+                        className="cursor-pointer hover:shadow-lg transition-shadow border-l-4 border-l-purple-500"
+                        onClick={() => openDetailModal(lead)}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                {lead.name.split(' ').map(n => n[0]).join('')}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="font-semibold text-gray-900">{lead.name}</h3>
+                                  <Badge className="bg-purple-500">Customer</Badge>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-gray-600">
+                                  <span>{lead.company}</span>
+                                  {lead.email && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="flex items-center gap-1">
+                                        <Mail className="w-3 h-3" />
+                                        {lead.email}
+                                      </span>
+                                    </>
+                                  )}
+                                  {lead.phone && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="flex items-center gap-1">
+                                        <Phone className="w-3 h-3" />
+                                        {lead.phone}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-6">
+                              <div className="text-right">
+                                <p className="text-sm text-gray-600">Assigned to</p>
+                                <p className="font-semibold text-gray-900">{lead.assignedTo}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm text-gray-600">Converted</p>
+                                <p className="font-semibold text-purple-600">{lead.convertedDate || lead.lastContact}</p>
+                              </div>
+                              {lead.leadValue && (
+                                <div className="text-right">
+                                  <p className="text-sm text-gray-600">Value</p>
+                                  <p className="font-semibold text-green-600">${lead.leadValue}</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="mt-3 pt-3 border-t border-gray-200 flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                              <Calendar className="w-3 h-3" />
+                              <span>Created: {lead.createdDate}</span>
+                              <span>•</span>
+                              <span>Source: {lead.source}</span>
+                            </div>
+                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openDetailModal(lead); }}>
+                              <Eye className="w-4 h-4 mr-1" />
+                              View Details
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Assignment Tab */}
           <TabsContent value="assignment" className="space-y-4">
@@ -477,24 +658,24 @@ export default function LeadsWorkflow() {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Assigned Leads</span>
-                            <span className="font-semibold">124</span>
+                            <span className="font-semibold">{leads.filter(l => l.assignedTo === "Sarah J.").length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Active</span>
-                            <span className="font-semibold text-green-600">89</span>
+                            <span className="font-semibold text-green-600">{leads.filter(l => l.assignedTo === "Sarah J." && l.status !== "converted").length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Converted</span>
-                            <span className="font-semibold text-blue-600">28</span>
+                            <span className="font-semibold text-blue-600">{leads.filter(l => l.assignedTo === "Sarah J." && l.status === "converted").length}</span>
                           </div>
                         </div>
                         <div className="mt-3 pt-3 border-t">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Workload</span>
-                            <span className="font-semibold">78%</span>
+                            <span className="font-semibold">{leads.filter(l => l.assignedTo === "Sarah J.").length > 0 ? Math.min(100, leads.filter(l => l.assignedTo === "Sarah J.").length * 10) : 0}%</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                            <div className="bg-indigo-600 h-2 rounded-full" style={{ width: "78%" }}></div>
+                            <div className="bg-indigo-600 h-2 rounded-full" style={{ width: `${leads.filter(l => l.assignedTo === "Sarah J.").length > 0 ? Math.min(100, leads.filter(l => l.assignedTo === "Sarah J.").length * 10) : 0}%` }}></div>
                           </div>
                         </div>
                       </CardContent>
@@ -514,24 +695,24 @@ export default function LeadsWorkflow() {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Assigned Leads</span>
-                            <span className="font-semibold">98</span>
+                            <span className="font-semibold">{leads.filter(l => l.assignedTo === "Mike C.").length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Active</span>
-                            <span className="font-semibold text-green-600">72</span>
+                            <span className="font-semibold text-green-600">{leads.filter(l => l.assignedTo === "Mike C." && l.status !== "converted").length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Converted</span>
-                            <span className="font-semibold text-blue-600">21</span>
+                            <span className="font-semibold text-blue-600">{leads.filter(l => l.assignedTo === "Mike C." && l.status === "converted").length}</span>
                           </div>
                         </div>
                         <div className="mt-3 pt-3 border-t">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Workload</span>
-                            <span className="font-semibold">62%</span>
+                            <span className="font-semibold">{leads.filter(l => l.assignedTo === "Mike C.").length > 0 ? Math.min(100, leads.filter(l => l.assignedTo === "Mike C.").length * 10) : 0}%</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                            <div className="bg-amber-600 h-2 rounded-full" style={{ width: "62%" }}></div>
+                            <div className="bg-amber-600 h-2 rounded-full" style={{ width: `${leads.filter(l => l.assignedTo === "Mike C.").length > 0 ? Math.min(100, leads.filter(l => l.assignedTo === "Mike C.").length * 10) : 0}%` }}></div>
                           </div>
                         </div>
                       </CardContent>
@@ -544,51 +725,47 @@ export default function LeadsWorkflow() {
                             <User className="w-5 h-5 text-green-600" />
                           </div>
                           <div>
-                            <p className="font-semibold text-gray-900">Emily Davis</p>
-                            <p className="text-xs text-gray-500">Sales Rep</p>
+                            <p className="font-semibold text-gray-900">Zedunix ERP Admin</p>
+                            <p className="text-xs text-gray-500">Admin</p>
                           </div>
                         </div>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Assigned Leads</span>
-                            <span className="font-semibold">87</span>
+                            <span className="font-semibold">{leads.filter(l => l.assignedTo === "Zedunix ERP Admin").length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Active</span>
-                            <span className="font-semibold text-green-600">64</span>
+                            <span className="font-semibold text-green-600">{leads.filter(l => l.assignedTo === "Zedunix ERP Admin" && l.status !== "converted").length}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Converted</span>
-                            <span className="font-semibold text-blue-600">18</span>
+                            <span className="font-semibold text-blue-600">{leads.filter(l => l.assignedTo === "Zedunix ERP Admin" && l.status === "converted").length}</span>
                           </div>
                         </div>
                         <div className="mt-3 pt-3 border-t">
                           <div className="flex justify-between text-sm">
                             <span className="text-gray-600">Workload</span>
-                            <span className="font-semibold">55%</span>
+                            <span className="font-semibold">{leads.filter(l => l.assignedTo === "Zedunix ERP Admin").length > 0 ? Math.min(100, leads.filter(l => l.assignedTo === "Zedunix ERP Admin").length * 10) : 0}%</span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                            <div className="bg-green-600 h-2 rounded-full" style={{ width: "55%" }}></div>
+                            <div className="bg-green-600 h-2 rounded-full" style={{ width: `${leads.filter(l => l.assignedTo === "Zedunix ERP Admin").length > 0 ? Math.min(100, leads.filter(l => l.assignedTo === "Zedunix ERP Admin").length * 10) : 0}%` }}></div>
                           </div>
                         </div>
                       </CardContent>
                     </Card>
                   </div>
-
-                 
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
-
-          
         </Tabs>
 
-        {/* Lead Details Modal */}
+        {/* Create Lead Modal */}
         <Dialog open={leadModalOpen} onOpenChange={setLeadModalOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{selectedLead ? "Lead Details" : "Add new lead"}</DialogTitle>
+              <DialogTitle>Add New Lead</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {/* Status, Source, and Assigned Row */}
@@ -598,21 +775,17 @@ export default function LeadsWorkflow() {
                     <span className="text-red-500">*</span> Status
                   </label>
                   <div className="flex gap-2 mt-1">
-                    <Select defaultValue="New Leads">
+                    <Select value={formData.status || "new"} onValueChange={(v) => setFormData(prev => ({ ...prev, status: v as Lead["status"] }))}>
                       <SelectTrigger className="flex-1">
                         <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="New Leads">New Leads</SelectItem>
-                        <SelectItem value="Qualified">Qualified</SelectItem>
-                        <SelectItem value="Nurturing">Nurturing</SelectItem>
-                        <SelectItem value="Converted">Converted</SelectItem>
-                        <SelectItem value="Lost">Lost</SelectItem>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="qualified">Qualified</SelectItem>
+                        <SelectItem value="nurturing">Nurturing</SelectItem>
+                        <SelectItem value="lost">Lost</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" size="icon" className="shrink-0">
-                      <Plus className="w-4 h-4" />
-                    </Button>
                   </div>
                 </div>
                 <div>
@@ -620,9 +793,9 @@ export default function LeadsWorkflow() {
                     <span className="text-red-500">*</span> Source
                   </label>
                   <div className="flex gap-2 mt-1">
-                    <Select defaultValue={selectedLead?.source}>
+                    <Select value={formData.source || ""} onValueChange={(v) => setFormData(prev => ({ ...prev, source: v }))}>
                       <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Non selected" />
+                        <SelectValue placeholder="Select source" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Website">Website</SelectItem>
@@ -632,15 +805,12 @@ export default function LeadsWorkflow() {
                         <SelectItem value="Cold Call">Cold Call</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" size="icon" className="shrink-0">
-                      <Plus className="w-4 h-4" />
-                    </Button>
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Assigned</label>
                   <div className="mt-1">
-                    <Select defaultValue="Zedunix ERP Admin">
+                    <Select value={formData.assignedTo || "Zedunix ERP Admin"} onValueChange={(v) => setFormData(prev => ({ ...prev, assignedTo: v }))}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select assignee" />
                       </SelectTrigger>
@@ -654,9 +824,24 @@ export default function LeadsWorkflow() {
                 </div>
               </div>
 
-              {/* Tags (multi-input, linear) */}
+              {/* Priority */}
               <div>
-                <label className="text-sm font-medium text-gray-700 flex items-center gap-1">Tags</label>
+                <label className="text-sm font-medium text-gray-700">Priority</label>
+                <Select value={formData.priority || "medium"} onValueChange={(v) => setFormData(prev => ({ ...prev, priority: v as Lead["priority"] }))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Tags */}
+              <div>
+                <label className="text-sm font-medium text-gray-700">Tags</label>
                 <div className="mt-1 flex items-center gap-2 overflow-x-auto border border-gray-300 rounded-md px-2 py-1 bg-white">
                   {tags.map((t, idx) => (
                     <span key={idx} className="inline-flex items-center px-2 py-1 bg-gray-100 text-sm rounded-full">
@@ -677,53 +862,53 @@ export default function LeadsWorkflow() {
                 </div>
               </div>
 
-              {/* Name and Address Row */}
+              {/* Name and Address */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">
                     <span className="text-red-500">*</span> Name
                   </label>
-                  <Input defaultValue={selectedLead?.name} placeholder="" className="mt-1" />
+                  <Input value={formData.name || ""} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="Full name" className="mt-1" />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Address</label>
-                  <Textarea defaultValue={selectedLead?.address} placeholder="" className="mt-1" rows={1} />
+                  <Textarea value={formData.address || ""} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} placeholder="" className="mt-1" rows={1} />
                 </div>
               </div>
 
-              {/* Position and City Row */}
+              {/* Position and City */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Position</label>
-                  <Input defaultValue={selectedLead?.position} placeholder="" className="mt-1" />
+                  <Input value={formData.position || ""} onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))} placeholder="" className="mt-1" />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">City</label>
-                  <Input defaultValue={selectedLead?.city} placeholder="" className="mt-1" />
+                  <Input value={formData.city || ""} onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))} placeholder="" className="mt-1" />
                 </div>
               </div>
 
-              {/* Email Address and State Row */}
+              {/* Email and State */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Email Address</label>
-                  <Input defaultValue={selectedLead?.email} type="email" placeholder="" className="mt-1" />
+                  <Input value={formData.email || ""} onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} type="email" placeholder="" className="mt-1" />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">State</label>
-                  <Input defaultValue={selectedLead?.state} placeholder="" className="mt-1" />
+                  <Input value={formData.state || ""} onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))} placeholder="" className="mt-1" />
                 </div>
               </div>
 
-              {/* Website and Country Row */}
+              {/* Website and Country */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Website</label>
-                  <Input defaultValue={selectedLead?.website} placeholder="" className="mt-1" />
+                  <Input value={formData.website || ""} onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))} placeholder="" className="mt-1" />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Country</label>
-                  <Select defaultValue="India">
+                  <Select value={formData.country || "India"} onValueChange={(v) => setFormData(prev => ({ ...prev, country: v }))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
@@ -737,37 +922,30 @@ export default function LeadsWorkflow() {
                 </div>
               </div>
 
-              {/* Phone and Zip Code Row */}
+              {/* Phone and Zip Code */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Phone</label>
-                  <Input defaultValue={selectedLead?.phone} type="tel" placeholder="" className="mt-1" />
+                  <Input value={formData.phone || ""} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} type="tel" placeholder="" className="mt-1" />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Zip Code</label>
-                  <Input defaultValue={selectedLead?.zipCode} placeholder="" className="mt-1" />
+                  <Input value={formData.zipCode || ""} onChange={(e) => setFormData(prev => ({ ...prev, zipCode: e.target.value }))} placeholder="" className="mt-1" />
                 </div>
               </div>
 
-              {/* Lead value and Default Language Row */}
+              {/* Lead value and Default Language */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Lead value</label>
                   <div className="flex mt-1">
-                    <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">
-                      $
-                    </span>
-                    <Input 
-                      defaultValue={selectedLead?.leadValue} 
-                      type="number" 
-                      placeholder="" 
-                      className="rounded-l-none" 
-                    />
+                    <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">$</span>
+                    <Input value={formData.leadValue || ""} onChange={(e) => setFormData(prev => ({ ...prev, leadValue: Number(e.target.value) || undefined }))} type="number" placeholder="" className="rounded-l-none" />
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Default Language</label>
-                  <Select defaultValue="System Default">
+                  <Select value={formData.defaultLanguage || "System Default"} onValueChange={(v) => setFormData(prev => ({ ...prev, defaultLanguage: v }))}>
                     <SelectTrigger className="mt-1">
                       <SelectValue placeholder="Select language" />
                     </SelectTrigger>
@@ -784,61 +962,455 @@ export default function LeadsWorkflow() {
               {/* Company */}
               <div>
                 <label className="text-sm font-medium text-gray-700">Company</label>
-                <Input defaultValue={selectedLead?.company} placeholder="" className="mt-1" />
+                <Input value={formData.company || ""} onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))} placeholder="" className="mt-1" />
               </div>
 
               {/* Description */}
               <div>
                 <label className="text-sm font-medium text-gray-700">Description</label>
-                <Textarea defaultValue={selectedLead?.description} placeholder="" className="mt-1" rows={4} />
+                <Textarea value={formData.description || ""} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="" className="mt-1" rows={4} />
               </div>
 
               {/* Date Contacted */}
               <div>
                 <label className="text-sm font-medium text-gray-700">Date Contacted</label>
-                <Input defaultValue={selectedLead?.dateContacted} type="date" className="mt-1" />
+                <Input value={formData.dateContacted || ""} onChange={(e) => setFormData(prev => ({ ...prev, dateContacted: e.target.value }))} type="date" className="mt-1" />
               </div>
 
               {/* Checkboxes */}
               <div className="flex gap-6">
                 <div className="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
-                    id="public" 
-                    defaultChecked={selectedLead?.isPublic}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                  />
-                  <label htmlFor="public" className="text-sm font-medium text-gray-700">
-                    Public
-                  </label>
+                  <input type="checkbox" id="create-public" checked={formData.isPublic || false} onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))} className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+                  <label htmlFor="create-public" className="text-sm font-medium text-gray-700">Public</label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
-                    id="contactedToday" 
-                    defaultChecked={selectedLead?.contactedToday}
-                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
-                  />
-                  <label htmlFor="contactedToday" className="text-sm font-medium text-gray-700">
-                    Contacted Today
-                  </label>
+                  <input type="checkbox" id="create-contactedToday" checked={formData.contactedToday || false} onChange={(e) => setFormData(prev => ({ ...prev, contactedToday: e.target.checked }))} className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+                  <label htmlFor="create-contactedToday" className="text-sm font-medium text-gray-700">Contacted Today</label>
                 </div>
               </div>
 
               {/* Action Buttons */}
               <div className="flex justify-end gap-2 pt-4">
-                <Button variant="outline" onClick={() => setLeadModalOpen(false)}>
-                  Close
-                </Button>
-                <Button className="bg-blue-600 hover:bg-blue-700">
-                  Save
+                <Button variant="outline" onClick={() => setLeadModalOpen(false)}>Cancel</Button>
+                <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={saveNewLead} disabled={!formData.name || !formData.source}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Lead
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
 
-       
+        {/* Lead Detail / Edit / View Modal */}
+        <Dialog open={detailModalOpen} onOpenChange={(open) => { setDetailModalOpen(open); if (!open) setIsEditing(false); }}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="flex items-center gap-3">
+                  {selectedLead && (
+                    <>
+                      <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                        {selectedLead.name.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <span>{selectedLead.name}</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge className={getStatusColor(selectedLead.status)}>
+                            {selectedLead.status === "converted" ? "Customer" : selectedLead.status}
+                          </Badge>
+                          <Badge variant="outline" className={getPriorityColor(selectedLead.priority)}>
+                            {selectedLead.priority}
+                          </Badge>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </DialogTitle>
+                {selectedLead && !isEditing && (
+                  <div className="flex gap-2">
+                    {selectedLead.status !== "converted" && (
+                      <Button
+                        size="sm"
+                        className="bg-purple-600 hover:bg-purple-700"
+                        onClick={() => requestConvert(selectedLead)}
+                      >
+                        <ArrowRight className="w-4 h-4 mr-1" />
+                        Convert to Customer
+                      </Button>
+                    )}
+                    <Button size="sm" variant="outline" onClick={startEditing}>
+                      <Edit className="w-4 h-4 mr-1" />
+                      Edit
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </DialogHeader>
+
+            {selectedLead && !isEditing ? (
+              /* VIEW MODE */
+              <div className="space-y-6">
+                {/* Converted banner */}
+                {selectedLead.status === "converted" && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-purple-600" />
+                    <div>
+                      <p className="font-semibold text-purple-800">Converted to Customer</p>
+                      <p className="text-sm text-purple-600">This lead was converted on {selectedLead.convertedDate || "N/A"}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Details Grid */}
+                <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Name</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Company</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.company || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Email</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.email || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Phone</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.phone || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Position</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.position || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Website</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.website || "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Source</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.source}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Assigned To</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.assignedTo}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Address</p>
+                    <p className="text-sm font-medium text-gray-900">
+                      {[selectedLead.address, selectedLead.city, selectedLead.state, selectedLead.zipCode, selectedLead.country].filter(Boolean).join(", ") || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Lead Value</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.leadValue ? `$${selectedLead.leadValue}` : "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Created Date</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.createdDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Last Contact</p>
+                    <p className="text-sm font-medium text-gray-900">{selectedLead.lastContact}</p>
+                  </div>
+                </div>
+
+                {/* Tags */}
+                {selectedLead.tags && selectedLead.tags.length > 0 && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-2">Tags</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedLead.tags.map((t, idx) => (
+                        <Badge key={idx} variant="outline" className="text-sm">{t}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Description */}
+                {selectedLead.description && (
+                  <div>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Description</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{selectedLead.description}</p>
+                  </div>
+                )}
+
+                {/* Attachments Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs text-gray-500 uppercase tracking-wide flex items-center gap-1">
+                      <Paperclip className="w-3 h-3" />
+                      Attachments ({selectedLead.attachments?.length || 0})
+                    </p>
+                    <div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        multiple
+                      />
+                      <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
+                        <Upload className="w-4 h-4 mr-1" />
+                        Add Attachment
+                      </Button>
+                    </div>
+                  </div>
+                  {(!selectedLead.attachments || selectedLead.attachments.length === 0) ? (
+                    <div className="text-center py-6 border border-dashed border-gray-300 rounded-lg">
+                      <FileText className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                      <p className="text-sm text-gray-400">No attachments yet</p>
+                      <Button variant="ghost" size="sm" className="mt-2" onClick={() => fileInputRef.current?.click()}>
+                        <Upload className="w-4 h-4 mr-1" />
+                        Upload files
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {selectedLead.attachments.map((att) => (
+                        <div key={att.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border">
+                          <div className="flex items-center gap-3">
+                            <FileText className="w-5 h-5 text-indigo-500" />
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{att.name}</p>
+                              <p className="text-xs text-gray-500">{att.size} · Added {att.addedDate}</p>
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" onClick={() => removeAttachment(att.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer actions */}
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setDetailModalOpen(false)}>Close</Button>
+                  {selectedLead.status !== "converted" && (
+                    <Button className="bg-purple-600 hover:bg-purple-700" onClick={() => requestConvert(selectedLead)}>
+                      <ArrowRight className="w-4 h-4 mr-1" />
+                      Convert to Customer
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={startEditing}>
+                    <Edit className="w-4 h-4 mr-1" />
+                    Edit
+                  </Button>
+                </div>
+              </div>
+            ) : selectedLead && isEditing ? (
+              /* EDIT MODE */
+              <div className="space-y-4">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700"><span className="text-red-500">*</span> Status</label>
+                    <Select value={formData.status || selectedLead.status} onValueChange={(v) => setFormData(prev => ({ ...prev, status: v as Lead["status"] }))}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="qualified">Qualified</SelectItem>
+                        <SelectItem value="nurturing">Nurturing</SelectItem>
+                        <SelectItem value="lost">Lost</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700"><span className="text-red-500">*</span> Source</label>
+                    <Select value={formData.source || selectedLead.source} onValueChange={(v) => setFormData(prev => ({ ...prev, source: v }))}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Website">Website</SelectItem>
+                        <SelectItem value="Referral">Referral</SelectItem>
+                        <SelectItem value="LinkedIn">LinkedIn</SelectItem>
+                        <SelectItem value="Trade Show">Trade Show</SelectItem>
+                        <SelectItem value="Cold Call">Cold Call</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Assigned</label>
+                    <Select value={formData.assignedTo || selectedLead.assignedTo} onValueChange={(v) => setFormData(prev => ({ ...prev, assignedTo: v }))}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Zedunix ERP Admin">Zedunix ERP Admin</SelectItem>
+                        <SelectItem value="Sarah J.">Sarah J.</SelectItem>
+                        <SelectItem value="Mike C.">Mike C.</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Priority</label>
+                  <Select value={formData.priority || selectedLead.priority} onValueChange={(v) => setFormData(prev => ({ ...prev, priority: v as Lead["priority"] }))}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Tags</label>
+                  <div className="mt-1 flex items-center gap-2 overflow-x-auto border border-gray-300 rounded-md px-2 py-1 bg-white">
+                    {tags.map((t, idx) => (
+                      <span key={idx} className="inline-flex items-center px-2 py-1 bg-gray-100 text-sm rounded-full">
+                        <span className="mr-2 text-sm text-gray-700">{t}</span>
+                        <button type="button" onClick={() => removeTag(idx)} className="text-gray-500 hover:text-gray-700">
+                          <XCircle className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      value={tagsInput}
+                      onChange={(e) => setTagsInput(e.target.value)}
+                      onKeyDown={handleTagKeyDown}
+                      onBlur={handleTagBlur}
+                      placeholder="Add tag and press Enter"
+                      className="min-w-[140px] bg-transparent outline-none text-sm text-gray-700"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700"><span className="text-red-500">*</span> Name</label>
+                    <Input value={formData.name || ""} onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))} className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Address</label>
+                    <Textarea value={formData.address || ""} onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))} className="mt-1" rows={1} />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Position</label>
+                    <Input value={formData.position || ""} onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))} className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">City</label>
+                    <Input value={formData.city || ""} onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))} className="mt-1" />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Email Address</label>
+                    <Input value={formData.email || ""} onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))} type="email" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">State</label>
+                    <Input value={formData.state || ""} onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))} className="mt-1" />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Website</label>
+                    <Input value={formData.website || ""} onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))} className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Country</label>
+                    <Select value={formData.country || "India"} onValueChange={(v) => setFormData(prev => ({ ...prev, country: v }))}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="India">India</SelectItem>
+                        <SelectItem value="USA">USA</SelectItem>
+                        <SelectItem value="UK">UK</SelectItem>
+                        <SelectItem value="Canada">Canada</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Phone</label>
+                    <Input value={formData.phone || ""} onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))} type="tel" className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Zip Code</label>
+                    <Input value={formData.zipCode || ""} onChange={(e) => setFormData(prev => ({ ...prev, zipCode: e.target.value }))} className="mt-1" />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Lead value</label>
+                    <div className="flex mt-1">
+                      <span className="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-200 border border-r-0 border-gray-300 rounded-l-md">$</span>
+                      <Input value={formData.leadValue || ""} onChange={(e) => setFormData(prev => ({ ...prev, leadValue: Number(e.target.value) || undefined }))} type="number" className="rounded-l-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Default Language</label>
+                    <Select value={formData.defaultLanguage || "System Default"} onValueChange={(v) => setFormData(prev => ({ ...prev, defaultLanguage: v }))}>
+                      <SelectTrigger className="mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="System Default">System Default</SelectItem>
+                        <SelectItem value="English">English</SelectItem>
+                        <SelectItem value="Spanish">Spanish</SelectItem>
+                        <SelectItem value="French">French</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Company</label>
+                  <Input value={formData.company || ""} onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))} className="mt-1" />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Description</label>
+                  <Textarea value={formData.description || ""} onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))} className="mt-1" rows={4} />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Date Contacted</label>
+                  <Input value={formData.dateContacted || ""} onChange={(e) => setFormData(prev => ({ ...prev, dateContacted: e.target.value }))} type="date" className="mt-1" />
+                </div>
+
+                <div className="flex gap-6">
+                  <div className="flex items-center space-x-2">
+                    <input type="checkbox" id="edit-public" checked={formData.isPublic || false} onChange={(e) => setFormData(prev => ({ ...prev, isPublic: e.target.checked }))} className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+                    <label htmlFor="edit-public" className="text-sm font-medium text-gray-700">Public</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input type="checkbox" id="edit-contactedToday" checked={formData.contactedToday || false} onChange={(e) => setFormData(prev => ({ ...prev, contactedToday: e.target.checked }))} className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" />
+                    <label htmlFor="edit-contactedToday" className="text-sm font-medium text-gray-700">Contacted Today</label>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                  <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={saveEditedLead}>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </DialogContent>
+        </Dialog>
 
         {/* Confirm Convert Dialog */}
         <Dialog open={confirmConvertOpen} onOpenChange={setConfirmConvertOpen}>
@@ -852,7 +1424,10 @@ export default function LeadsWorkflow() {
               </p>
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setConfirmConvertOpen(false)}>Cancel</Button>
-                <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => { confirmConvert(); }}>Confirm</Button>
+                <Button className="bg-purple-600 hover:bg-purple-700" onClick={() => { confirmConvert(); }}>
+                  <ArrowRight className="w-4 h-4 mr-1" />
+                  Confirm
+                </Button>
               </div>
             </div>
           </DialogContent>
