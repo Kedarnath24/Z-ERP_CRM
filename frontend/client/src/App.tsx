@@ -55,7 +55,7 @@ import OrganizationsManagement from "@/pages/organizations/OrganizationsManageme
 
 // New Z-ERP Modules
 import SubscriptionManagement from "@/pages/subscriptions/SubscriptionManagement";
-import LeadsWorkflow from "@/pages/leads/LeadsWorkflow";
+import LeadsWorkflow from "@/pages/leads/index";
 import AdminSetup from "@/pages/admin/AdminSetup";
 
 // Contacts Module
