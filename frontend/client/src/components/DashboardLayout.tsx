@@ -14,6 +14,7 @@ import {
   Briefcase,
   Package,
   MessageCircle,
+  MessageSquareMore,
   CreditCard,
   Settings,
   ChevronDown,
@@ -185,6 +186,15 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       ]
     },
 
+    { 
+      name: 'Team Space', 
+      icon: MessageSquareMore, 
+      path: '/team-space',
+      hasSubmenu: true,
+      submenuKey: 'team-space',
+      
+    },
+
     { name: 'Profile', icon: Users, path: '/profile' },
     
     { name: 'Subscription', icon: CreditCard, path: '/subscriptions' },
@@ -273,6 +283,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     setup: false,
     contracts: false,
     customers: false,
+    'team-space': false,
     settings: false,
   });
 
@@ -409,6 +420,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     { name: 'Subscriptions', path: '/subscriptions', category: 'Accounts', keywords: 'recurring billing plans' },
     { name: 'Leads', path: '/leads', category: 'Sales', keywords: 'prospects opportunities pipeline' },
     { name: 'Admin Setup', path: '/admin', category: 'Admin', keywords: 'configuration permissions users' },
+    { name: 'Team Space', path: '/team-space', category: 'Communication', keywords: 'team collaboration meetings calls chats files' },
     { name: 'Profile', path: '/profile', category: 'Profile', keywords: 'account settings preferences' },
   ], []);
 
