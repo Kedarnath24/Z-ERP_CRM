@@ -252,7 +252,7 @@ export default function LeadReminders() {
               <Bell className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Lead Management - Follow Up Reminders</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">CRM - Follow Up Reminders</h1>
               <p className="text-sm text-gray-600">Schedule and manage follow-up reminders for all leads</p>
             </div>
           </div>

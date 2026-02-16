@@ -18,7 +18,7 @@ import {
   CheckCheck, AlertTriangle, Sparkles, Brain, TrendingDown,
   ArrowUpRight, ArrowDownRight, Clock3, Users2, FileCheck,
   MessageSquare, PlusCircle, Save, Briefcase, MapPinned, History,
-  Loader2
+  Loader2, ExternalLink, PhoneCall
 } from "lucide-react";
 import {
   Dialog,
@@ -126,9 +126,10 @@ interface Proposal {
   notes?: string;
   createdBy: string;
   createdAt: string;
-  sentAt?: string;
+  sentAt?: string | null;
   viewedAt?: string;
   respondedAt?: string;
+  validUntil?: string;
 }
 
 type CallStatus = "not_called" | "called" | "no_answer" | "interested" | "not_interested";
@@ -286,6 +287,82 @@ export default function LeadsModule() {
           createdBy: "John Smith",
           createdAt: "Feb 12, 2026 at 3:45 PM"
         }
+      ],
+      proposals: [
+        {
+          id: "PROP-001",
+          title: "Enterprise ERP Solution Package",
+          status: "sent",
+          version: 1,
+          lineItems: [
+            {
+              id: "item-1",
+              description: "ERP Software License - Annual Subscription (50 users)",
+              quantity: 1,
+              unitPrice: 25000,
+              total: 25000
+            },
+            {
+              id: "item-2",
+              description: "Implementation & Setup Services",
+              quantity: 1,
+              unitPrice: 15000,
+              total: 15000
+            },
+            {
+              id: "item-3",
+              description: "Training Sessions (5 days on-site)",
+              quantity: 5,
+              unitPrice: 1000,
+              total: 5000
+            },
+            {
+              id: "item-4",
+              description: "Premium Support Package (1 year)",
+              quantity: 1,
+              unitPrice: 5000,
+              total: 5000
+            }
+          ],
+          subtotal: 50000,
+          tax: 5000,
+          total: 55000,
+          notes: "Enterprise package with complete setup, training, and premium support. Price includes migration from existing system.",
+          createdBy: "John Smith",
+          createdAt: "Feb 11, 2026",
+          sentAt: "Feb 11, 2026 at 2:30 PM",
+          validUntil: "Mar 15, 2026"
+        },
+        {
+          id: "PROP-002",
+          title: "Add-on: Advanced Analytics Module",
+          status: "draft",
+          version: 1,
+          lineItems: [
+            {
+              id: "item-1",
+              description: "Advanced Analytics & Reporting Module",
+              quantity: 1,
+              unitPrice: 8000,
+              total: 8000
+            },
+            {
+              id: "item-2",
+              description: "Custom Dashboard Development",
+              quantity: 3,
+              unitPrice: 1500,
+              total: 4500
+            }
+          ],
+          subtotal: 12500,
+          tax: 1250,
+          total: 13750,
+          notes: "Optional add-on for advanced analytics capabilities. Can be purchased separately or bundled.",
+          createdBy: "John Smith",
+          createdAt: "Feb 13, 2026",
+          sentAt: null,
+          validUntil: "Mar 15, 2026"
+        }
       ]
     },
     {
@@ -336,7 +413,67 @@ export default function LeadsModule() {
       aiSummary: "Emma Rodriguez is Director of Operations at Global Manufacturing. High-value referral lead with urgent timeline. Proposal sent, awaiting response.",
       activities: [],
       tasks: [],
-      notes: []
+      notes: [],
+      proposals: [
+        {
+          id: "PROP-003",
+          title: "Complete Manufacturing ERP Solution",
+          status: "viewed",
+          version: 2,
+          lineItems: [
+            {
+              id: "item-1",
+              description: "Manufacturing ERP Suite - Enterprise License (200 users)",
+              quantity: 1,
+              unitPrice: 85000,
+              total: 85000
+            },
+            {
+              id: "item-2",
+              description: "Supply Chain Management Module",
+              quantity: 1,
+              unitPrice: 15000,
+              total: 15000
+            },
+            {
+              id: "item-3",
+              description: "Quality Control & Compliance Module",
+              quantity: 1,
+              unitPrice: 12000,
+              total: 12000
+            },
+            {
+              id: "item-4",
+              description: "Implementation Services (Full deployment)",
+              quantity: 1,
+              unitPrice: 25000,
+              total: 25000
+            },
+            {
+              id: "item-5",
+              description: "Training & Documentation",
+              quantity: 10,
+              unitPrice: 800,
+              total: 8000
+            },
+            {
+              id: "item-6",
+              description: "12-Month Premium Support & Maintenance",
+              quantity: 1,
+              unitPrice: 10000,
+              total: 10000
+            }
+          ],
+          subtotal: 155000,
+          tax: 15500,
+          total: 170500,
+          notes: "Comprehensive manufacturing solution with all modules included. Revised proposal with extended support period and additional training sessions based on client feedback.",
+          createdBy: "Emily Davis",
+          createdAt: "Feb 8, 2026",
+          sentAt: "Feb 9, 2026 at 11:00 AM",
+          validUntil: "Mar 10, 2026"
+        }
+      ]
     },
     {
       id: "4",
@@ -386,7 +523,60 @@ export default function LeadsModule() {
       aiSummary: "Lisa Anderson is VP of Technology at Healthcare Solutions. In final negotiation stage. Price negotiation ongoing.",
       activities: [],
       tasks: [],
-      notes: []
+      notes: [],
+      proposals: [
+        {
+          id: "PROP-004",
+          title: "Healthcare Management System - Enterprise",
+          status: "accepted",
+          version: 3,
+          lineItems: [
+            {
+              id: "item-1",
+              description: "Healthcare ERP Platform (150 users)",
+              quantity: 1,
+              unitPrice: 65000,
+              total: 65000
+            },
+            {
+              id: "item-2",
+              description: "Patient Management Module",
+              quantity: 1,
+              unitPrice: 12000,
+              total: 12000
+            },
+            {
+              id: "item-3",
+              description: "HIPAA Compliance & Security Package",
+              quantity: 1,
+              unitPrice: 8000,
+              total: 8000
+            },
+            {
+              id: "item-4",
+              description: "Data Migration & Integration Services",
+              quantity: 1,
+              unitPrice: 15000,
+              total: 15000
+            },
+            {
+              id: "item-5",
+              description: "24/7 Support Package (Annual)",
+              quantity: 1,
+              unitPrice: 12000,
+              total: 12000
+            }
+          ],
+          subtotal: 112000,
+          tax: 11200,
+          total: 123200,
+          notes: "Final negotiated price with 10% discount applied. Includes priority implementation timeline and extended warranty. Client accepted on Feb 15, 2026.",
+          createdBy: "John Smith",
+          createdAt: "Feb 5, 2026",
+          sentAt: "Feb 12, 2026 at 9:15 AM",
+          validUntil: "Mar 5, 2026"
+        }
+      ]
     }
   ]);
 
@@ -1002,8 +1192,8 @@ export default function LeadsModule() {
           <div className="px-6 py-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Leads</h1>
-                <p className="text-gray-500 mt-1">Manage and track all sales leads</p>
+                <h1 className="text-3xl font-bold text-gray-900">CRM</h1>
+                <p className="text-gray-500 mt-1">Leads Management</p>
               </div>
               <div className="flex items-center gap-3">
                 <Button variant="outline" size="sm" onClick={handleImport} className="hover:bg-blue-50 hover:border-blue-500">
@@ -2701,8 +2891,17 @@ function LeadDetailModal({
   const [reminderNotifyBefore, setReminderNotifyBefore] = useState(15);
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
   const [currentStatus, setCurrentStatus] = useState(lead.status);
+  const [currentPriority, setCurrentPriority] = useState(lead.priority);
+  const [statusNotes, setStatusNotes] = useState("");
   const [currentAssignee, setCurrentAssignee] = useState(lead.assignedTo);
+  const [assignmentReason, setAssignmentReason] = useState("");
+  const [notifyAssignee, setNotifyAssignee] = useState(true);
   const [currentCallStatus, setCurrentCallStatus] = useState<CallStatus>(lead.callStatus || "not_called");
+  const [callOutcome, setCallOutcome] = useState("");
+  const [callDuration, setCallDuration] = useState("");
+  const [callDate, setCallDate] = useState(new Date().toISOString().split('T')[0]);
+  const [callNotes, setCallNotes] = useState("");
+  const [nextSteps, setNextSteps] = useState("");
   const [proposalForm, setProposalForm] = useState({
     title: "",
     lineItems: [] as ProposalLineItem[],
@@ -2713,6 +2912,298 @@ function LeadDetailModal({
     quantity: 1,
     unitPrice: 0,
   });
+  const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
+  const [showProposalForm, setShowProposalForm] = useState(false);
+  const [viewingProposal, setViewingProposal] = useState<Proposal | null>(null);
+  
+  // Handler functions
+  const handleUpdateStatus = () => {
+    if (onUpdateLead) {
+      onUpdateLead(lead.id, () => ({
+        status: currentStatus,
+        priority: currentPriority,
+        lastContact: new Date().toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true
+        })
+      }));
+    }
+    toast({
+      title: "✅ Status Updated",
+      description: `Lead status changed to ${currentStatus}`,
+      duration: 3000,
+    });
+    setStatusNotes("");
+  };
+
+  const handleAssignLead = () => {
+    if (onUpdateLead) {
+      onUpdateLead(lead.id, () => ({
+        assignedTo: currentAssignee
+      }));
+    }
+    toast({
+      title: "✅ Lead Assigned",
+      description: `Lead assigned to ${currentAssignee}`,
+      duration: 3000,
+    });
+    setAssignmentReason("");
+  };
+
+  const handleSaveCallLog = () => {
+    if (onUpdateLead) {
+      onUpdateLead(lead.id, () => ({
+        callStatus: currentCallStatus,
+        lastContact: new Date().toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true
+        })
+      }));
+    }
+    toast({
+      title: "✅ Call Log Saved",
+      description: `Call status updated to ${currentCallStatus.replace('_', ' ')}`,
+      duration: 3000,
+    });
+    setCallNotes("");
+    setNextSteps("");
+    setCallDuration("");
+  };
+
+  const handleAddLineItem = () => {
+    if (!newLineItem.description || newLineItem.quantity <= 0 || newLineItem.unitPrice <= 0) {
+      toast({
+        title: "❌ Invalid Line Item",
+        description: "Please fill in all fields with valid values",
+        duration: 3000,
+      });
+      return;
+    }
+
+    const lineItem: ProposalLineItem = {
+      id: String(Date.now()),
+      description: newLineItem.description,
+      quantity: newLineItem.quantity,
+      unitPrice: newLineItem.unitPrice,
+      total: newLineItem.quantity * newLineItem.unitPrice
+    };
+
+    setProposalForm(prev => ({
+      ...prev,
+      lineItems: [...prev.lineItems, lineItem]
+    }));
+
+    setNewLineItem({ description: "", quantity: 1, unitPrice: 0 });
+  };
+
+  const handleRemoveLineItem = (itemId: string) => {
+    setProposalForm(prev => ({
+      ...prev,
+      lineItems: prev.lineItems.filter(item => item.id !== itemId)
+    }));
+  };
+
+  const handleSaveProposal = () => {
+    if (!proposalForm.title || proposalForm.lineItems.length === 0) {
+      toast({
+        title: "❌ Invalid Proposal",
+        description: "Please add a title and at least one line item",
+        duration: 3000,
+      });
+      return;
+    }
+
+    const subtotal = proposalForm.lineItems.reduce((sum, item) => sum + item.total, 0);
+    const tax = subtotal * 0.1; // 10% tax
+    const total = subtotal + tax;
+
+    const newProposal: Proposal = {
+      id: String(Date.now()),
+      title: proposalForm.title,
+      version: editingProposal ? editingProposal.version + 1 : 1,
+      status: "draft",
+      lineItems: proposalForm.lineItems,
+      subtotal,
+      tax,
+      total,
+      notes: proposalForm.notes,
+      createdBy: "Current User",
+      createdAt: new Date().toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      })
+    };
+
+    if (onUpdateLead) {
+      onUpdateLead(lead.id, (l) => ({
+        proposals: editingProposal
+          ? l.proposals?.map(p => p.id === editingProposal.id ? newProposal : p)
+          : [newProposal, ...(l.proposals || [])]
+      }));
+    }
+
+    toast({
+      title: "✅ Proposal Saved",
+      description: editingProposal ? "Proposal updated successfully" : "New proposal created",
+      duration: 3000,
+    });
+
+    setProposalForm({ title: "", lineItems: [], notes: "" });
+    setEditingProposal(null);
+    setShowProposalForm(false);
+  };
+
+  const handleEditProposal = (proposal: Proposal) => {
+    setEditingProposal(proposal);
+    setProposalForm({
+      title: proposal.title,
+      lineItems: proposal.lineItems,
+      notes: proposal.notes || ""
+    });
+    setShowProposalForm(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSendProposal = (proposalId: string) => {
+    if (onUpdateLead) {
+      onUpdateLead(lead.id, (l) => ({
+        proposals: l.proposals?.map(p => 
+          p.id === proposalId 
+            ? { 
+                ...p, 
+                status: "sent",
+                sentAt: new Date().toLocaleString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true
+                })
+              }
+            : p
+        )
+      }));
+    }
+    toast({
+      title: "✅ Proposal Sent",
+      description: "Proposal has been sent to the lead",
+      duration: 3000,
+    });
+  };
+
+  const handleViewProposal = (proposal: Proposal) => {
+    // Show proposal in detail view
+    setViewingProposal(proposal);
+    onTabChange('proposals');
+    toast({
+      title: "📄 Viewing Proposal",
+      description: `Opened ${proposal.title}`,
+      duration: 2000,
+    });
+  };
+
+  const handleDownloadProposal = (proposal: Proposal) => {
+    // Generate proposal content for download
+    const proposalContent = `
+======================================
+PROPOSAL: ${proposal.title}
+======================================
+
+Lead: ${lead.name}
+Company: ${lead.company}
+Version: ${proposal.version}
+Status: ${proposal.status.toUpperCase()}
+
+--------------------------------------
+LINE ITEMS:
+--------------------------------------
+${proposal.lineItems.map((item, index) => 
+  `${index + 1}. ${item.description}\n   Quantity: ${item.quantity} x $${item.unitPrice} = $${item.total}`
+).join('\n\n')}
+
+--------------------------------------
+SUMMARY:
+--------------------------------------
+Subtotal: $${proposal.subtotal.toFixed(2)}
+Tax (10%): $${proposal.tax.toFixed(2)}
+Total: $${proposal.total.toFixed(2)}
+
+${proposal.notes ? `--------------------------------------\nNOTES:\n--------------------------------------\n${proposal.notes}` : ''}
+
+--------------------------------------
+Generated: ${new Date().toLocaleString()}
+======================================
+    `;
+
+    // Create a blob and download
+    const blob = new Blob([proposalContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Proposal_${proposal.title.replace(/\s+/g, '_')}_${lead.name.replace(/\s+/g, '_')}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "⬇️ Download Started",
+      description: `Downloading ${proposal.title}`,
+      duration: 3000,
+    });
+  };
+
+  const handleAddNote = () => {
+    if (!noteContent.trim()) {
+      toast({
+        title: "❌ Empty Note",
+        description: "Please enter some content for the note",
+        duration: 3000,
+      });
+      return;
+    }
+
+    const newNote: Note = {
+      id: String(Date.now()),
+      content: noteContent,
+      createdBy: "Current User",
+      createdAt: new Date().toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      })
+    };
+
+    if (onUpdateLead) {
+      onUpdateLead(lead.id, (l) => ({
+        notes: [newNote, ...(l.notes || [])]
+      }));
+    }
+
+    toast({
+      title: "✅ Note Added",
+      description: "Note saved successfully",
+      duration: 3000,
+    });
+
+    setNoteContent("");
+  };
   
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -2760,7 +3251,7 @@ function LeadDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[98vw] sm:max-w-6xl max-h-[95vh] overflow-hidden p-0">
+      <DialogContent className="max-w-[98vw] sm:max-w-7xl max-h-[96vh] overflow-hidden p-0">
         <div className="grid grid-cols-1 md:grid-cols-[380px_1fr] h-full max-h-[95vh]">
           {/* LEFT PANEL - Lead Profile */}
           <div className="bg-gradient-to-br from-gray-50 to-white border-b md:border-b-0 md:border-r border-gray-200">
@@ -3109,7 +3600,7 @@ function LeadDetailModal({
           <div className="flex flex-col overflow-hidden h-full max-h-[95vh]">
             <div className="border-b border-gray-200 px-4 sm:px-6 pt-4 sm:pt-6 bg-white sticky top-0 z-10">
               <Tabs value={activeTab} onValueChange={onTabChange}>
-                <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9 h-auto bg-gray-100 gap-1">
+                <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 h-auto bg-gray-100 gap-1">
                   <TabsTrigger value="overview" className="text-xs py-2 data-[state=active]:bg-white">
                     <Eye className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
                     <span className="hidden sm:inline">Overview</span>
@@ -3121,10 +3612,6 @@ function LeadDetailModal({
                   <TabsTrigger value="reminders" className="text-xs py-2 data-[state=active]:bg-white">
                     <Bell className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
                     <span className="hidden sm:inline">Reminder</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="communication" className="text-xs py-2 data-[state=active]:bg-white">
-                    <Phone className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Contact</span>
                   </TabsTrigger>
                   <TabsTrigger value="lead-status" className="text-xs py-2 data-[state=active]:bg-white">
                     <Flag className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
@@ -3170,6 +3657,573 @@ function LeadDetailModal({
                       </CardContent>
                     </Card>
                   )}
+
+                  {/* Notes Section */}
+                  <Card className="border-2 border-slate-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-slate-50 via-gray-50 to-slate-50 rounded-t-lg border-b-2 border-slate-200">
+                      <CardTitle className="text-base sm:text-lg flex items-center justify-between">
+                        <span className="flex items-center gap-3 text-slate-900">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center shadow-lg">
+                            <MessageSquare className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-bold flex items-center gap-2">
+                              📝 Notes
+                              {lead.notes && lead.notes.length > 0 && (
+                                <Badge className="bg-slate-600 text-white text-xs px-2 py-0.5">
+                                  {lead.notes.length}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-600 font-normal mt-0.5">Quick notes and observations</p>
+                          </div>
+                        </span>
+                        <Link href="/leads/notes">
+                          <Button size="sm" className="text-xs bg-slate-600 hover:bg-slate-700 text-white shadow-md">
+                            <Eye className="w-3 h-3 mr-1" />
+                            View All
+                          </Button>
+                        </Link>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-5 pb-5">
+                      {lead.notes && lead.notes.length > 0 ? (
+                        <div className="space-y-3">
+                          {lead.notes.slice(0, 2).map(note => (
+                            <div key={note.id} className="p-4 bg-gradient-to-r from-slate-50 via-gray-50 to-slate-50 rounded-xl border-2 border-slate-200 hover:border-slate-300 hover:shadow-md transition-all duration-200">
+                              <p className="text-sm sm:text-base text-gray-800 mb-3 leading-relaxed font-medium">{note.content}</p>
+                              <div className="flex items-center gap-2 text-xs text-gray-600">
+                                <Avatar className="w-5 h-5 ring-2 ring-slate-200">
+                                  <AvatarFallback className="bg-gradient-to-br from-slate-400 to-slate-600 text-white text-xs font-semibold">
+                                    {getInitials(note.createdBy)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="font-semibold text-gray-700">{note.createdBy}</span>
+                                <span className="text-gray-400">•</span>
+                                <Clock className="w-3 h-3 text-gray-500" />
+                                <span className="text-gray-600">{note.createdAt}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-slate-100 to-gray-100 flex items-center justify-center">
+                            <MessageSquare className="w-8 h-8 text-slate-400" />
+                          </div>
+                          <p className="text-sm font-medium text-gray-500">No notes added yet</p>
+                          <p className="text-xs text-gray-400 mt-1">Add your first note to track important information</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Follow Up Reminder Section */}
+                  <Card className="border-2 border-orange-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 rounded-t-lg border-b-2 border-orange-200">
+                      <CardTitle className="text-base sm:text-lg flex items-center justify-between">
+                        <span className="flex items-center gap-3 text-orange-900">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-700 flex items-center justify-center shadow-lg animate-pulse">
+                            <Bell className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-bold flex items-center gap-2">
+                              🔔 Follow Up Reminder
+                              {lead.reminders && lead.reminders.length > 0 && (
+                                <Badge className="bg-orange-600 text-white text-xs px-2 py-0.5">
+                                  {lead.reminders.length}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-600 font-normal mt-0.5">Scheduled follow-ups and reminders</p>
+                          </div>
+                        </span>
+                        <Link href="/leads/reminders">
+                          <Button size="sm" className="text-xs bg-orange-600 hover:bg-orange-700 text-white shadow-md">
+                            <Eye className="w-3 h-3 mr-1" />
+                            View All
+                          </Button>
+                        </Link>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-5 pb-5">
+                      {lead.reminders && lead.reminders.length > 0 ? (
+                        <div className="space-y-3">
+                          {lead.reminders.slice(0, 2).map(reminder => (
+                            <div key={reminder.id} className="p-4 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 rounded-xl border-2 border-orange-200 hover:border-orange-300 hover:shadow-md transition-all duration-200">
+                              <div className="flex items-start justify-between gap-2 mb-3">
+                                <p className="text-sm sm:text-base font-semibold text-gray-900 leading-relaxed">{reminder.message}</p>
+                                {reminder.priority && (
+                                  <Badge className={`text-xs font-semibold shadow-sm ${
+                                    reminder.priority === 'high' ? 'bg-red-500 text-white' :
+                                    reminder.priority === 'medium' ? 'bg-yellow-500 text-white' :
+                                    'bg-gray-500 text-white'
+                                  }`}>
+                                    {reminder.priority === 'high' ? '🔥' : reminder.priority === 'medium' ? '⚡' : '📌'} {reminder.priority.toUpperCase()}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-3 text-xs">
+                                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-orange-200 text-gray-700 font-medium">
+                                  <Calendar className="w-3.5 h-3.5 text-orange-600" />
+                                  {reminder.date}
+                                </span>
+                                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-lg border border-orange-200 text-gray-700 font-medium">
+                                  <Clock className="w-3.5 h-3.5 text-orange-600" />
+                                  {reminder.time}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
+                            <Bell className="w-8 h-8 text-orange-500" />
+                          </div>
+                          <p className="text-sm font-medium text-gray-500">No reminders set</p>
+                          <p className="text-xs text-gray-400 mt-1">Schedule a reminder to stay on track with follow-ups</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* Communication Actions Section */}
+                  <Card className="border-2 border-cyan-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-cyan-50 via-blue-50 to-cyan-50 rounded-t-lg border-b-2 border-cyan-200">
+                      <CardTitle className="text-base sm:text-lg flex items-center justify-between">
+                        <span className="flex items-center gap-3 text-cyan-900">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-700 flex items-center justify-center shadow-lg">
+                            <Send className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-bold flex items-center gap-2">
+                              📨 Communication Actions
+                            </div>
+                            <p className="text-xs text-gray-600 font-normal mt-0.5">Quick communication options</p>
+                          </div>
+                        </span>
+                        <Link href="/leads/communication">
+                          <Button size="sm" className="text-xs bg-cyan-600 hover:bg-cyan-700 text-white shadow-md">
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            Open
+                          </Button>
+                        </Link>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-5 pb-5">
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <Button 
+                          variant="outline" 
+                          className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-green-50 hover:border-green-400 bg-gradient-to-b from-white to-green-50/50 border-2 border-green-200 shadow-sm hover:shadow-md transition-all duration-200"
+                          onClick={() => onWhatsApp?.(lead)}
+                        >
+                          <MessageCircle className="w-6 h-6 text-green-600" />
+                          <span className="text-xs font-semibold text-gray-700">WhatsApp</span>
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-blue-50 hover:border-blue-400 bg-gradient-to-b from-white to-blue-50/50 border-2 border-blue-200 shadow-sm hover:shadow-md transition-all duration-200"
+                          onClick={() => onEmail?.(lead)}
+                        >
+                          <Mail className="w-6 h-6 text-blue-600" />
+                          <span className="text-xs font-semibold text-gray-700">Email</span>
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="h-auto py-4 flex flex-col items-center gap-2 hover:bg-purple-50 hover:border-purple-400 bg-gradient-to-b from-white to-purple-50/50 border-2 border-purple-200 shadow-sm hover:shadow-md transition-all duration-200"
+                          onClick={() => onCall?.(lead)}
+                        >
+                          <Phone className="w-6 h-6 text-purple-600" />
+                          <span className="text-xs font-semibold text-gray-700">Call</span>
+                        </Button>
+                      </div>
+                      <div className="p-4 bg-gradient-to-r from-cyan-50 via-blue-50 to-cyan-50 rounded-xl border-2 border-cyan-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-cyan-600" />
+                            Last Contact:
+                          </span>
+                          <span className="text-sm font-bold text-gray-900">{lead.lastContact}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Lead Status Section */}
+                  <Card className="border-2 border-teal-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 rounded-t-lg border-b-2 border-teal-200">
+                      <CardTitle className="text-base sm:text-lg flex items-center justify-between">
+                        <span className="flex items-center gap-3 text-teal-900">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-700 flex items-center justify-center shadow-lg">
+                            <Flag className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-bold flex items-center gap-2">
+                              🏁 Lead Status
+                            </div>
+                            <p className="text-xs text-gray-600 font-normal mt-0.5">Current status and pipeline stage</p>
+                          </div>
+                        </span>
+                        <Link href="/leads/lead-status">
+                          <Button size="sm" className="text-xs bg-teal-600 hover:bg-teal-700 text-white shadow-md">
+                            <Edit className="w-3 h-3 mr-1" />
+                            Update
+                          </Button>
+                        </Link>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-5 pb-5">
+                      <div className="p-4 bg-gradient-to-r from-teal-50 via-emerald-50 to-teal-50 rounded-xl border-2 border-teal-200">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                            <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                              <Flag className="w-4 h-4 text-teal-600" />
+                              Status:
+                            </span>
+                            <Badge className={`font-semibold text-xs shadow-sm ${
+                              lead.status === 'new' ? 'bg-blue-500 text-white' :
+                              lead.status === 'contacted' ? 'bg-cyan-500 text-white' :
+                              lead.status === 'qualified' ? 'bg-purple-500 text-white' :
+                              lead.status === 'proposal' ? 'bg-orange-500 text-white' :
+                              lead.status === 'negotiation' ? 'bg-yellow-500 text-white' :
+                              lead.status === 'won' ? 'bg-green-500 text-white' :
+                              'bg-red-500 text-white'
+                            }`}>
+                              {lead.status === 'new' ? '🆕' :
+                               lead.status === 'contacted' ? '📞' :
+                               lead.status === 'qualified' ? '✅' :
+                               lead.status === 'proposal' ? '📄' :
+                               lead.status === 'negotiation' ? '💬' :
+                               lead.status === 'won' ? '🎉' : '❌'} {lead.status.toUpperCase()}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                            <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-teal-600" />
+                              Priority:
+                            </span>
+                            <Badge className={`font-semibold text-xs shadow-sm ${
+                              lead.priority === 'high' ? 'bg-red-500 text-white' :
+                              lead.priority === 'medium' ? 'bg-yellow-500 text-white' :
+                              'bg-gray-500 text-white'
+                            }`}>
+                              {lead.priority === 'high' ? '🔥' : lead.priority === 'medium' ? '⚡' : '📌'} {lead.priority.toUpperCase()}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Assign Lead Section */}
+                  <Card className="border-2 border-indigo-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 rounded-t-lg border-b-2 border-indigo-200">
+                      <CardTitle className="text-base sm:text-lg flex items-center justify-between">
+                        <span className="flex items-center gap-3 text-indigo-900">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg">
+                            <User className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-bold flex items-center gap-2">
+                              👤 Assign Lead
+                            </div>
+                            <p className="text-xs text-gray-600 font-normal mt-0.5">Manage lead ownership</p>
+                          </div>
+                        </span>
+                        <Link href="/leads/assign">
+                          <Button size="sm" className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white shadow-md">
+                            <Edit className="w-3 h-3 mr-1" />
+                            Reassign
+                          </Button>
+                        </Link>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-5 pb-5">
+                      <div className="p-4 bg-gradient-to-r from-indigo-50 via-purple-50 to-indigo-50 rounded-xl border-2 border-indigo-200">
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-12 w-12 border-3 border-white shadow-lg ring-2 ring-indigo-200">
+                            <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white font-bold text-base">
+                              {getInitials(lead.assignedTo)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-gray-700">Assigned To:</span>
+                              <Badge className="bg-indigo-500 text-white font-semibold shadow-sm">
+                                👤 {lead.assignedTo || 'Unassigned'}
+                              </Badge>
+                            </div>
+                            <p className="text-xs text-gray-600 mt-1">Team member responsible for this lead</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Call Status Section */}
+                  <Card className="border-2 border-violet-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-violet-50 via-purple-50 to-violet-50 rounded-t-lg border-b-2 border-violet-200">
+                      <CardTitle className="text-base sm:text-lg flex items-center justify-between">
+                        <span className="flex items-center gap-3 text-violet-900">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center shadow-lg">
+                            <PhoneCall className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-bold flex items-center gap-2">
+                              📞 Call Status
+                            </div>
+                            <p className="text-xs text-gray-600 font-normal mt-0.5">Track call activities</p>
+                          </div>
+                        </span>
+                        <Link href="/leads/call-status">
+                          <Button size="sm" className="text-xs bg-violet-600 hover:bg-violet-700 text-white shadow-md">
+                            <Plus className="w-3 h-3 mr-1" />
+                            Log Call
+                          </Button>
+                        </Link>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-5 pb-5">
+                      <div className="p-4 bg-gradient-to-r from-violet-50 via-purple-50 to-violet-50 rounded-xl border-2 border-violet-200">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                            <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                              <PhoneCall className="w-4 h-4 text-violet-600" />
+                              Call Status:
+                            </span>
+                            <Badge className={`font-semibold text-xs shadow-sm ${
+                              lead.callStatus === 'called' ? 'bg-green-500 text-white' :
+                              lead.callStatus === 'not_called' ? 'bg-gray-500 text-white' :
+                              lead.callStatus === 'no_answer' ? 'bg-yellow-500 text-white' :
+                              lead.callStatus === 'interested' ? 'bg-blue-500 text-white' :
+                              'bg-red-500 text-white'
+                            }`}>
+                              {lead.callStatus === 'called' ? '✅' :
+                               lead.callStatus === 'not_called' ? '❓' :
+                               lead.callStatus === 'no_answer' ? '⚠️' :
+                               lead.callStatus === 'interested' ? '🔵' : '🔴'} {lead.callStatus?.replace('_', ' ').toUpperCase() || 'NO CALLS'}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                            <span className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-violet-600" />
+                              Last Call:
+                            </span>
+                            <span className="text-sm font-bold text-gray-900">{lead.lastContact || 'Never'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Proposal Section */}
+                  <Card className="border-2 border-rose-300 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-rose-50 via-pink-50 to-rose-50 rounded-t-lg border-b-2 border-rose-200">
+                      <CardTitle className="text-base sm:text-lg flex items-center justify-between">
+                        <span className="flex items-center gap-3 text-rose-900">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-rose-700 flex items-center justify-center shadow-lg">
+                            <FileCheck className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-bold flex items-center gap-2">
+                              📄 Proposal
+                              {lead.proposals && lead.proposals.length > 0 && (
+                                <Badge className="bg-rose-600 text-white text-xs font-bold shadow-sm">
+                                  {lead.proposals.length}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-600 font-normal mt-0.5">Manage proposals and quotes</p>
+                          </div>
+                        </span>
+                        <Link href="/leads/proposals">
+                          <Button size="sm" className="text-xs bg-rose-600 hover:bg-rose-700 text-white shadow-md">
+                            <Plus className="w-3 h-3 mr-1" />
+                            Create
+                          </Button>
+                        </Link>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-5 pb-5">
+                      {lead.proposals && lead.proposals.length > 0 ? (
+                        <div className="space-y-4">
+                          {lead.proposals.slice(0, 2).map(proposal => (
+                            <div key={proposal.id} className="p-5 bg-gradient-to-br from-rose-50 via-pink-50 to-rose-50 rounded-xl border-2 border-rose-200 hover:shadow-lg transition-all duration-300">
+                              {/* Header */}
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex-1">
+                                  <h4 className="font-bold text-base text-gray-900 mb-1.5 flex items-center gap-2">
+                                    📄 {proposal.title}
+                                  </h4>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded-md border border-gray-200">
+                                      Version {proposal.version}
+                                    </span>
+                                    <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded-md border border-gray-200">
+                                      ID: {proposal.id}
+                                    </span>
+                                    {proposal.lineItems && proposal.lineItems.length > 0 && (
+                                      <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded-md border border-gray-200">
+                                        {proposal.lineItems.length} items
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <Badge className={`font-semibold text-xs shadow-md px-3 py-1 ${
+                                  proposal.status === 'draft' ? 'bg-gray-500 text-white' :
+                                  proposal.status === 'sent' ? 'bg-blue-500 text-white' :
+                                  proposal.status === 'viewed' ? 'bg-purple-500 text-white' :
+                                  proposal.status === 'accepted' ? 'bg-green-500 text-white' :
+                                  'bg-red-500 text-white'
+                                }`}>
+                                  {proposal.status === 'draft' ? '📝' :
+                                   proposal.status === 'sent' ? '📤' :
+                                   proposal.status === 'viewed' ? '👁️' :
+                                   proposal.status === 'accepted' ? '✅' : '❌'} {proposal.status.toUpperCase()}
+                                </Badge>
+                              </div>
+
+                              {/* Line Items Preview */}
+                              {proposal.lineItems && proposal.lineItems.length > 0 && (
+                                <div className="mb-4 space-y-2">
+                                  <p className="text-xs font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                                    <FileText className="w-3 h-3" />
+                                    Items Included:
+                                  </p>
+                                  <div className="space-y-1.5">
+                                    {proposal.lineItems.slice(0, 3).map((item, index) => (
+                                      <div key={item.id} className="flex items-start justify-between p-2.5 bg-white rounded-lg border border-rose-100 hover:border-rose-200 transition-colors">
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-xs font-medium text-gray-800 truncate">
+                                            {index + 1}. {item.description}
+                                          </p>
+                                          <p className="text-xs text-gray-500 mt-0.5">
+                                            Qty: {item.quantity} × ${item.unitPrice.toLocaleString()}
+                                          </p>
+                                        </div>
+                                        <span className="text-xs font-bold text-gray-900 ml-2 whitespace-nowrap">
+                                          ${item.total.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    ))}
+                                    {proposal.lineItems.length > 3 && (
+                                      <p className="text-xs text-gray-500 italic pl-2">
+                                        +{proposal.lineItems.length - 3} more items...
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Pricing Breakdown */}
+                              <div className="p-4 bg-white rounded-xl border-2 border-rose-200 mb-4 space-y-2">
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-gray-600">Subtotal:</span>
+                                  <span className="font-semibold text-gray-800">${proposal.subtotal.toLocaleString()}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-gray-600">Tax (10%):</span>
+                                  <span className="font-semibold text-gray-800">${proposal.tax.toLocaleString()}</span>
+                                </div>
+                                <Separator className="my-2" />
+                                <div className="flex items-center justify-between">
+                                  <span className="text-base font-bold text-gray-900 flex items-center gap-2">
+                                    💰 Total Amount:
+                                  </span>
+                                  <span className="text-xl font-bold text-rose-600">
+                                    ${proposal.total.toLocaleString()}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Timeline */}
+                              <div className="grid grid-cols-2 gap-2 mb-4">
+                                <div className="p-2.5 bg-white rounded-lg border border-gray-200">
+                                  <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                                    <Calendar className="w-3 h-3" />
+                                    Created:
+                                  </p>
+                                  <p className="text-xs font-semibold text-gray-900">{proposal.createdAt || 'N/A'}</p>
+                                </div>
+                                {proposal.sentAt && (
+                                  <div className="p-2.5 bg-white rounded-lg border border-blue-200">
+                                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                                      <Send className="w-3 h-3 text-blue-600" />
+                                      Sent:
+                                    </p>
+                                    <p className="text-xs font-semibold text-blue-900">{proposal.sentAt}</p>
+                                  </div>
+                                )}
+                                {proposal.validUntil && (
+                                  <div className="p-2.5 bg-white rounded-lg border border-orange-200">
+                                    <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
+                                      <Clock className="w-3 h-3 text-orange-600" />
+                                      Valid Until:
+                                    </p>
+                                    <p className="text-xs font-semibold text-orange-900">{proposal.validUntil}</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Notes Preview */}
+                              {proposal.notes && (
+                                <div className="p-3 bg-white rounded-lg border border-gray-200 mb-4">
+                                  <p className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center gap-1">
+                                    <FileText className="w-3 h-3" />
+                                    Notes:
+                                  </p>
+                                  <p className="text-xs text-gray-600 line-clamp-2">{proposal.notes}</p>
+                                </div>
+                              )}
+
+                              {/* Action Buttons */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-xs bg-white hover:bg-blue-50 border-2 border-blue-200 hover:border-blue-400 text-blue-700 font-semibold"
+                                  onClick={() => handleViewProposal(proposal)}
+                                >
+                                  <Eye className="w-3.5 h-3.5 mr-1.5" />
+                                  View Details
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-xs bg-white hover:bg-green-50 border-2 border-green-200 hover:border-green-400 text-green-700 font-semibold"
+                                  onClick={() => handleDownloadProposal(proposal)}
+                                >
+                                  <Download className="w-3.5 h-3.5 mr-1.5" />
+                                  Download
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                          {lead.proposals.length > 2 && (
+                            <Link href="/leads/proposals">
+                              <Button variant="outline" className="w-full text-xs border-2 border-rose-300 hover:bg-rose-50 hover:border-rose-400 font-semibold">
+                                <ArrowRight className="w-3 h-3 mr-1" />
+                                View all {lead.proposals.length} proposals
+                              </Button>
+                            </Link>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-6 text-center bg-gradient-to-r from-rose-50 via-pink-50 to-rose-50 rounded-xl border-2 border-rose-200">
+                          <FileCheck className="w-16 h-16 mx-auto text-rose-300 mb-3" />
+                          <p className="text-sm text-gray-600 font-medium">No proposals yet</p>
+                          <p className="text-xs text-gray-500 mt-1">Create your first proposal to get started</p>
+                          <Link href="/leads/proposals">
+                            <Button size="sm" className="mt-3 bg-rose-600 hover:bg-rose-700 text-white">
+                              <Plus className="w-3 h-3 mr-1" />
+                              Create Proposal
+                            </Button>
+                          </Link>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
 
                   {/* Upcoming Tasks */}
                   {lead.tasks && lead.tasks.length > 0 && (
@@ -3379,18 +4433,515 @@ function LeadDetailModal({
                 </TabsContent>
 
                 {/* PROPOSALS TAB */}
-                <TabsContent value="proposals" className="mt-0">
-                  <div className="text-center py-12 sm:py-16 text-gray-400">
-                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                      <FileCheck className="w-8 h-8 text-green-600" />
-                    </div>
-                    <p className="text-sm sm:text-base font-medium">No proposals yet</p>
-                    <p className="text-xs mt-1 mb-4">Create proposals to send to this lead</p>
-                    <Button className="mt-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-md">
+                <TabsContent value="proposals" className="mt-0 space-y-4 sm:space-y-6">
+                  {/* Create/Edit Proposal Form */}
+                  {showProposalForm ? (
+                    <Card className="border-2 border-rose-200 shadow-md">
+                      <CardHeader className="pb-3 bg-gradient-to-r from-rose-50 to-pink-50">
+                        <CardTitle className="text-base sm:text-lg flex items-center gap-2 text-rose-900">
+                          <FileCheck className="w-5 h-5" />
+                          {editingProposal ? "Edit Proposal" : "Create New Proposal"}
+                        </CardTitle>
+                        <CardDescription className="text-sm">
+                          {editingProposal ? "Update proposal details" : "Create a proposal for"} {lead.name}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-4 sm:p-6 space-y-4">
+                        {/* Proposal Title */}
+                        <div className="space-y-2">
+                          <Label htmlFor="proposal-title" className="text-sm font-medium">
+                            Proposal Title <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="proposal-title"
+                            value={proposalForm.title}
+                            onChange={(e) => setProposalForm(prev => ({ ...prev, title: e.target.value }))}
+                            placeholder="e.g., Annual Software License Proposal"
+                            className="text-sm border-rose-200"
+                          />
+                        </div>
+
+                        {/* Line Items */}
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium">Line Items</Label>
+                          
+                          {/* Existing Line Items */}
+                          {proposalForm.lineItems.length > 0 && (
+                            <div className="space-y-2 mb-3">
+                              {proposalForm.lineItems.map(item => (
+                                <div key={item.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded border">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium">{item.description}</p>
+                                    <p className="text-xs text-gray-600">{item.quantity} x ${item.unitPrice} = ${item.total}</p>
+                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleRemoveLineItem(item.id)}
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Add Line Item */}
+                          <div className="grid grid-cols-12 gap-2">
+                            <Input
+                              placeholder="Description"
+                              value={newLineItem.description}
+                              onChange={(e) => setNewLineItem(prev => ({ ...prev, description: e.target.value }))}
+                              className="col-span-6 text-sm"
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Qty"
+                              value={newLineItem.quantity}
+                              onChange={(e) => setNewLineItem(prev => ({ ...prev, quantity: Number(e.target.value) }))}
+                              className="col-span-2 text-sm"
+                              min="1"
+                            />
+                            <Input
+                              type="number"
+                              placeholder="Price"
+                              value={newLineItem.unitPrice}
+                              onChange={(e) => setNewLineItem(prev => ({ ...prev, unitPrice: Number(e.target.value) }))}
+                              className="col-span-3 text-sm"
+                              min="0"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={handleAddLineItem}
+                              className="col-span-1 bg-rose-600 hover:bg-rose-700 text-white"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Proposal Notes */}
+                        <div className="space-y-2">
+                          <Label htmlFor="proposal-notes" className="text-sm font-medium">
+                            Additional Notes
+                          </Label>
+                          <Textarea
+                            id="proposal-notes"
+                            value={proposalForm.notes}
+                            onChange={(e) => setProposalForm(prev => ({ ...prev, notes: e.target.value }))}
+                            placeholder="Terms, conditions, or additional information..."
+                            className="min-h-[100px] text-sm border-rose-200"
+                          />
+                        </div>
+
+                        {/* Pricing Summary */}
+                        {proposalForm.lineItems.length > 0 && (
+                          <div className="p-3 bg-rose-50 rounded-lg border border-rose-200">
+                            <div className="space-y-1 text-sm">
+                              <div className="flex justify-between">
+                                <span>Subtotal:</span>
+                                <span>${proposalForm.lineItems.reduce((sum, item) => sum + item.total, 0).toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Tax (10%):</span>
+                                <span>${(proposalForm.lineItems.reduce((sum, item) => sum + item.total, 0) * 0.1).toLocaleString()}</span>
+                              </div>
+                              <Separator className="my-2" />
+                              <div className="flex justify-between font-bold text-base">
+                                <span>Total:</span>
+                                <span className="text-rose-700">${(proposalForm.lineItems.reduce((sum, item) => sum + item.total, 0) * 1.1).toLocaleString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => {
+                              setShowProposalForm(false);
+                              setProposalForm({ title: "", lineItems: [], notes: "" });
+                              setEditingProposal(null);
+                            }}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleSaveProposal}
+                            className="flex-1 bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white"
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            {editingProposal ? "Update" : "Create"} Proposal
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <Button 
+                      onClick={() => setShowProposalForm(true)}
+                      className="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white shadow-md"
+                    >
                       <PlusCircle className="w-4 h-4 mr-2" />
-                      Create Proposal
+                      Create New Proposal
                     </Button>
-                  </div>
+                  )}
+
+                  {/* Proposal Detail View */}
+                  {viewingProposal && !showProposalForm && (
+                    <Card className="border-3 border-rose-400 shadow-2xl">
+                      <CardHeader className="pb-4 bg-gradient-to-r from-rose-100 via-pink-100 to-rose-100 border-b-2 border-rose-300">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-xl font-bold text-rose-900 flex items-center gap-2 mb-2">
+                              <FileCheck className="w-6 h-6" />
+                              {viewingProposal.title}
+                            </CardTitle>
+                            <div className="flex flex-wrap items-center gap-3 text-sm">
+                              <Badge className="bg-white text-rose-900 border-2 border-rose-300 font-semibold">
+                                Version {viewingProposal.version}
+                              </Badge>
+                              <Badge className={`font-semibold ${
+                                viewingProposal.status === 'draft' ? 'bg-gray-500 text-white' :
+                                viewingProposal.status === 'sent' ? 'bg-blue-500 text-white' :
+                                viewingProposal.status === 'viewed' ? 'bg-purple-500 text-white' :
+                                viewingProposal.status === 'accepted' ? 'bg-green-500 text-white' :
+                                'bg-red-500 text-white'
+                              }`}>
+                                {viewingProposal.status.toUpperCase()}
+                              </Badge>
+                              <span className="text-gray-700 font-medium">{viewingProposal.id}</span>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setViewingProposal(null)}
+                            className="border-2"
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Close
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-6 space-y-6">
+                        {/* Lead Information */}
+                        <div className="p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl border-2 border-cyan-200">
+                          <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <User className="w-4 h-4 text-cyan-600" />
+                            Client Information
+                          </h3>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs text-gray-600">Name</p>
+                              <p className="text-sm font-semibold text-gray-900">{lead.name}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-600">Company</p>
+                              <p className="text-sm font-semibold text-gray-900">{lead.company}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-600">Email</p>
+                              <p className="text-sm font-semibold text-gray-900">{lead.email}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-600">Phone</p>
+                              <p className="text-sm font-semibold text-gray-900">{lead.phone}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Line Items Detailed View */}
+                        <div>
+                          <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-rose-600" />
+                            Line Items
+                          </h3>
+                          <div className="space-y-3">
+                            {viewingProposal.lineItems.map((item, index) => (
+                              <div key={item.id} className="p-4 bg-gradient-to-r from-rose-50 via-pink-50 to-rose-50 rounded-xl border-2 border-rose-200">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex-1">
+                                    <p className="font-semibold text-gray-900 text-base">
+                                      {index + 1}. {item.description}
+                                    </p>
+                                  </div>
+                                  <Badge className="bg-rose-600 text-white font-bold">
+                                    ${item.total.toLocaleString()}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm text-gray-600">
+                                  <span>Quantity: <strong className="text-gray-900">{item.quantity}</strong></span>
+                                  <span>×</span>
+                                  <span>Unit Price: <strong className="text-gray-900">${item.unitPrice.toLocaleString()}</strong></span>
+                                  <span>=</span>
+                                  <span className="font-bold text-gray-900">${item.total.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Pricing Summary */}
+                        <div className="p-6 bg-gradient-to-br from-rose-100 via-pink-100 to-rose-100 rounded-2xl border-3 border-rose-300 shadow-lg">
+                          <h3 className="text-base font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <DollarSign className="w-5 h-5 text-rose-600" />
+                            Pricing Summary
+                          </h3>
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                              <span className="text-gray-700 font-medium">Subtotal:</span>
+                              <span className="text-lg font-semibold text-gray-900">${viewingProposal.subtotal.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+                              <span className="text-gray-700 font-medium">Tax (10%):</span>
+                              <span className="text-lg font-semibold text-gray-900">${viewingProposal.tax.toLocaleString()}</span>
+                            </div>
+                            <Separator className="bg-rose-300" />
+                            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-rose-200 to-pink-200 rounded-xl border-2 border-rose-400">
+                              <span className="text-xl font-bold text-rose-900">Total Amount:</span>
+                              <span className="text-3xl font-bold text-rose-700">${viewingProposal.total.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Timeline & Notes */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                            <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                              <Calendar className="w-4 h-4 text-blue-600" />
+                              Timeline
+                            </h4>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Created:</span>
+                                <span className="font-semibold text-gray-900">{viewingProposal.createdAt}</span>
+                              </div>
+                              {viewingProposal.sentAt && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Sent:</span>
+                                  <span className="font-semibold text-gray-900">{viewingProposal.sentAt}</span>
+                                </div>
+                              )}
+                              {viewingProposal.validUntil && (
+                                <div className="flex justify-between">
+                                  <span className="text-gray-600">Valid Until:</span>
+                                  <span className="font-semibold text-orange-900">{viewingProposal.validUntil}</span>
+                                </div>
+                              )}
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Created By:</span>
+                                <span className="font-semibold text-gray-900">{viewingProposal.createdBy}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {viewingProposal.notes && (
+                            <div className="p-4 bg-yellow-50 rounded-xl border-2 border-yellow-200">
+                              <h4 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-yellow-600" />
+                                Notes
+                              </h4>
+                              <p className="text-sm text-gray-700 leading-relaxed">{viewingProposal.notes}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <Button
+                            onClick={() => {
+                              if (viewingProposal) {
+                                setEditingProposal(viewingProposal);
+                                setProposalForm({
+                                  title: viewingProposal.title,
+                                  lineItems: viewingProposal.lineItems,
+                                  notes: viewingProposal.notes || ""
+                                });
+                                setShowProposalForm(true);
+                                setViewingProposal(null);
+                              }
+                            }}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </Button>
+                          <Button
+                            onClick={() => viewingProposal && handleDownloadProposal(viewingProposal)}
+                            variant="outline"
+                            className="border-2 border-green-500 text-green-700 hover:bg-green-50"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Download
+                          </Button>
+                          {viewingProposal?.status === 'draft' && (
+                            <Button
+                              onClick={() => viewingProposal && handleSendProposal(viewingProposal.id)}
+                              className="bg-purple-600 hover:bg-purple-700 text-white"
+                            >
+                              <Send className="w-4 h-4 mr-2" />
+                              Send
+                            </Button>
+                          )}
+                          <Button
+                            onClick={() => setViewingProposal(null)}
+                            variant="outline"
+                            className="border-2"
+                          >
+                            <ArrowRight className="w-4 h-4 mr-2" />
+                            Back to List
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Proposals List */}
+                  {!viewingProposal && lead.proposals && lead.proposals.length > 0 ? (
+                    <div className="space-y-4">
+                      {lead.proposals.map(proposal => (
+                          <Card key={proposal.id} className="border-2 border-rose-200 shadow-md hover:shadow-lg transition-all">
+                            <CardHeader className="pb-3 bg-gradient-to-r from-rose-50 to-pink-50">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <CardTitle className="text-base sm:text-lg text-rose-900">
+                                    {proposal.title}
+                                  </CardTitle>
+                                  <CardDescription className="text-sm mt-1">
+                                    Version {proposal.version} • Created by {proposal.createdBy}
+                                  </CardDescription>
+                                </div>
+                                <Badge className={`${
+                                  proposal.status === 'draft' ? 'bg-gray-100 text-gray-800' :
+                                  proposal.status === 'sent' ? 'bg-blue-100 text-blue-800' :
+                                  proposal.status === 'viewed' ? 'bg-purple-100 text-purple-800' :
+                                  proposal.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {proposal.status}
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="pt-4">
+                              {/* Line Items Summary */}
+                              <div className="mb-4">
+                                <h4 className="text-sm font-semibold text-gray-700 mb-2">Line Items</h4>
+                                <div className="space-y-2">
+                                  {proposal.lineItems.slice(0, 3).map(item => (
+                                    <div key={item.id} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded">
+                                      <span className="text-gray-700">{item.description}</span>
+                                      <span className="font-medium text-gray-900">${item.total.toLocaleString()}</span>
+                                    </div>
+                                  ))}
+                                  {proposal.lineItems.length > 3 && (
+                                    <p className="text-xs text-gray-500 text-center">
+                                      +{proposal.lineItems.length - 3} more items
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Pricing Summary */}
+                              <div className="p-3 bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg border border-rose-200">
+                                <div className="space-y-1">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-600">Subtotal:</span>
+                                    <span className="font-medium">${proposal.subtotal.toLocaleString()}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-600">Tax:</span>
+                                    <span className="font-medium">${proposal.tax.toLocaleString()}</span>
+                                  </div>
+                                  <Separator className="my-2" />
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-semibold text-gray-900">Total:</span>
+                                    <span className="text-lg font-bold text-rose-700">${proposal.total.toLocaleString()}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Timeline */}
+                              <div className="mt-4 space-y-2 text-xs text-gray-600">
+                                <div className="flex items-center gap-2">
+                                  <Clock className="w-3 h-3" />
+                                  <span>Created: {proposal.createdAt}</span>
+                                </div>
+                                {proposal.sentAt && (
+                                  <div className="flex items-center gap-2">
+                                    <Send className="w-3 h-3 text-blue-600" />
+                                    <span>Sent: {proposal.sentAt}</span>
+                                  </div>
+                                )}
+                                {proposal.viewedAt && (
+                                  <div className="flex items-center gap-2">
+                                    <Eye className="w-3 h-3 text-purple-600" />
+                                    <span>Viewed: {proposal.viewedAt}</span>
+                                  </div>
+                                )}
+                                {proposal.respondedAt && (
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle className="w-3 h-3 text-green-600" />
+                                    <span>Responded: {proposal.respondedAt}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="flex-1 hover:bg-blue-50 hover:border-blue-400"
+                                  onClick={() => setViewingProposal(proposal)}
+                                >
+                                  <Eye className="w-3 h-3 mr-1" />
+                                  View
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="flex-1 hover:bg-purple-50 hover:border-purple-400"
+                                  onClick={() => handleEditProposal(proposal)}
+                                >
+                                  <Edit className="w-3 h-3 mr-1" />
+                                  Edit
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="flex-1 hover:bg-green-50 hover:border-green-400"
+                                  onClick={() => handleSendProposal(proposal.id)}
+                                  disabled={proposal.status !== "draft"}
+                                >
+                                  <Send className="w-3 h-3 mr-1" />
+                                  {proposal.status === "draft" ? "Send" : "Sent"}
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="flex-1 hover:bg-orange-50 hover:border-orange-400"
+                                  onClick={() => handleDownloadProposal(proposal)}
+                                >
+                                  <Download className="w-3 h-3 mr-1" />
+                                  PDF
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                  ) : !showProposalForm ? (
+                    <div className="text-center py-12 sm:py-16 text-gray-400">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-rose-100 to-pink-100 flex items-center justify-center">
+                        <FileCheck className="w-8 h-8 text-rose-600" />
+                      </div>
+                      <p className="text-sm sm:text-base font-medium">No proposals yet</p>
+                      <p className="text-xs mt-1 mb-4">Create your first proposal for this lead</p>
+                    </div>
+                  ) : null}
                 </TabsContent>
 
                 {/* NOTES TAB */}
@@ -3400,10 +4951,16 @@ function LeadDetailModal({
                       <Textarea 
                         placeholder="Add a note about this lead..."
                         rows={3}
+                        value={noteContent}
+                        onChange={(e) => setNoteContent(e.target.value)}
                         className="mb-3 text-sm sm:text-base focus:ring-2 focus:ring-blue-400"
                       />
                       <div className="flex justify-end">
-                        <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md">
+                        <Button 
+                          size="sm" 
+                          onClick={handleAddNote}
+                          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md"
+                        >
                           <Save className="w-4 h-4 mr-2" />
                           Save Note
                         </Button>
@@ -4017,6 +5574,416 @@ function LeadDetailModal({
                       <p className="text-xs mt-1">Create your first reminder above to stay on top of follow-ups</p>
                     </div>
                   )}
+                </TabsContent>
+
+                {/* LEAD STATUS TAB */}
+                <TabsContent value="lead-status" className="mt-0 space-y-4 sm:space-y-6">
+                  <Card className="border-2 border-teal-200 shadow-md">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-teal-50 to-emerald-50">
+                      <CardTitle className="text-base sm:text-lg flex items-center gap-2 text-teal-900">
+                        <Flag className="w-5 h-5" />
+                        Update Lead Status
+                      </CardTitle>
+                      <CardDescription className="text-sm">
+                        Manage status, priority, and pipeline stage for {lead.name}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-4 sm:p-6 space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Lead Status */}
+                        <div className="space-y-2">
+                          <Label htmlFor="lead-status-select" className="text-sm font-medium flex items-center gap-1">
+                            <Flag className="w-4 h-4 text-teal-600" />
+                            Lead Status
+                          </Label>
+                          <Select value={currentStatus} onValueChange={(value: any) => setCurrentStatus(value)}>
+                            <SelectTrigger id="lead-status-select" className="w-full text-sm border-teal-200">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="new">🆕 New</SelectItem>
+                              <SelectItem value="contacted">📞 Contacted</SelectItem>
+                              <SelectItem value="qualified">✅ Qualified</SelectItem>
+                              <SelectItem value="proposal">📄 Proposal Sent</SelectItem>
+                              <SelectItem value="negotiation">💬 Negotiation</SelectItem>
+                              <SelectItem value="won">🎉 Won</SelectItem>
+                              <SelectItem value="lost">❌ Lost</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Priority */}
+                        <div className="space-y-2">
+                          <Label htmlFor="priority-select" className="text-sm font-medium flex items-center gap-1">
+                            <AlertCircle className="w-4 h-4 text-teal-600" />
+                            Priority Level
+                          </Label>
+                          <Select value={currentPriority} onValueChange={(value: any) => setCurrentPriority(value)}>
+                            <SelectTrigger id="priority-select" className="w-full text-sm border-teal-200">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="high">🔥 High Priority</SelectItem>
+                              <SelectItem value="medium">⚡ Medium Priority</SelectItem>
+                              <SelectItem value="low">📌 Low Priority</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Current Status Display */}
+                      <div className="p-4 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-lg border-2 border-teal-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Current Status</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Status:</span>
+                            <Badge className={`${
+                              lead.status === 'new' ? 'bg-blue-100 text-blue-800' :
+                              lead.status === 'contacted' ? 'bg-cyan-100 text-cyan-800' :
+                              lead.status === 'qualified' ? 'bg-purple-100 text-purple-800' :
+                              lead.status === 'proposal' ? 'bg-orange-100 text-orange-800' :
+                              lead.status === 'negotiation' ? 'bg-yellow-100 text-yellow-800' :
+                              lead.status === 'won' ? 'bg-green-100 text-green-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {lead.status}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Priority:</span>
+                            <Badge variant="outline" className={`${
+                              lead.priority === 'high' ? 'border-red-500 text-red-700 bg-red-50' :
+                              lead.priority === 'medium' ? 'border-yellow-500 text-yellow-700 bg-yellow-50' :
+                              'border-gray-500 text-gray-700 bg-gray-50'
+                            }`}>
+                              {lead.priority}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Last Updated:</span>
+                            <span className="text-sm font-medium text-gray-900">{lead.lastContact}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status Notes */}
+                      <div className="space-y-2">
+                        <Label htmlFor="status-notes" className="text-sm font-medium">
+                          Status Update Notes
+                        </Label>
+                        <Textarea
+                          id="status-notes"
+                          value={statusNotes}
+                          onChange={(e) => setStatusNotes(e.target.value)}
+                          placeholder="Add notes about this status change..."
+                          className="min-h-[100px] text-sm border-teal-200 focus:border-teal-400 focus:ring-teal-400"
+                        />
+                      </div>
+
+                      <Button 
+                        onClick={handleUpdateStatus}
+                        className="w-full bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white shadow-md"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Update Status
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Status History */}
+                  <Card className="border-2 border-gray-200 shadow-md">
+                    <CardHeader className="pb-3 bg-gray-50">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <History className="w-5 h-5" />
+                        Status History
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">Status changed to <Badge className="ml-1">{lead.status}</Badge></p>
+                            <p className="text-xs text-gray-500 mt-1">Updated on {lead.lastContact}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* ASSIGN TAB */}
+                <TabsContent value="assign" className="mt-0 space-y-4 sm:space-y-6">
+                  <Card className="border-2 border-indigo-200 shadow-md">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-indigo-50 to-purple-50">
+                      <CardTitle className="text-base sm:text-lg flex items-center gap-2 text-indigo-900">
+                        <User className="w-5 h-5" />
+                        Assign Lead
+                      </CardTitle>
+                      <CardDescription className="text-sm">
+                        Assign {lead.name} to a team member
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-4 sm:p-6 space-y-4">
+                      {/* Current Assignment */}
+                      <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Currently Assigned To</h4>
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-12 h-12 ring-2 ring-indigo-200">
+                            <AvatarFallback className="bg-gradient-to-br from-indigo-400 to-purple-500 text-white font-semibold text-lg">
+                              {getInitials(lead.assignedTo)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{lead.assignedTo}</p>
+                            <p className="text-xs text-gray-600">Sales Representative</p>
+                          </div>
+                          <Badge className="bg-indigo-100 text-indigo-800">Active</Badge>
+                        </div>
+                      </div>
+
+                      {/* Reassign Section */}
+                      <div className="space-y-2">
+                        <Label htmlFor="assign-to" className="text-sm font-medium flex items-center gap-1">
+                          <Users className="w-4 h-4 text-indigo-600" />
+                          Reassign To
+                        </Label>
+                        <Select value={currentAssignee} onValueChange={setCurrentAssignee}>
+                          <SelectTrigger id="assign-to" className="w-full text-sm border-indigo-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="John Smith">👤 John Smith</SelectItem>
+                            <SelectItem value="Sarah Wilson">👤 Sarah Wilson</SelectItem>
+                            <SelectItem value="Michael Chen">👤 Michael Chen</SelectItem>
+                            <SelectItem value="Emily Davis">👤 Emily Davis</SelectItem>
+                            <SelectItem value="David Brown">👤 David Brown</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Assignment Reason */}
+                      <div className="space-y-2">
+                        <Label htmlFor="assign-reason" className="text-sm font-medium">
+                          Reason for Assignment/Reassignment
+                        </Label>
+                        <Textarea
+                          id="assign-reason"
+                          value={assignmentReason}
+                          onChange={(e) => setAssignmentReason(e.target.value)}
+                          placeholder="Why is this lead being assigned to this team member..."
+                          className="min-h-[100px] text-sm border-indigo-200 focus:border-indigo-400 focus:ring-indigo-400"
+                        />
+                      </div>
+
+                      {/* Send Notification */}
+                      <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <input 
+                          type="checkbox" 
+                          id="notify-assignee" 
+                          className="w-4 h-4" 
+                          checked={notifyAssignee}
+                          onChange={(e) => setNotifyAssignee(e.target.checked)}
+                        />
+                        <Label htmlFor="notify-assignee" className="text-sm cursor-pointer">
+                          Send notification email to assignee
+                        </Label>
+                      </div>
+
+                      <Button 
+                        onClick={handleAssignLead}
+                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-md"
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        Assign Lead
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Assignment History */}
+                  <Card className="border-2 border-gray-200 shadow-md">
+                    <CardHeader className="pb-3 bg-gray-50">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <History className="w-5 h-5" />
+                        Assignment History
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <User className="w-5 h-5 text-indigo-600 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">Assigned to {lead.assignedTo}</p>
+                            <p className="text-xs text-gray-500 mt-1">On {lead.createdDate}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* CALL STATUS TAB */}
+                <TabsContent value="call-status" className="mt-0 space-y-4 sm:space-y-6">
+                  <Card className="border-2 border-violet-200 shadow-md">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-violet-50 to-purple-50">
+                      <CardTitle className="text-base sm:text-lg flex items-center gap-2 text-violet-900">
+                        <Phone className="w-5 h-5" />
+                        Update Call Status
+                      </CardTitle>
+                      <CardDescription className="text-sm">
+                        Log call outcomes and notes for {lead.name}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-4 sm:p-6 space-y-4">
+                      {/* Current Call Status */}
+                      <div className="p-4 bg-gradient-to-r from-violet-50 to-purple-50 rounded-lg border-2 border-violet-200">
+                        <h4 className="text-sm font-semibold text-gray-700 mb-3">Current Call Status</h4>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">Status:</span>
+                          <Badge className={`${
+                            lead.callStatus === 'called' ? 'bg-green-100 text-green-800' :
+                            lead.callStatus === 'not_called' ? 'bg-gray-100 text-gray-800' :
+                            lead.callStatus === 'no_answer' ? 'bg-yellow-100 text-yellow-800' :
+                            lead.callStatus === 'interested' ? 'bg-blue-100 text-blue-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {lead.callStatus?.replace('_', ' ') || 'Not Called'}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Call Status Selection */}
+                      <div className="space-y-2">
+                        <Label htmlFor="call-status-select" className="text-sm font-medium flex items-center gap-1">
+                          <Phone className="w-4 h-4 text-violet-600" />
+                          Call Status
+                        </Label>
+                        <Select value={currentCallStatus} onValueChange={(value: any) => setCurrentCallStatus(value)}>
+                          <SelectTrigger id="call-status-select" className="w-full text-sm border-violet-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="not_called">📵 Not Called</SelectItem>
+                            <SelectItem value="called">✅ Called</SelectItem>
+                            <SelectItem value="no_answer">📞 No Answer</SelectItem>
+                            <SelectItem value="interested">👍 Interested</SelectItem>
+                            <SelectItem value="not_interested">👎 Not Interested</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Call Outcome */}
+                      <div className="space-y-2">
+                        <Label htmlFor="call-outcome" className="text-sm font-medium">
+                          Call Outcome
+                        </Label>
+                        <Select value={callOutcome} onValueChange={setCallOutcome}>
+                          <SelectTrigger id="call-outcome" className="w-full text-sm border-violet-200">
+                            <SelectValue placeholder="Select outcome..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="positive">✅ Positive - Interested</SelectItem>
+                            <SelectItem value="followup">📅 Schedule Follow-up</SelectItem>
+                            <SelectItem value="voicemail">📧 Left Voicemail</SelectItem>
+                            <SelectItem value="callback">🔄 Requested Callback</SelectItem>
+                            <SelectItem value="nointerest">❌ Not Interested</SelectItem>
+                            <SelectItem value="wrongnumber">📵 Wrong Number</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Call Duration */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="call-duration" className="text-sm font-medium flex items-center gap-1">
+                            <Clock className="w-4 h-4 text-violet-600" />
+                            Duration (minutes)
+                          </Label>
+                          <Input
+                            id="call-duration"
+                            type="number"
+                            value={callDuration}
+                            onChange={(e) => setCallDuration(e.target.value)}
+                            placeholder="5"
+                            min="0"
+                            className="text-sm border-violet-200"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="call-date" className="text-sm font-medium flex items-center gap-1">
+                            <Calendar className="w-4 h-4 text-violet-600" />
+                            Call Date
+                          </Label>
+                          <Input
+                            id="call-date"
+                            type="date"
+                            value={callDate}
+                            onChange={(e) => setCallDate(e.target.value)}
+                            className="text-sm border-violet-200"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Call Notes */}
+                      <div className="space-y-2">
+                        <Label htmlFor="call-notes" className="text-sm font-medium">
+                          Call Notes
+                        </Label>
+                        <Textarea
+                          id="call-notes"
+                          value={callNotes}
+                          onChange={(e) => setCallNotes(e.target.value)}
+                          placeholder="Key points discussed during the call..."
+                          className="min-h-[120px] text-sm border-violet-200 focus:border-violet-400 focus:ring-violet-400"
+                        />
+                      </div>
+
+                      {/* Next Steps */}
+                      <div className="space-y-2">
+                        <Label htmlFor="next-steps" className="text-sm font-medium">
+                          Next Steps
+                        </Label>
+                        <Textarea
+                          id="next-steps"
+                          value={nextSteps}
+                          onChange={(e) => setNextSteps(e.target.value)}
+                          placeholder="What are the next actions to take..."
+                          className="min-h-[80px] text-sm border-violet-200 focus:border-violet-400 focus:ring-violet-400"
+                        />
+                      </div>
+
+                      <Button 
+                        onClick={handleSaveCallLog}
+                        className="w-full bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-md"
+                      >
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Call Log
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Call History */}
+                  <Card className="border-2 border-gray-200 shadow-md">
+                    <CardHeader className="pb-3 bg-gray-50">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <History className="w-5 h-5" />
+                        Call History
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <PhoneCall className="w-5 h-5 text-green-600 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">Last Call: {lead.lastContact}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Status: <Badge className="ml-1 text-xs">{lead.callStatus?.replace('_', ' ') || 'Not Called'}</Badge>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
               </Tabs>
             </ScrollArea>

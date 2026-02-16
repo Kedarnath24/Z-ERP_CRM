@@ -107,19 +107,13 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     { name: 'Projects', icon: FolderKanban, path: '/projects' },
     { name: 'HRM', icon: UserCheck, path: '/hrm' },
     { 
-      name: 'Lead Management', 
+      name: 'CRM', 
       icon: Users, 
       path: '/leads',
       hasSubmenu: true,
       submenuKey: 'leads',
       submenu: [
-        { name: 'Notes', path: '/leads/notes' },
-        { name: 'Follow Up Reminder', path: '/leads/reminders' },
-        { name: 'Communication Actions', path: '/leads/communication' },
-        { name: 'Lead Status', path: '/leads/lead-status' },
-        { name: 'Assign Lead', path: '/leads/assign' },
         { name: 'Call Status', path: '/leads/call-status' },
-        { name: 'Proposal', path: '/leads/proposals' },
       ]
     },
     { 
