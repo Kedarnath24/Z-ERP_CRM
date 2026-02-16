@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import {
   CheckCheck, AlertTriangle, Sparkles, Brain, TrendingDown,
   ArrowUpRight, ArrowDownRight, Clock3, Users2, FileCheck,
   MessageSquare, PlusCircle, Save, Briefcase, MapPinned, History,
-  Loader2
+  Loader2, UserCheck
 } from "lucide-react";
 import {
   Dialog,
@@ -92,47 +92,6 @@ interface Note {
   createdAt: string;
 }
 
-interface Reminder {
-  id: string;
-  date: string;
-  time: string;
-  message: string;
-  createdBy: string;
-  createdAt: string;
-  completed?: boolean;
-  priority?: "high" | "medium" | "low";
-  category?: string;
-  notifyBefore?: number; // minutes before to notify
-  snoozedUntil?: string;
-}
-
-interface ProposalLineItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  total: number;
-}
-
-interface Proposal {
-  id: string;
-  title: string;
-  version: number;
-  status: "draft" | "sent" | "viewed" | "accepted" | "rejected";
-  lineItems: ProposalLineItem[];
-  subtotal: number;
-  tax: number;
-  total: number;
-  notes?: string;
-  createdBy: string;
-  createdAt: string;
-  sentAt?: string;
-  viewedAt?: string;
-  respondedAt?: string;
-}
-
-type CallStatus = "not_called" | "called" | "no_answer" | "interested" | "not_interested";
-
 interface Lead {
   id: string;
   name: string;
@@ -181,10 +140,6 @@ interface Lead {
   nextFollowUp?: string;
   campaignSource?: string;
   referredBy?: string;
-  // Enhanced lead management fields
-  callStatus?: CallStatus;
-  reminders?: Reminder[];
-  proposals?: Proposal[];
 }
 
 type ViewMode = "table" | "kanban" | "grid";
@@ -192,6 +147,7 @@ type ViewMode = "table" | "kanban" | "grid";
 // ==================== COMPONENT ====================
 export default function LeadsModule() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -602,6 +558,44 @@ export default function LeadsModule() {
       description: `Created a copy of ${lead.name}`,
       duration: 3000,
     });
+  };
+
+  const handleConvertToCustomer = (lead: Lead) => {
+    console.log("🔄 Converting lead to customer:", lead.name);
+    
+    // Store lead data in localStorage to pass to customer page
+    const customerData = {
+      companyName: lead.company || lead.name,
+      primaryContact: lead.name,
+      primaryEmail: lead.email || "",
+      phone: lead.phone || "",
+      vatNumber: "",
+      website: lead.website || "",
+      address: lead.address || "",
+      city: lead.city || "",
+      state: lead.state || "",
+      zipCode: lead.zipCode || "",
+      country: lead.country || "USA",
+      position: lead.position || "",
+      leadSource: lead.source,
+      convertedFrom: "lead",
+      leadId: lead.id,
+      convertedDate: new Date().toISOString(),
+    };
+
+    // Store in localStorage
+    localStorage.setItem('newCustomerData', JSON.stringify(customerData));
+    
+    toast({
+      title: "✅ Converting to Customer",
+      description: `Redirecting to create customer from ${lead.name}...`,
+      duration: 3000,
+    });
+
+    // Navigate to customers page after a brief delay
+    setTimeout(() => {
+      setLocation('/customers');
+    }, 1000);
   };
 
   // Import/Export
@@ -1430,6 +1424,14 @@ export default function LeadsModule() {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem 
+                              onClick={(e) => { e.stopPropagation(); handleConvertToCustomer(lead); }}
+                              className="text-green-600 focus:text-green-600 focus:bg-green-50 font-semibold"
+                            >
+                              <UserCheck className="w-4 h-4 mr-2" />
+                              Convert to Customer
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
                               onClick={(e) => handleDelete(lead.id, e)} 
                               className="text-red-600 focus:text-red-600 focus:bg-red-50"
                             >
@@ -1691,6 +1693,14 @@ export default function LeadsModule() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
+                            onClick={(e) => { e.stopPropagation(); handleConvertToCustomer(lead); }}
+                            className="text-green-600 focus:text-green-600 focus:bg-green-50 font-semibold"
+                          >
+                            <UserCheck className="w-4 h-4 mr-2" />
+                            Convert
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
                             onClick={(e) => handleDelete(lead.id, e)} 
                             className="text-red-600 focus:text-red-600 focus:bg-red-50"
                           >
@@ -1784,753 +1794,320 @@ export default function LeadsModule() {
             
             {/* Scrollable Content with Fixed Height */}
             <ScrollArea className="h-[calc(95vh-280px)] sm:h-[calc(92vh-280px)] px-4 sm:px-6 overflow-y-auto">
-              <div className="space-y-4 sm:space-y-6 py-4 sm:py-6 pb-8">
+              <div className="space-y-5 sm:space-y-6 py-5 sm:py-6 pb-8">
                 
                 {/* Quick Guide Alert */}
                 {(!formData.name || !formData.source) && (
-                  <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300 rounded-xl p-4 sm:p-5 flex items-start gap-3 shadow-md animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                      <Sparkles className="w-5 h-5 text-white" />
+                  <div className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-2xl p-4 sm:p-5 flex items-start gap-3 shadow-xl animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 shadow-lg">
+                      <Sparkles className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-blue-900 text-sm sm:text-base mb-2 flex items-center gap-2">
+                      <h4 className="font-extrabold text-white text-sm sm:text-base mb-2 flex items-center gap-2">
                         Quick Start Guide
-                        <Badge className="bg-blue-600 text-white text-xs">Required</Badge>
+                        <Badge className="bg-white/30 backdrop-blur-sm text-white border-0 text-xs font-bold">Required Fields</Badge>
                       </h4>
-                      <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
-                        To create a lead, you must fill in: <strong className="text-blue-900">Full Name</strong> and <strong className="text-blue-900">Lead Source</strong>. 
-                        All other fields are optional but help you track leads better!
+                      <p className="text-xs sm:text-sm text-white/95 leading-relaxed font-medium">
+                        Start by filling in <span className="font-extrabold">Full Name</span> and <span className="font-extrabold">Lead Source</span>. 
+                        All other fields are optional but recommended!
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* Basic Information Section */}
-                <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50/50 to-white shadow-lg">
-                  <CardHeader className="pb-4 bg-gradient-to-r from-blue-100/50 to-purple-100/50">
-                    <CardTitle className="text-base flex items-center gap-3 text-blue-900">
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
-                        <User className="w-5 h-5 text-white" />
+                {/* Personal & Contact Information - Streamlined */}
+                <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50/30 via-white to-indigo-50/20 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                  <CardHeader className="pb-5 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 text-white rounded-t-xl">
+                    <CardTitle className="text-lg flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                        <User className="w-6 h-6 text-white" />
                       </div>
-                      <span className="font-bold">Basic Information</span>
-                      <span className="text-xs text-red-600 ml-auto font-bold bg-red-50 px-2 py-1 rounded-md">* Required</span>
+                      <div className="flex-1">
+                        <span className="font-extrabold">Personal Information</span>
+                        <p className="text-xs text-white/80 font-medium mt-0.5">Basic contact details</p>
+                      </div>
+                      <Badge className="bg-red-500 text-white border-0 text-xs font-bold shadow-md">
+                        <span className="mr-1">*</span> Required
+                      </Badge>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4 pt-4">
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <Label htmlFor="name" className="flex items-center gap-2 font-semibold text-gray-700 mb-2">
-                          Full Name <span className="text-red-500 text-base">*</span>
-                          {formData.name && <CheckCircle className="w-4 h-4 text-green-500" />}
-                        </Label>
-                        <Input
-                          id="name"
-                          value={formData.name || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="e.g., John Doe"
-                          className={`mt-1 transition-all duration-200 ${!formData.name ? 'border-2 border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-200' : 'border-2 border-green-300 focus:border-green-500 focus:ring-2 focus:ring-green-200 bg-green-50/30'}`}
-                          autoFocus
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="source" className="flex items-center gap-2 font-semibold text-gray-700 mb-2">
-                          Lead Source <span className="text-red-500 text-base">*</span>
-                          {formData.source && <CheckCircle className="w-4 h-4 text-green-500" />}
-                        </Label>
-                        <Select value={formData.source || ""} onValueChange={(v) => setFormData(prev => ({ ...prev, source: v }))}>
-                          <SelectTrigger className={`mt-1 transition-all duration-200 ${!formData.source ? 'border-2 border-red-300 focus:border-red-500' : 'border-2 border-green-300 focus:border-green-500 bg-green-50/30'}`}>
-                            <SelectValue placeholder="Select where this lead came from *" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Website">🌐 Website</SelectItem>
-                            <SelectItem value="LinkedIn">💼 LinkedIn</SelectItem>
-                            <SelectItem value="Referral">🤝 Referral</SelectItem>
-                            <SelectItem value="Trade Show">🎪 Trade Show</SelectItem>
-                            <SelectItem value="Cold Call">📞 Cold Call</SelectItem>
-                            <SelectItem value="Email Campaign">📧 Email Campaign</SelectItem>
-                            <SelectItem value="Social Media">📱 Social Media</SelectItem>
-                            <SelectItem value="Advertisement">📺 Advertisement</SelectItem>
-                            <SelectItem value="Partner">🔗 Partner</SelectItem>
-                            <SelectItem value="Other">📋 Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                  <CardContent className="space-y-5 pt-6">
+                    {/* Full Name - Required */}
+                    <div>
+                      <Label htmlFor="name" className="flex items-center gap-2 font-bold text-gray-800 mb-2.5 text-sm">
+                        <User className="w-4 h-4 text-blue-600" />
+                        Full Name <span className="text-red-500 text-lg">*</span>
+                        {formData.name && <CheckCircle className="w-4 h-4 text-green-500 ml-auto" />}
+                      </Label>
+                      <Input
+                        id="name"
+                        value={formData.name || ""}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="e.g., John Doe"
+                        className={`h-12 text-base transition-all duration-200 ${!formData.name ? 'border-2 border-red-400 focus:border-red-600 focus:ring-4 focus:ring-red-100' : 'border-2 border-green-400 focus:border-green-600 focus:ring-4 focus:ring-green-100 bg-green-50/40'}`}
+                        autoFocus
+                      />
+                      {!formData.name && (
+                        <p className="text-xs text-red-600 mt-1.5 font-medium flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          This field is required
+                        </p>
+                      )}
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <Label htmlFor="position" className="font-medium text-gray-700">Job Position</Label>
-                        <Input
-                          id="position"
-                          value={formData.position || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
-                          placeholder="e.g., CEO, VP of Sales"
-                          className="mt-1.5 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="company" className="font-medium text-gray-700">Company Name</Label>
-                        <div className="relative">
-                          <Building2 className="absolute left-3 top-[50%] -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <Input
-                            id="company"
-                            value={formData.company || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
-                            placeholder="e.g., TechCorp Inc"
-                            className="mt-1.5 pl-10 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
 
-                {/* Contact Details Section */}
-                <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50/50 to-white shadow-lg">
-                  <CardHeader className="pb-4 bg-gradient-to-r from-purple-100/50 to-pink-100/50">
-                    <CardTitle className="text-base flex items-center gap-3 text-purple-900">
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-md">
-                        <Mail className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="font-bold">Contact Information</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    {/* Email & Phone Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="email">Email Address</Label>
+                        <Label htmlFor="email" className="flex items-center gap-2 font-bold text-gray-800 mb-2.5 text-sm">
+                          <Mail className="w-4 h-4 text-purple-600" />
+                          Email Address
+                        </Label>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-[50%] -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <Input
                             id="email"
                             type="email"
                             value={formData.email || ""}
                             onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                            placeholder="email@company.com"
-                            className="mt-1.5 pl-9 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            placeholder="john.doe@company.com"
+                            className="h-12 pl-12 text-base border-2 border-gray-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all"
                           />
                         </div>
                       </div>
                       <div>
-                        <Label htmlFor="phone">Phone Number</Label>
+                        <Label htmlFor="phone" className="flex items-center gap-2 font-bold text-gray-800 mb-2.5 text-sm">
+                          <Phone className="w-4 h-4 text-green-600" />
+                          Contact Number
+                        </Label>
                         <div className="relative">
-                          <Phone className="absolute left-3 top-[50%] -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <Input
                             id="phone"
                             type="tel"
                             value={formData.phone || ""}
                             onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                             placeholder="+1 (555) 123-4567"
-                            className="mt-1.5 pl-9 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            className="h-12 pl-12 text-base border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all"
                           />
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+
+                    {/* Company & Position Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="alternateEmail">Alternate Email</Label>
+                        <Label htmlFor="company" className="flex items-center gap-2 font-bold text-gray-800 mb-2.5 text-sm">
+                          <Building2 className="w-4 h-4 text-blue-600" />
+                          Company Name
+                        </Label>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-[50%] -translate-y-1/2 w-4 h-4 text-gray-400" />
+                          <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                           <Input
-                            id="alternateEmail"
-                            type="email"
-                            value={formData.alternateEmail || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, alternateEmail: e.target.value }))}
-                            placeholder="secondary@company.com"
-                            className="mt-1.5 pl-9 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            id="company"
+                            value={formData.company || ""}
+                            onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                            placeholder="e.g., TechCorp Inc."
+                            className="h-12 pl-12 text-base border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all"
                           />
                         </div>
                       </div>
                       <div>
-                        <Label htmlFor="alternatePhone">Alternate Phone</Label>
-                        <div className="relative">
-                          <Phone className="absolute left-3 top-[50%] -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <Input
-                            id="alternatePhone"
-                            type="tel"
-                            value={formData.alternatePhone || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, alternatePhone: e.target.value }))}
-                            placeholder="+1 (555) 987-6543"
-                            className="mt-1.5 pl-9 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <Label htmlFor="preferredContact">Preferred Contact Method</Label>
-                        <Select 
-                          value={formData.preferredContactMethod || "email"} 
-                          onValueChange={(v) => setFormData(prev => ({ ...prev, preferredContactMethod: v as Lead["preferredContactMethod"] }))}
-                        >
-                          <SelectTrigger className="mt-1.5">
-                            <SelectValue placeholder="Select method" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="email">📧 Email</SelectItem>
-                            <SelectItem value="phone">📞 Phone Call</SelectItem>
-                            <SelectItem value="linkedin">💼 LinkedIn Message</SelectItem>
-                            <SelectItem value="meeting">🤝 In-Person Meeting</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="nextFollowUp">Next Follow-up Date</Label>
-                        <div className="relative">
-                          <Calendar className="absolute left-3 top-[50%] -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <Input
-                            id="nextFollowUp"
-                            type="date"
-                            value={formData.nextFollowUp || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, nextFollowUp: e.target.value }))}
-                            className="mt-1.5 pl-9"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="website">Website / LinkedIn URL</Label>
-                      <div className="relative">
-                        <Globe className="absolute left-3 top-[50%] -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Label htmlFor="position" className="flex items-center gap-2 font-bold text-gray-800 mb-2.5 text-sm">
+                          <Briefcase className="w-4 h-4 text-indigo-600" />
+                          Job Position
+                        </Label>
                         <Input
-                          id="website"
-                          value={formData.website || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
-                          placeholder="https://company.com"
-                          className="mt-1.5 pl-9 border-gray-300 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                          id="position"
+                          value={formData.position || ""}
+                          onChange={(e) => setFormData(prev => ({ ...prev, position: e.target.value }))}
+                          placeholder="e.g., CEO, VP of Sales"
+                          className="h-12 text-base border-2 border-gray-300 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all"
                         />
+                      </div>
+                    </div>
+
+                    {/* Place & Website Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="city" className="flex items-center gap-2 font-bold text-gray-800 mb-2.5 text-sm">
+                          <MapPin className="w-4 h-4 text-red-600" />
+                          Place / Location
+                        </Label>
+                        <div className="relative">
+                          <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <Input
+                            id="city"
+                            value={formData.city || ""}
+                            onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                            placeholder="e.g., San Francisco, CA"
+                            className="h-12 pl-12 text-base border-2 border-gray-300 focus:border-red-500 focus:ring-4 focus:ring-red-100 transition-all"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="website" className="flex items-center gap-2 font-bold text-gray-800 mb-2.5 text-sm">
+                          <Globe className="w-4 h-4 text-cyan-600" />
+                          Website Link
+                        </Label>
+                        <div className="relative">
+                          <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <Input
+                            id="website"
+                            value={formData.website || ""}
+                            onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
+                            placeholder="https://company.com"
+                            className="h-12 pl-12 text-base border-2 border-gray-300 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100 transition-all"
+                          />
+                        </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Lead Intelligence Section */}
-                <Card className="border-2 border-amber-200 bg-gradient-to-br from-amber-50/50 to-white shadow-lg">
-                  <CardHeader className="pb-4 bg-gradient-to-r from-amber-100/50 to-orange-100/50">
-                    <CardTitle className="text-base flex items-center gap-3 text-amber-900">
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center shadow-md">
-                        <Brain className="w-5 h-5 text-white" />
+                {/* Lead Management - Streamlined */}
+                <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50/30 via-white to-teal-50/20 shadow-xl hover:shadow-2xl transition-shadow duration-300">
+                  <CardHeader className="pb-5 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white rounded-t-xl">
+                    <CardTitle className="text-lg flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                        <Target className="w-6 h-6 text-white" />
                       </div>
-                      <span className="font-bold">Lead Intelligence & Scoring</span>
+                      <div className="flex-1">
+                        <span className="font-extrabold">Lead Management</span>
+                        <p className="text-xs text-white/80 font-medium mt-0.5">Status and assignment</p>
+                      </div>
+                      <Badge className="bg-red-500 text-white border-0 text-xs font-bold shadow-md">
+                        <span className="mr-1">*</span> Required
+                      </Badge>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <CardContent className="space-y-5 pt-6">
+                    {/* Lead Source - Required */}
+                    <div>
+                      <Label htmlFor="source" className="flex items-center gap-2 font-bold text-gray-800 mb-2.5 text-sm">
+                        <Star className="w-4 h-4 text-yellow-600" />
+                        Lead Source <span className="text-red-500 text-lg">*</span>
+                        {formData.source && <CheckCircle className="w-4 h-4 text-green-500 ml-auto" />}
+                      </Label>
+                      <Select value={formData.source || ""} onValueChange={(v) => setFormData(prev => ({ ...prev, source: v }))}>
+                        <SelectTrigger className={`h-12 text-base transition-all duration-200 ${!formData.source ? 'border-2 border-red-400 focus:border-red-600 focus:ring-4 focus:ring-red-100' : 'border-2 border-green-400 focus:border-green-600 focus:ring-4 focus:ring-green-100 bg-green-50/40'}`}>
+                          <SelectValue placeholder="🎯 Select where this lead came from *" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-80">
+                          <SelectItem value="Website" className="text-base py-3">🌐 Website</SelectItem>
+                          <SelectItem value="LinkedIn" className="text-base py-3">💼 LinkedIn</SelectItem>
+                          <SelectItem value="Referral" className="text-base py-3">🤝 Referral</SelectItem>
+                          <SelectItem value="Trade Show" className="text-base py-3">🎪 Trade Show</SelectItem>
+                          <SelectItem value="Cold Call" className="text-base py-3">📞 Cold Call</SelectItem>
+                          <SelectItem value="Email Campaign" className="text-base py-3">📧 Email Campaign</SelectItem>
+                          <SelectItem value="Social Media" className="text-base py-3">📱 Social Media</SelectItem>
+                          <SelectItem value="Advertisement" className="text-base py-3">📺 Advertisement</SelectItem>
+                          <SelectItem value="Partner" className="text-base py-3">🔗 Partner</SelectItem>
+                          <SelectItem value="Other" className="text-base py-3">📋 Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {!formData.source && (
+                        <p className="text-xs text-red-600 mt-1.5 font-medium flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Please select a lead source
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Lead Status & Assigned To Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="status" className="flex items-center gap-1">
+                        <Label htmlFor="status" className="flex items-center gap-2 font-bold text-gray-800 mb-2.5 text-sm">
+                          <Activity className="w-4 h-4 text-blue-600" />
                           Lead Status
                         </Label>
                         <Select value={formData.status || "new"} onValueChange={(v) => setFormData(prev => ({ ...prev, status: v as Lead["status"] }))}>
-                          <SelectTrigger className="mt-1.5">
+                          <SelectTrigger className="h-12 text-base border-2 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="new">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                                New
+                            <SelectItem value="new" className="text-base py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm"></div>
+                                <span className="font-medium">New</span>
                               </div>
                             </SelectItem>
-                            <SelectItem value="contacted">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                Contacted
+                            <SelectItem value="contacted" className="text-base py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-yellow-500 shadow-sm"></div>
+                                <span className="font-medium">Contacted</span>
                               </div>
                             </SelectItem>
-                            <SelectItem value="qualified">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                                Qualified
+                            <SelectItem value="qualified" className="text-base py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-purple-500 shadow-sm"></div>
+                                <span className="font-medium">Qualified</span>
                               </div>
                             </SelectItem>
-                            <SelectItem value="proposal">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                                Proposal Sent
+                            <SelectItem value="proposal" className="text-base py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-orange-500 shadow-sm"></div>
+                                <span className="font-medium">Proposal Sent</span>
                               </div>
                             </SelectItem>
-                            <SelectItem value="negotiation">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-pink-500"></div>
-                                Negotiation
+                            <SelectItem value="negotiation" className="text-base py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-pink-500 shadow-sm"></div>
+                                <span className="font-medium">Negotiation</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="won" className="text-base py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-green-500 shadow-sm"></div>
+                                <span className="font-medium">Won</span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="lost" className="text-base py-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm"></div>
+                                <span className="font-medium">Lost</span>
                               </div>
                             </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="assignedTo">Assign To</Label>
+                        <Label htmlFor="assignedTo" className="flex items-center gap-2 font-bold text-gray-800 mb-2.5 text-sm">
+                          <Users className="w-4 h-4 text-purple-600" />
+                          Assigned To
+                        </Label>
                         <Select value={formData.assignedTo || "John Smith"} onValueChange={(v) => setFormData(prev => ({ ...prev, assignedTo: v }))}>
-                          <SelectTrigger className="mt-1.5">
-                            <SelectValue placeholder="Select user" />
+                          <SelectTrigger className="h-12 text-base border-2 border-gray-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-100">
+                            <SelectValue placeholder="Select team member" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="John Smith">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="w-5 h-5">
-                                  <AvatarFallback className="text-xs bg-blue-100">JS</AvatarFallback>
+                            <SelectItem value="John Smith" className="text-base py-3">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="w-7 h-7">
+                                  <AvatarFallback className="text-sm bg-blue-100 text-blue-700 font-bold">JS</AvatarFallback>
                                 </Avatar>
-                                John Smith
+                                <span className="font-medium">John Smith</span>
                               </div>
                             </SelectItem>
-                            <SelectItem value="Emily Davis">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="w-5 h-5">
-                                  <AvatarFallback className="text-xs bg-purple-100">ED</AvatarFallback>
+                            <SelectItem value="Emily Davis" className="text-base py-3">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="w-7 h-7">
+                                  <AvatarFallback className="text-sm bg-purple-100 text-purple-700 font-bold">ED</AvatarFallback>
                                 </Avatar>
-                                Emily Davis
+                                <span className="font-medium">Emily Davis</span>
                               </div>
                             </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                      <div>
-                        <Label htmlFor="priority">Priority Level</Label>
-                        <Select value={formData.priority || "medium"} onValueChange={(v) => setFormData(prev => ({ ...prev, priority: v as Lead["priority"] }))}>
-                          <SelectTrigger className="mt-1.5">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="high">
-                              <div className="flex items-center gap-2">
-                                <AlertTriangle className="w-4 h-4 text-red-500" />
-                                High Priority
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="medium">
-                              <div className="flex items-center gap-2">
-                                <AlertCircle className="w-4 h-4 text-amber-500" />
-                                Medium Priority
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="low">
-                              <div className="flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4 text-gray-500" />
-                                Low Priority
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="temperature">Temperature</Label>
-                        <Select 
-                          value={formData.temperature || "warm"} 
-                          onValueChange={(v) => setFormData(prev => ({ ...prev, temperature: v as Lead["temperature"] }))}
-                        >
-                          <SelectTrigger className="mt-1.5">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="hot">
-                              <div className="flex items-center gap-2">
-                                <Flame className="w-4 h-4 text-red-500" />
-                                Hot 🔥
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="warm">
-                              <div className="flex items-center gap-2">
-                                <TrendingUp className="w-4 h-4 text-yellow-500" />
-                                Warm
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="cold">
-                              <div className="flex items-center gap-2">
-                                <TrendingDown className="w-4 h-4 text-blue-500" />
-                                Cold
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="assigned">Assign To</Label>
-                        <Select value={formData.assignedTo || ""} onValueChange={(v) => setFormData(prev => ({ ...prev, assignedTo: v }))}>
-                          <SelectTrigger className="mt-1.5">
-                            <SelectValue placeholder="Select user" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="John Smith">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="w-5 h-5">
-                                  <AvatarFallback className="text-xs bg-blue-100">JS</AvatarFallback>
+                            <SelectItem value="Michael Chen" className="text-base py-3">
+                              <div className="flex items-center gap-3">
+                                <Avatar className="w-7 h-7">
+                                  <AvatarFallback className="text-sm bg-green-100 text-green-700 font-bold">MC</AvatarFallback>
                                 </Avatar>
-                                John Smith
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="Emily Davis">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="w-5 h-5">
-                                  <AvatarFallback className="text-xs bg-purple-100">ED</AvatarFallback>
-                                </Avatar>
-                                Emily Davis
+                                <span className="font-medium">Michael Chen</span>
                               </div>
                             </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <Label htmlFor="leadValue" className="flex items-center gap-2">
-                          Expected Deal Value
-                          {formData.leadValue && formData.leadValue > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(formData.leadValue)}
-                            </Badge>
-                          )}
-                        </Label>
-                        <div className="relative mt-1.5">
-                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <Input
-                            id="leadValue"
-                            type="number"
-                            value={formData.leadValue || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, leadValue: Number(e.target.value) || undefined }))}
-                            placeholder="50000"
-                            className="pl-9 border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="leadScore" className="flex items-center gap-2">
-                          Lead Score
-                          {formData.leadScore !== undefined && (
-                            <Badge 
-                              variant="secondary" 
-                              className={`text-xs ${
-                                formData.leadScore >= 80 ? 'bg-green-100 text-green-700' :
-                                formData.leadScore >= 60 ? 'bg-yellow-100 text-yellow-700' :
-                                formData.leadScore >= 40 ? 'bg-orange-100 text-orange-700' :
-                                'bg-red-100 text-red-700'
-                              }`}
-                            >
-                              {formData.leadScore}/100
-                            </Badge>
-                          )}
-                        </Label>
-                        <div className="space-y-2 mt-1.5">
-                          <Input
-                            id="leadScore"
-                            type="range"
-                            min="0"
-                            max="100"
-                            value={formData.leadScore || 50}
-                            onChange={(e) => setFormData(prev => ({ ...prev, leadScore: Number(e.target.value) }))}
-                            className="w-full"
-                          />
-                          <Progress value={formData.leadScore || 50} className="h-2" />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Company & Industry Details Section - NEW */}
-                <Card className="border-2 border-cyan-100 bg-cyan-50/30">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-base flex items-center gap-2 text-cyan-900">
-                      <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center">
-                        <Building2 className="w-4 h-4 text-white" />
-                      </div>
-                      Company & Industry Details
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <Label htmlFor="industry">Industry</Label>
-                        <Select value={formData.industry || ""} onValueChange={(v) => setFormData(prev => ({ ...prev, industry: v }))}>
-                          <SelectTrigger className="mt-1.5">
-                            <SelectValue placeholder="Select industry" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Technology">💻 Technology</SelectItem>
-                            <SelectItem value="Finance">💰 Finance</SelectItem>
-                            <SelectItem value="Healthcare">🏥 Healthcare</SelectItem>
-                            <SelectItem value="Manufacturing">🏭 Manufacturing</SelectItem>
-                            <SelectItem value="Retail">🛍️ Retail</SelectItem>
-                            <SelectItem value="Education">🎓 Education</SelectItem>
-                            <SelectItem value="Real Estate">🏢 Real Estate</SelectItem>
-                            <SelectItem value="Marketing">📢 Marketing</SelectItem>
-                            <SelectItem value="Consulting">🤝 Consulting</SelectItem>
-                            <SelectItem value="Other">📋 Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="companySize">Company Size</Label>
-                        <Select value={formData.companySize || ""} onValueChange={(v) => setFormData(prev => ({ ...prev, companySize: v }))}>
-                          <SelectTrigger className="mt-1.5">
-                            <SelectValue placeholder="Select size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1-10">👤 1-10 employees</SelectItem>
-                            <SelectItem value="11-50">👥 11-50 employees</SelectItem>
-                            <SelectItem value="51-200">👨‍👩‍👧‍👦 51-200 employees</SelectItem>
-                            <SelectItem value="201-500">🏢 201-500 employees</SelectItem>
-                            <SelectItem value="501-1000">🏭 501-1000 employees</SelectItem>
-                            <SelectItem value="1000+">🌐 1000+ employees</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <Label htmlFor="budget" className="flex items-center gap-2">
-                          Budget Range
-                          {formData.budget && formData.budget > 0 && (
-                            <Badge variant="secondary" className="text-xs bg-cyan-100 text-cyan-700">
-                              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(formData.budget)}
-                            </Badge>
-                          )}
-                        </Label>
-                        <div className="relative mt-1.5">
-                          <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                          <Input
-                            id="budget"
-                            type="number"
-                            value={formData.budget || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, budget: Number(e.target.value) || undefined }))}
-                            placeholder="Annual budget"
-                            className="pl-9 border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="decisionTimeline">Decision Timeline</Label>
-                        <Select value={formData.decisionTimeline || ""} onValueChange={(v) => setFormData(prev => ({ ...prev, decisionTimeline: v }))}>
-                          <SelectTrigger className="mt-1.5">
-                            <SelectValue placeholder="When will they decide?" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Immediate">⚡ Immediate (This week)</SelectItem>
-                            <SelectItem value="1-month">📅 Within 1 month</SelectItem>
-                            <SelectItem value="1-3-months">🗓️ 1-3 months</SelectItem>
-                            <SelectItem value="3-6-months">📆 3-6 months</SelectItem>
-                            <SelectItem value="6-12-months">📊 6-12 months</SelectItem>
-                            <SelectItem value="Not sure">❓ Not sure yet</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <Label htmlFor="campaignSource">Campaign Source</Label>
-                        <Input
-                          id="campaignSource"
-                          value={formData.campaignSource || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, campaignSource: e.target.value }))}
-                          placeholder="e.g., Summer Promo 2026"
-                          className="mt-1.5 border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="referredBy">Referred By</Label>
-                        <Input
-                          id="referredBy"
-                          value={formData.referredBy || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, referredBy: e.target.value }))}
-                          placeholder="Name of referrer"
-                          className="mt-1.5 border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all"
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Social Media & Online Presence - NEW */}
-                <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50/50 to-white shadow-lg">
-                  <CardHeader className="pb-4 bg-gradient-to-r from-pink-100/50 to-rose-100/50">
-                    <CardTitle className="text-base flex items-center gap-3 text-pink-900">
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center shadow-md">
-                        <Globe className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="font-bold">Social Media & Online Presence</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 gap-3 sm:gap-4">
-                      <div>
-                        <Label htmlFor="linkedinUrl">LinkedIn Profile URL</Label>
-                        <div className="relative">
-                          <Linkedin className="absolute left-3 top-[50%] -translate-y-1/2 w-4 h-4 text-blue-600" />
-                          <Input
-                            id="linkedinUrl"
-                            value={formData.linkedinUrl || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, linkedinUrl: e.target.value }))}
-                            placeholder="https://linkedin.com/in/username"
-                            className="mt-1.5 pl-9 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <Label htmlFor="twitterHandle">Twitter/X Handle</Label>
-                        <div className="relative">
-                          <Twitter className="absolute left-3 top-[50%] -translate-y-1/2 w-4 h-4 text-sky-500" />
-                          <Input
-                            id="twitterHandle"
-                            value={formData.twitterHandle || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, twitterHandle: e.target.value }))}
-                            placeholder="@username"
-                            className="mt-1.5 pl-9 border-gray-300 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 transition-all"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="facebookPage">Facebook Page</Label>
-                        <div className="relative">
-                          <Facebook className="absolute left-3 top-[50%] -translate-y-1/2 w-4 h-4 text-blue-600" />
-                          <Input
-                            id="facebookPage"
-                            value={formData.facebookPage || ""}
-                            onChange={(e) => setFormData(prev => ({ ...prev, facebookPage: e.target.value }))}
-                            placeholder="facebook.com/company"
-                            className="mt-1.5 pl-9 border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 transition-all"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Tags & Categories Section */}
-                <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50/50 to-white shadow-lg">
-                  <CardHeader className="pb-4 bg-gradient-to-r from-green-100/50 to-emerald-100/50">
-                    <CardTitle className="text-base flex items-center gap-3 text-green-900">
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-md">
-                        <TagIcon className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="font-bold">Tags & Categories</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Label>Add Tags (press Enter or comma to add)</Label>
-                    <div className="mt-1.5 flex items-center gap-2 flex-wrap border-2 border-gray-300 rounded-lg px-3 py-2.5 bg-white min-h-[50px] focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all">
-                      {tags.map((tag, idx) => (
-                        <Badge key={idx} className="gap-1.5 bg-green-100 text-green-700 hover:bg-green-200">
-                          <TagIcon className="w-3 h-3" />
-                          {tag}
-                          <X className="w-3 h-3 cursor-pointer hover:text-green-900" onClick={() => removeTag(idx)} />
-                        </Badge>
-                      ))}
-                      <input
-                        value={tagsInput}
-                        onChange={(e) => setTagsInput(e.target.value)}
-                        onKeyDown={handleTagKeyDown}
-                        onBlur={() => { if (tagsInput.trim()) addTag(tagsInput); }}
-                        placeholder={tags.length === 0 ? "e.g., Enterprise, SaaS, High Value" : "Add another tag..."}
-                        className="flex-1 min-w-[180px] bg-transparent outline-none text-sm"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      💡 Tip: Use tags like "Enterprise", "Hot Lead", "Follow Up", etc. for better organization
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {/* Address Section */}
-                <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/50 to-white shadow-lg">
-                  <CardHeader className="pb-4 bg-gradient-to-r from-indigo-100/50 to-blue-100/50">
-                    <CardTitle className="text-base flex items-center gap-3 text-indigo-900">
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md">
-                        <MapPinned className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="font-bold">Location & Address</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <Label htmlFor="address">Street Address</Label>
-                      <Input
-                        id="address"
-                        value={formData.address || ""}
-                        onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                        placeholder="123 Main Street, Suite 100"
-                        className="mt-1.5 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="city">City</Label>
-                        <Input
-                          id="city"
-                          value={formData.city || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                          placeholder="San Francisco"
-                          className="mt-1.5 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="state">State / Province</Label>
-                        <Input
-                          id="state"
-                          value={formData.state || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
-                          placeholder="CA"
-                          className="mt-1.5 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <Label htmlFor="country">Country</Label>
-                        <Select value={formData.country || "USA"} onValueChange={(v) => setFormData(prev => ({ ...prev, country: v }))}>
-                          <SelectTrigger className="mt-1.5">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="USA">🇺🇸 United States</SelectItem>
-                            <SelectItem value="Canada">🇨🇦 Canada</SelectItem>
-                            <SelectItem value="UK">🇬🇧 United Kingdom</SelectItem>
-                            <SelectItem value="India">🇮🇳 India</SelectItem>
-                            <SelectItem value="Australia">🇦🇺 Australia</SelectItem>
-                            <SelectItem value="Germany">🇩🇪 Germany</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="zipCode">Zip / Postal Code</Label>
-                        <Input
-                          id="zipCode"
-                          value={formData.zipCode || ""}
-                          onChange={(e) => setFormData(prev => ({ ...prev, zipCode: e.target.value }))}
-                          placeholder="94105"
-                          className="mt-1.5 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all"
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Additional Information Section */}
-                <Card className="border-2 border-slate-200 bg-gradient-to-br from-slate-50/50 to-white shadow-lg">
-                  <CardHeader className="pb-4 bg-gradient-to-r from-slate-100/50 to-gray-100/50">
-                    <CardTitle className="text-base flex items-center gap-3 text-slate-900">
-                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center shadow-md">
-                        <FileText className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="font-bold">Additional Notes</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Label htmlFor="description">Description / Notes</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description || ""}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Add any additional information about this lead, conversation notes, special requirements, or next steps..."
-                      rows={5}
-                      className="mt-1.5 resize-none border-2 border-gray-300 focus:border-slate-500 focus:ring-2 focus:ring-slate-200 transition-all"
-                    />
-                    <p className="text-xs text-gray-500 mt-2">
-                      {formData.description?.length || 0} characters
-                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -2641,21 +2218,7 @@ export default function LeadsModule() {
             onCall={handleCall}
             onEmail={handleEmail}
             onWhatsApp={handleWhatsApp}
-            onUpdateLead={(leadId, updater) => {
-              setLeads(prev => prev.map(l => {
-                if (l.id === leadId) {
-                  return { ...l, ...updater(l) };
-                }
-                return l;
-              }));
-              // Update selectedLead to reflect changes in modal
-              setSelectedLead(prev => {
-                if (prev && prev.id === leadId) {
-                  return { ...prev, ...updater(prev) };
-                }
-                return prev;
-              });
-            }}
+            onConvertToCustomer={handleConvertToCustomer}
           />
         )}
       </div>
@@ -2675,7 +2238,7 @@ function LeadDetailModal({
   onCall,
   onEmail,
   onWhatsApp,
-  onUpdateLead,
+  onConvertToCustomer,
 }: {
   lead: Lead;
   open: boolean;
@@ -2687,33 +2250,8 @@ function LeadDetailModal({
   onCall?: (lead: Lead) => void;
   onEmail?: (lead: Lead) => void;
   onWhatsApp?: (lead: Lead) => void;
-  onUpdateLead?: (leadId: string, updater: (lead: Lead) => Partial<Lead>) => void;
+  onConvertToCustomer?: (lead: Lead) => void;
 }) {
-  const { toast } = useToast();
-  
-  // State management for tabs
-  const [noteContent, setNoteContent] = useState("");
-  const [reminderDate, setReminderDate] = useState("");
-  const [reminderTime, setReminderTime] = useState("");
-  const [reminderMessage, setReminderMessage] = useState("");
-  const [reminderPriority, setReminderPriority] = useState<"high" | "medium" | "low">("medium");
-  const [reminderCategory, setReminderCategory] = useState("follow-up");
-  const [reminderNotifyBefore, setReminderNotifyBefore] = useState(15);
-  const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
-  const [currentStatus, setCurrentStatus] = useState(lead.status);
-  const [currentAssignee, setCurrentAssignee] = useState(lead.assignedTo);
-  const [currentCallStatus, setCurrentCallStatus] = useState<CallStatus>(lead.callStatus || "not_called");
-  const [proposalForm, setProposalForm] = useState({
-    title: "",
-    lineItems: [] as ProposalLineItem[],
-    notes: "",
-  });
-  const [newLineItem, setNewLineItem] = useState({
-    description: "",
-    quantity: 1,
-    unitPrice: 0,
-  });
-  
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
@@ -2845,6 +2383,20 @@ function LeadDetailModal({
                       </Button>
                     )}
                   </div>
+
+                  {/* Convert to Customer Button */}
+                  {onConvertToCustomer && (
+                    <Button
+                      className="w-full mb-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                      onClick={() => {
+                        onConvertToCustomer(lead);
+                        onOpenChange(false);
+                      }}
+                    >
+                      <UserCheck className="w-4 h-4 mr-2" />
+                      Convert to Customer
+                    </Button>
+                  )}
 
                   {/* Lead Score */}
                   {lead.leadScore !== undefined && (
@@ -3109,42 +2661,34 @@ function LeadDetailModal({
           <div className="flex flex-col overflow-hidden h-full max-h-[95vh]">
             <div className="border-b border-gray-200 px-4 sm:px-6 pt-4 sm:pt-6 bg-white sticky top-0 z-10">
               <Tabs value={activeTab} onValueChange={onTabChange}>
-                <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9 h-auto bg-gray-100 gap-1">
+                <TabsList className="grid w-full grid-cols-7 h-auto bg-gray-100">
                   <TabsTrigger value="overview" className="text-xs py-2 data-[state=active]:bg-white">
                     <Eye className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
                     <span className="hidden sm:inline">Overview</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="activity" className="text-xs py-2 data-[state=active]:bg-white">
+                    <Activity className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Activity</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="tasks" className="text-xs py-2 data-[state=active]:bg-white">
+                    <CheckCheck className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Tasks</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="proposals" className="text-xs py-2 data-[state=active]:bg-white">
+                    <FileCheck className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Proposals</span>
                   </TabsTrigger>
                   <TabsTrigger value="notes" className="text-xs py-2 data-[state=active]:bg-white">
                     <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
                     <span className="hidden sm:inline">Notes</span>
                   </TabsTrigger>
+                  <TabsTrigger value="files" className="text-xs py-2 data-[state=active]:bg-white">
+                    <Paperclip className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                    <span className="hidden sm:inline">Files</span>
+                  </TabsTrigger>
                   <TabsTrigger value="reminders" className="text-xs py-2 data-[state=active]:bg-white">
                     <Bell className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Reminder</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="communication" className="text-xs py-2 data-[state=active]:bg-white">
-                    <Phone className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Contact</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="lead-status" className="text-xs py-2 data-[state=active]:bg-white">
-                    <Flag className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Status</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="assign" className="text-xs py-2 data-[state=active]:bg-white">
-                    <User className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Assign</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="call-status" className="text-xs py-2 data-[state=active]:bg-white">
-                    <Phone className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Call</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="proposals" className="text-xs py-2 data-[state=active]:bg-white">
-                    <FileCheck className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Proposal</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="activity" className="text-xs py-2 data-[state=active]:bg-white">
-                    <Activity className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
-                    <span className="hidden sm:inline">Activity</span>
+                    <span className="hidden sm:inline">Reminders</span>
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -3459,564 +3003,19 @@ function LeadDetailModal({
                   </div>
                 </TabsContent>
 
-                {/* REMINDERS TAB - Enhanced Follow-up System */}
-                <TabsContent value="reminders" className="mt-0 space-y-4 sm:space-y-6">
-                  
-                  {/* Enhanced Features Banner */}
-                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 rounded-lg shadow-lg mb-4">
-                    <div className="flex items-center gap-3">
-                      <Sparkles className="w-6 h-6" />
-                      <div>
-                        <h3 className="font-bold text-lg">✨ Enhanced Follow-up Reminder System</h3>
-                        <p className="text-sm text-purple-100">Complete reminder management with priority, categories, and smart notifications</p>
-                      </div>
+                {/* REMINDERS TAB */}
+                <TabsContent value="reminders" className="mt-0">
+                  <div className="text-center py-12 sm:py-16 text-gray-400">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-red-100 to-pink-100 flex items-center justify-center">
+                      <Bell className="w-8 h-8 text-red-600" />
                     </div>
+                    <p className="text-sm sm:text-base font-medium">No reminders set</p>
+                    <p className="text-xs mt-1 mb-4">Set reminders to follow up with this lead</p>
+                    <Button className="mt-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white shadow-md">
+                      <PlusCircle className="w-4 h-4 mr-2" />
+                      Set Reminder
+                    </Button>
                   </div>
-
-                  {/* Reminder Form */}
-                  <Card className="border-2 border-purple-200 shadow-md">
-                    <CardHeader className="pb-3 bg-gradient-to-r from-purple-50 to-pink-50">
-                      <CardTitle className="text-base sm:text-lg flex items-center gap-2 text-purple-900">
-                        <Bell className="w-5 h-5" />
-                        {editingReminder ? "Edit Follow-up Reminder" : "Schedule Follow-up Reminder"}
-                      </CardTitle>
-                      <CardDescription className="text-sm">
-                        {editingReminder ? `Update reminder for ${lead.name}` : `Set a reminder to follow up with ${lead.name}`}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-4 sm:p-6 space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Date Picker */}
-                        <div className="space-y-2">
-                          <Label htmlFor="reminder-date" className="text-sm font-medium flex items-center gap-1">
-                            <Calendar className="w-4 h-4 text-purple-600" />
-                            Date <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="reminder-date"
-                            type="date"
-                            value={reminderDate}
-                            onChange={(e) => setReminderDate(e.target.value)}
-                            min={new Date().toISOString().split('T')[0]}
-                            className="text-sm w-full border-purple-200 focus:border-purple-400 focus:ring-purple-400"
-                          />
-                          {reminderDate && new Date(reminderDate) < new Date(new Date().setHours(0, 0, 0, 0)) && (
-                            <p className="text-xs text-red-500 flex items-center gap-1">
-                              <AlertTriangle className="w-3 h-3" />
-                              Date cannot be in the past
-                            </p>
-                          )}
-                        </div>
-                        
-                        {/* Time Picker */}
-                        <div className="space-y-2">
-                          <Label htmlFor="reminder-time" className="text-sm font-medium flex items-center gap-1">
-                            <Clock className="w-4 h-4 text-purple-600" />
-                            Time <span className="text-red-500">*</span>
-                          </Label>
-                          <Input
-                            id="reminder-time"
-                            type="time"
-                            value={reminderTime}
-                            onChange={(e) => setReminderTime(e.target.value)}
-                            className="text-sm w-full border-purple-200 focus:border-purple-400 focus:ring-purple-400"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        {/* Priority Selector */}
-                        <div className="space-y-2">
-                          <Label htmlFor="reminder-priority" className="text-sm font-medium flex items-center gap-1">
-                            <Flag className="w-4 h-4 text-purple-600" />
-                            Priority
-                          </Label>
-                          <Select
-                            value={reminderPriority}
-                            onValueChange={(value: "high" | "medium" | "low") => setReminderPriority(value)}
-                          >
-                            <SelectTrigger className="w-full text-sm border-purple-200">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="high" className="text-sm">
-                                <span className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                                  High Priority
-                                </span>
-                              </SelectItem>
-                              <SelectItem value="medium" className="text-sm">
-                                <span className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                  Medium Priority
-                                </span>
-                              </SelectItem>
-                              <SelectItem value="low" className="text-sm">
-                                <span className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                  Low Priority
-                                </span>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Category Selector */}
-                        <div className="space-y-2">
-                          <Label htmlFor="reminder-category" className="text-sm font-medium flex items-center gap-1">
-                            <TagIcon className="w-4 h-4 text-purple-600" />
-                            Category
-                          </Label>
-                          <Select
-                            value={reminderCategory}
-                            onValueChange={setReminderCategory}
-                          >
-                            <SelectTrigger className="w-full text-sm border-purple-200">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="follow-up" className="text-sm">Follow-up Call</SelectItem>
-                              <SelectItem value="meeting" className="text-sm">Schedule Meeting</SelectItem>
-                              <SelectItem value="email" className="text-sm">Send Email</SelectItem>
-                              <SelectItem value="proposal" className="text-sm">Send Proposal</SelectItem>
-                              <SelectItem value="demo" className="text-sm">Product Demo</SelectItem>
-                              <SelectItem value="contract" className="text-sm">Contract Review</SelectItem>
-                              <SelectItem value="other" className="text-sm">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {/* Notify Before */}
-                        <div className="space-y-2">
-                          <Label htmlFor="reminder-notify" className="text-sm font-medium flex items-center gap-1">
-                            <Bell className="w-4 h-4 text-purple-600" />
-                            Notify Before
-                          </Label>
-                          <Select
-                            value={String(reminderNotifyBefore)}
-                            onValueChange={(value) => setReminderNotifyBefore(Number(value))}
-                          >
-                            <SelectTrigger className="w-full text-sm border-purple-200">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="5" className="text-sm">5 minutes</SelectItem>
-                              <SelectItem value="15" className="text-sm">15 minutes</SelectItem>
-                              <SelectItem value="30" className="text-sm">30 minutes</SelectItem>
-                              <SelectItem value="60" className="text-sm">1 hour</SelectItem>
-                              <SelectItem value="120" className="text-sm">2 hours</SelectItem>
-                              <SelectItem value="1440" className="text-sm">1 day</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      
-                      {/* Reminder Message */}
-                      <div className="space-y-2">
-                        <Label htmlFor="reminder-message" className="text-sm font-medium flex items-center gap-1">
-                          <MessageSquare className="w-4 h-4 text-purple-600" />
-                          Reminder Message <span className="text-red-500">*</span>
-                        </Label>
-                        <Textarea
-                          id="reminder-message"
-                          placeholder="Enter reminder message... (e.g., 'Follow up on pricing proposal')" 
-                          value={reminderMessage}
-                          onChange={(e) => setReminderMessage(e.target.value)}
-                          rows={3}
-                          className="text-sm resize-none border-purple-200 focus:border-purple-400 focus:ring-purple-400"
-                        />
-                        <p className="text-xs text-gray-500">{reminderMessage.length} / 500 characters</p>
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex flex-col sm:flex-row justify-end gap-2 pt-2">
-                        {editingReminder && (
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setEditingReminder(null);
-                              setReminderDate("");
-                              setReminderTime("");
-                              setReminderMessage("");
-                              setReminderPriority("medium");
-                              setReminderCategory("follow-up");
-                              setReminderNotifyBefore(15);
-                            }}
-                            className="w-full sm:w-auto border-gray-300"
-                          >
-                            <X className="w-4 h-4 mr-2" />
-                            Cancel
-                          </Button>
-                        )}
-                        <Button
-                          onClick={() => {
-                            // Validation
-                            if (!reminderDate || !reminderTime || !reminderMessage.trim()) {
-                              toast({
-                                title: "⚠️ Missing Information",
-                                description: "Please fill in date, time, and message to set a reminder.",
-                                variant: "destructive",
-                                duration: 3000,
-                              });
-                              return;
-                            }
-
-                            // Validate date is not in the past
-                            const reminderDateTime = new Date(`${reminderDate}T${reminderTime}`);
-                            if (reminderDateTime < new Date()) {
-                              toast({
-                                title: "⚠️ Invalid Date/Time",
-                                description: "Reminder date and time cannot be in the past.",
-                                variant: "destructive",
-                                duration: 3000,
-                              });
-                              return;
-                            }
-
-                            if (editingReminder) {
-                              // Update existing reminder
-                              if (onUpdateLead) {
-                                onUpdateLead(lead.id, (l) => ({
-                                  reminders: l.reminders?.map(r => 
-                                    r.id === editingReminder.id
-                                      ? {
-                                          ...r,
-                                          date: reminderDate,
-                                          time: reminderTime,
-                                          message: reminderMessage,
-                                          priority: reminderPriority,
-                                          category: reminderCategory,
-                                          notifyBefore: reminderNotifyBefore
-                                        }
-                                      : r
-                                  )
-                                }));
-                              }
-
-                              toast({
-                                title: "✅ Reminder Updated",
-                                description: `Reminder updated successfully`,
-                                duration: 3000,
-                              });
-
-                              setEditingReminder(null);
-                            } else {
-                              // Create new reminder
-                              const newReminder: Reminder = {
-                                id: String(Date.now()),
-                                date: reminderDate,
-                                time: reminderTime,
-                                message: reminderMessage,
-                                priority: reminderPriority,
-                                category: reminderCategory,
-                                notifyBefore: reminderNotifyBefore,
-                                createdBy: "Current User",
-                                createdAt: new Date().toLocaleString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                  hour: "numeric",
-                                  minute: "2-digit",
-                                  hour12: true
-                                }),
-                                completed: false
-                              };
-
-                              // Update lead with new reminder
-                              if (onUpdateLead) {
-                                onUpdateLead(lead.id, (l) => ({
-                                  reminders: [newReminder, ...(l.reminders || [])]
-                                }));
-                              }
-
-                              // Success toast
-                              toast({
-                                title: "✅ Reminder Set",
-                                description: `Follow-up reminder scheduled for ${new Date(reminderDate).toLocaleDateString()} at ${reminderTime}`,
-                                duration: 3000,
-                              });
-                            }
-
-                            // Clear form
-                            setReminderDate("");
-                            setReminderTime("");
-                            setReminderMessage("");
-                            setReminderPriority("medium");
-                            setReminderCategory("follow-up");
-                            setReminderNotifyBefore(15);
-                          }}
-                          className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md"
-                        >
-                          <Save className="w-4 h-4 mr-2" />
-                          {editingReminder ? "Update Reminder" : "Save Reminder"}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Reminders List */}
-                  {lead.reminders && lead.reminders.length > 0 ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base flex items-center gap-2">
-                          <History className="w-4 h-4" />
-                          Scheduled Reminders ({lead.reminders.filter(r => !r.completed).length} active)
-                        </h3>
-                        {lead.reminders.filter(r => r.completed).length > 0 && (
-                          <Badge variant="outline" className="text-xs">
-                            {lead.reminders.filter(r => r.completed).length} completed
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      {lead.reminders
-                        .sort((a, b) => {
-                          // Sort by completed status first, then by date/time
-                          if (a.completed && !b.completed) return 1;
-                          if (!a.completed && b.completed) return -1;
-                          return new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime();
-                        })
-                        .map(reminder => {
-                          const reminderDateTime = new Date(`${reminder.date}T${reminder.time}`);
-                          const isOverdue = reminderDateTime < new Date() && !reminder.completed;
-                          const isUpcoming = reminderDateTime > new Date() && reminderDateTime < new Date(Date.now() + 24 * 60 * 60 * 1000);
-                          
-                          return (
-                            <Card key={reminder.id} className={`border-2 transition-all ${
-                              reminder.completed 
-                                ? 'border-gray-200 bg-gray-50' 
-                                : isOverdue
-                                  ? 'border-red-300 bg-red-50 hover:border-red-400 hover:shadow-md'
-                                  : isUpcoming
-                                    ? 'border-yellow-300 bg-yellow-50 hover:border-yellow-400 hover:shadow-md'
-                                    : 'border-purple-200 hover:border-purple-300 hover:shadow-md bg-white'
-                            }`}>
-                              <CardContent className="p-3 sm:p-4">
-                                <div className="flex items-start gap-3">
-                                  {/* Checkbox */}
-                                  <input
-                                    type="checkbox"
-                                    checked={reminder.completed || false}
-                                    onChange={() => {
-                                      if (onUpdateLead) {
-                                        onUpdateLead(lead.id, (l) => ({
-                                          reminders: l.reminders?.map(r => 
-                                            r.id === reminder.id ? { ...r, completed: !r.completed } : r
-                                          )
-                                        }));
-                                      }
-                                    }}
-                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
-                                  />
-                                  
-                                  {/* Content */}
-                                  <div className="flex-1 min-w-0">
-                                    {/* Priority and Category Badges */}
-                                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                                      {reminder.priority && (
-                                        <Badge 
-                                          variant="outline"
-                                          className={`text-xs ${
-                                            reminder.priority === "high"
-                                              ? "border-red-300 bg-red-50 text-red-700"
-                                              : reminder.priority === "medium"
-                                                ? "border-yellow-300 bg-yellow-50 text-yellow-700"
-                                                : "border-green-300 bg-green-50 text-green-700"
-                                          }`}
-                                        >
-                                          <Flag className="w-3 h-3 mr-1" />
-                                          {reminder.priority.charAt(0).toUpperCase() + reminder.priority.slice(1)}
-                                        </Badge>
-                                      )}
-                                      {reminder.category && (
-                                        <Badge variant="outline" className="text-xs border-purple-300 bg-purple-50 text-purple-700">
-                                          <TagIcon className="w-3 h-3 mr-1" />
-                                          {reminder.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-                                        </Badge>
-                                      )}
-                                      {isOverdue && !reminder.completed && (
-                                        <Badge variant="destructive" className="text-xs">
-                                          <AlertTriangle className="w-3 h-3 mr-1" />
-                                          Overdue
-                                        </Badge>
-                                      )}
-                                      {isUpcoming && !reminder.completed && (
-                                        <Badge className="text-xs bg-yellow-500">
-                                          <Zap className="w-3 h-3 mr-1" />
-                                          Due Soon
-                                        </Badge>
-                                      )}
-                                    </div>
-
-                                    <p className={`text-sm sm:text-base mb-2 leading-relaxed ${
-                                      reminder.completed ? 'line-through text-gray-400' : 'text-gray-700 font-medium'
-                                    }`}>
-                                      {reminder.message}
-                                    </p>
-                                    <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
-                                      <span className={`flex items-center gap-1 px-2 py-1 rounded ${
-                                        isOverdue && !reminder.completed ? 'bg-red-100 text-red-700' : 'bg-purple-50'
-                                      }`}>
-                                        <Calendar className="w-3 h-3" />
-                                        {new Date(reminder.date).toLocaleDateString('en-US', { 
-                                          month: 'short', 
-                                          day: 'numeric', 
-                                          year: 'numeric' 
-                                        })}
-                                      </span>
-                                      <span className={`flex items-center gap-1 px-2 py-1 rounded ${
-                                        isOverdue && !reminder.completed ? 'bg-red-100 text-red-700' : 'bg-pink-50'
-                                      }`}>
-                                        <Clock className="w-3 h-3" />
-                                        {reminder.time}
-                                      </span>
-                                      {reminder.notifyBefore && (
-                                        <span className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded">
-                                          <Bell className="w-3 h-3" />
-                                          {reminder.notifyBefore >= 1440 
-                                            ? `${reminder.notifyBefore / 1440} day${reminder.notifyBefore / 1440 > 1 ? 's' : ''} before`
-                                            : reminder.notifyBefore >= 60
-                                              ? `${reminder.notifyBefore / 60} hr${reminder.notifyBefore / 60 > 1 ? 's' : ''} before`
-                                              : `${reminder.notifyBefore} min before`
-                                          }
-                                        </span>
-                                      )}
-                                      <span className="flex items-center gap-1">
-                                        <User className="w-3 h-3" />
-                                        {reminder.createdBy}
-                                      </span>
-                                      {reminder.createdAt && (
-                                        <>
-                                          <span>•</span>
-                                          <span className="text-gray-400">{reminder.createdAt}</span>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Action Buttons */}
-                                  <div className="flex items-center gap-1 flex-shrink-0">
-                                    {!reminder.completed && (
-                                      <>
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => {
-                                                  setEditingReminder(reminder);
-                                                  setReminderDate(reminder.date);
-                                                  setReminderTime(reminder.time);
-                                                  setReminderMessage(reminder.message);
-                                                  setReminderPriority(reminder.priority || "medium");
-                                                  setReminderCategory(reminder.category || "follow-up");
-                                                  setReminderNotifyBefore(reminder.notifyBefore || 15);
-                                                  
-                                                  // Scroll to form
-                                                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                                                }}
-                                                className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
-                                              >
-                                                <Edit className="w-4 h-4" />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>Edit reminder</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-
-                                        <TooltipProvider>
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => {
-                                                  const tomorrow = new Date();
-                                                  tomorrow.setDate(tomorrow.getDate() + 1);
-                                                  
-                                                  if (onUpdateLead) {
-                                                    onUpdateLead(lead.id, (l) => ({
-                                                      reminders: l.reminders?.map(r => 
-                                                        r.id === reminder.id
-                                                          ? {
-                                                              ...r,
-                                                              date: tomorrow.toISOString().split('T')[0],
-                                                              snoozedUntil: tomorrow.toISOString()
-                                                            }
-                                                          : r
-                                                      )
-                                                    }));
-                                                  }
-                                                  
-                                                  toast({
-                                                    title: "⏰ Reminder Snoozed",
-                                                    description: "Reminder postponed until tomorrow",
-                                                    duration: 2000,
-                                                  });
-                                                }}
-                                                className="text-orange-500 hover:text-orange-700 hover:bg-orange-50"
-                                              >
-                                                <Clock3 className="w-4 h-4" />
-                                              </Button>
-                                            </TooltipTrigger>
-                                            <TooltipContent>
-                                              <p>Snooze until tomorrow</p>
-                                            </TooltipContent>
-                                          </Tooltip>
-                                        </TooltipProvider>
-                                      </>
-                                    )}
-
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => {
-                                              if (confirm('Delete this reminder?')) {
-                                                if (onUpdateLead) {
-                                                  onUpdateLead(lead.id, (l) => ({
-                                                    reminders: l.reminders?.filter(r => r.id !== reminder.id)
-                                                  }));
-                                                }
-                                                toast({
-                                                  title: "🗑️ Reminder Deleted",
-                                                  description: "The reminder has been removed.",
-                                                  duration: 2000,
-                                                });
-                                              }
-                                            }}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                          >
-                                            <Trash2 className="w-4 h-4" />
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <p>Delete reminder</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          );
-                        })
-                      }
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 sm:py-12 text-gray-400">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                        <Bell className="w-8 h-8 text-purple-600" />
-                      </div>
-                      <p className="text-sm sm:text-base font-medium">No reminders scheduled yet</p>
-                      <p className="text-xs mt-1">Create your first reminder above to stay on top of follow-ups</p>
-                    </div>
-                  )}
                 </TabsContent>
               </Tabs>
             </ScrollArea>

@@ -76,9 +76,16 @@ import RolesPage from "@/pages/setup/roles";
 // Customer Groups
 import CustomerGroups from "@/pages/customers/customer-groups";
 
-// Lead Sources & Status
-import LeadSources from "@/pages/leads/lead-sources";
-import LeadStatus from "@/pages/leads/lead-status";
+// Lead Sections
+import LeadNotes from "@/pages/leads/notes";
+import LeadReminders from "@/pages/leads/reminders";
+import LeadCommunication from "@/pages/leads/communication";
+import LeadStatusPage from "@/pages/leads/lead-status";
+import LeadAssign from "@/pages/leads/assign";
+import LeadCallStatus from "@/pages/leads/call-status";
+import LeadProposals from "@/pages/leads/proposals";
+
+
 
 // Contract Types
 import ContractTypes from "@/pages/contracts/contract-types";
@@ -176,8 +183,13 @@ function AppRouter() {
       <Route path="/subscriptions" component={SubscriptionManagement} />
       
       {/* Leads & Workflow Module */}
-      <Route path="/leads/sources" component={LeadSources} />
-      <Route path="/leads/status" component={LeadStatus} />
+      <Route path="/leads/notes" component={LeadNotes} />
+      <Route path="/leads/reminders" component={LeadReminders} />
+      <Route path="/leads/communication" component={LeadCommunication} />
+      <Route path="/leads/lead-status" component={LeadStatusPage} />
+      <Route path="/leads/assign" component={LeadAssign} />
+      <Route path="/leads/call-status" component={LeadCallStatus} />
+      <Route path="/leads/proposals" component={LeadProposals} />
       <Route path="/leads/*" component={LeadsWorkflow} />
       <Route path="/leads" component={LeadsWorkflow} />
       

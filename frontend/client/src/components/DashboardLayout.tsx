@@ -107,6 +107,22 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     { name: 'Projects', icon: FolderKanban, path: '/projects' },
     { name: 'HRM', icon: UserCheck, path: '/hrm' },
     { 
+      name: 'Lead Management', 
+      icon: Users, 
+      path: '/leads',
+      hasSubmenu: true,
+      submenuKey: 'leads',
+      submenu: [
+        { name: 'Notes', path: '/leads/notes' },
+        { name: 'Follow Up Reminder', path: '/leads/reminders' },
+        { name: 'Communication Actions', path: '/leads/communication' },
+        { name: 'Lead Status', path: '/leads/lead-status' },
+        { name: 'Assign Lead', path: '/leads/assign' },
+        { name: 'Call Status', path: '/leads/call-status' },
+        { name: 'Proposal', path: '/leads/proposals' },
+      ]
+    },
+    { 
       name: 'Sales', 
       icon: TrendingUp, 
       path: '/sales',
@@ -162,33 +178,6 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       ]
     },
     { 
-      name: 'Vendors', 
-      icon: Briefcase, 
-      path: '/vendors',
-      hasSubmenu: true,
-      submenuKey: 'vendors',
-      submenu: [
-        { name: 'Vendor List', path: '/vendors/list' },
-        { name: 'Vendor Payments', path: '/vendors/payments' },
-        { name: 'Documentation', path: '/vendors/documentation' },
-      ]
-    },
-    { 
-      name: 'Items', 
-      icon: Package, 
-      path: '/products',
-      hasSubmenu: true,
-      submenuKey: 'items',
-      submenu: [
-        { name: 'Products', path: '/items/products' },
-        { name: 'Services', path: '/items/services' },
-      ]
-    },
-
-    { name: 'Profile', icon: Users, path: '/profile' },
-    
-    { name: 'Subscription', icon: CreditCard, path: '/subscriptions' },
-    { 
       name: 'Finance', 
       icon: DollarSign, 
       path: '/dashboard/finance/tax-rates',
@@ -202,6 +191,33 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       ]
     },
     { 
+      name: 'Items', 
+      icon: Package, 
+      path: '/products',
+      hasSubmenu: true,
+      submenuKey: 'items',
+      submenu: [
+        { name: 'Products', path: '/items/products' },
+        { name: 'Services', path: '/items/services' },
+      ]
+    },
+    { 
+      name: 'Vendors', 
+      icon: Briefcase, 
+      path: '/vendors',
+      hasSubmenu: true,
+      submenuKey: 'vendors',
+      submenu: [
+        { name: 'Vendor List', path: '/vendors/list' },
+        { name: 'Vendor Payments', path: '/vendors/payments' },
+        { name: 'Documentation', path: '/vendors/documentation' },
+      ]
+    },
+
+    { name: 'Profile', icon: Users, path: '/profile' },
+    
+    { name: 'Subscription', icon: CreditCard, path: '/subscriptions' },
+    { 
       name: 'Setup', 
       icon: Settings, 
       path: '/dashboard/setup/staff',
@@ -213,19 +229,6 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
         { name: 'Roles', path: '/dashboard/setup/roles' },
         { name: 'Permissions', path: '/dashboard/setup/permissions' },
         
-      ]
-    },
-    { 
-      name: 'Leads', 
-      icon: Users, 
-      path: '/leads',
-      hasSubmenu: true,
-      submenuKey: 'leads',
-      submenu: [
-        { name: 'Lead Intake', path: '/leads/intake' },
-        { name: 'Assignment', path: '/leads/assignment' },
-        { name: 'Sources', path: '/leads/sources' },
-        { name: 'Status', path: '/leads/status' },
       ]
     },
     { 
@@ -475,12 +478,37 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
               <motion.button
                 onClick={(e) => {
                   e.preventDefault();
+                  e.stopPropagation();
+                  // Prevent scroll into view
+                  const button = e.currentTarget as HTMLButtonElement;
+                  const scrollParent = button.closest('[data-radix-scroll-area-viewport]');
+                  const scrollTop = scrollParent?.scrollTop || 0;
+                  
                   if (item.submenuKey) {
                     toggleMenu(item.submenuKey);
                   }
                   if (item.path && location !== item.path) {
                     navigate(item.path);
                   }
+                  
+                  // Restore scroll position after state update
+                  requestAnimationFrame(() => {
+                    if (scrollParent) {
+                      scrollParent.scrollTop = scrollTop;
+                    }
+                  });
+                  button.blur();
+                }}
+                onFocus={(e) => {
+                  // Prevent scroll on focus
+                  e.preventDefault();
+                  const scrollParent = (e.currentTarget as HTMLElement).closest('[data-radix-scroll-area-viewport]');
+                  const scrollTop = scrollParent?.scrollTop || 0;
+                  requestAnimationFrame(() => {
+                    if (scrollParent) {
+                      scrollParent.scrollTop = scrollTop;
+                    }
+                  });
                 }}
                 className={`relative w-full flex items-center ${
                   expanded ? 'gap-3 px-4 py-3' : 'justify-center px-2 py-3'
@@ -511,13 +539,13 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
               </motion.button>
 
               {/* Submenu items */}
-              <AnimatePresence>
+              <AnimatePresence initial={false}>
                 {menuExpanded && expanded && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
                     className="overflow-hidden"
                   >
                     {item.submenu.map((subItem) => {
@@ -533,7 +561,29 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
                             <motion.button
                               onClick={(e) => {
                                 e.preventDefault();
+                                e.stopPropagation();
+                                const button = e.currentTarget as HTMLButtonElement;
+                                const scrollParent = button.closest('[data-radix-scroll-area-viewport]');
+                                const scrollTop = scrollParent?.scrollTop || 0;
+                                
                                 subItem.submenuKey && toggleMenu(subItem.submenuKey);
+                                
+                                requestAnimationFrame(() => {
+                                  if (scrollParent) {
+                                    scrollParent.scrollTop = scrollTop;
+                                  }
+                                });
+                                button.blur();
+                              }}
+                              onFocus={(e) => {
+                                e.preventDefault();
+                                const scrollParent = (e.currentTarget as HTMLElement).closest('[data-radix-scroll-area-viewport]');
+                                const scrollTop = scrollParent?.scrollTop || 0;
+                                requestAnimationFrame(() => {
+                                  if (scrollParent) {
+                                    scrollParent.scrollTop = scrollTop;
+                                  }
+                                });
                               }}
                               className={`relative w-full flex items-center gap-3 pl-12 pr-4 py-2.5 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 rounded-xl ${
                                 hasActiveSubSubmenu ? 'bg-slate-700/40' : ''
@@ -554,13 +604,13 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
                             </motion.button>
 
                             {/* Sub-submenu items */}
-                            <AnimatePresence>
+                            <AnimatePresence initial={false}>
                               {subMenuExpanded && (
                                 <motion.div
                                   initial={{ height: 0, opacity: 0 }}
                                   animate={{ height: 'auto', opacity: 1 }}
                                   exit={{ height: 0, opacity: 0 }}
-                                  transition={{ duration: 0.3 }}
+                                  transition={{ duration: 0.25, ease: "easeInOut" }}
                                   className="overflow-hidden"
                                 >
                                   {subItem.submenu.map((subSubItem) => {
@@ -571,11 +621,33 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
                                         href={subSubItem.path}
                                         onClick={(e: React.MouseEvent) => {
                                           e.preventDefault();
+                                          const target = e.currentTarget as HTMLElement;
+                                          const scrollParent = target.closest('[data-radix-scroll-area-viewport]');
+                                          const scrollTop = scrollParent?.scrollTop || 0;
+                                          
                                           window.history.pushState({}, '', subSubItem.path);
                                           window.dispatchEvent(new PopStateEvent('popstate'));
+                                          
+                                          requestAnimationFrame(() => {
+                                            if (scrollParent) {
+                                              scrollParent.scrollTop = scrollTop;
+                                            }
+                                            target.blur();
+                                          });
                                         }}
                                       >
-                                        <a className={`relative flex items-center gap-3 pl-20 pr-4 py-2 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 rounded-xl cursor-pointer`}>
+                                        <a 
+                                          className={`relative flex items-center gap-3 pl-20 pr-4 py-2 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 rounded-xl cursor-pointer`}
+                                          onFocus={(e) => {
+                                            const scrollParent = (e.currentTarget as HTMLElement).closest('[data-radix-scroll-area-viewport]');
+                                            const scrollTop = scrollParent?.scrollTop || 0;
+                                            requestAnimationFrame(() => {
+                                              if (scrollParent) {
+                                                scrollParent.scrollTop = scrollTop;
+                                              }
+                                            });
+                                          }}
+                                        >
                                           <span className={`relative z-10 font-medium ${
                                             subSubActive ? 'text-white' : 'text-slate-300'
                                           }`}>
@@ -605,11 +677,33 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
                           href={subItem.path}
                           onClick={(e: React.MouseEvent) => {
                             e.preventDefault();
+                            const target = e.currentTarget as HTMLElement;
+                            const scrollParent = target.closest('[data-radix-scroll-area-viewport]');
+                            const scrollTop = scrollParent?.scrollTop || 0;
+                            
                             window.history.pushState({}, '', subItem.path);
                             window.dispatchEvent(new PopStateEvent('popstate'));
+                            
+                            requestAnimationFrame(() => {
+                              if (scrollParent) {
+                                scrollParent.scrollTop = scrollTop;
+                              }
+                              target.blur();
+                            });
                           }}
                         >
-                          <a className={`relative flex items-center gap-3 pl-12 pr-4 py-2.5 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 rounded-xl cursor-pointer`}>
+                          <a 
+                            className={`relative flex items-center gap-3 pl-12 pr-4 py-2.5 text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 rounded-xl cursor-pointer`}
+                            onFocus={(e) => {
+                              const scrollParent = (e.currentTarget as HTMLElement).closest('[data-radix-scroll-area-viewport]');
+                              const scrollTop = scrollParent?.scrollTop || 0;
+                              requestAnimationFrame(() => {
+                                if (scrollParent) {
+                                  scrollParent.scrollTop = scrollTop;
+                                }
+                              });
+                            }}
+                          >
                             <span className={`relative z-10 font-medium ${
                               subActive ? 'text-white' : 'text-slate-300'
                             }`}>
@@ -641,11 +735,31 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
             href={item.path}
             onClick={(e: React.MouseEvent) => {
               e.preventDefault();
+              const target = e.currentTarget as HTMLElement;
+              const scrollParent = target.closest('[data-radix-scroll-area-viewport]');
+              const scrollTop = scrollParent?.scrollTop || 0;
+              
               window.history.pushState({}, '', item.path);
               window.dispatchEvent(new PopStateEvent('popstate'));
+              
+              requestAnimationFrame(() => {
+                if (scrollParent) {
+                  scrollParent.scrollTop = scrollTop;
+                }
+                target.blur();
+              });
             }}
             onMouseEnter={() => !expanded && setHoveredNav(item.path)}
             onMouseLeave={() => setHoveredNav(prev => (prev === item.path ? null : prev))}
+            onFocus={(e) => {
+              const scrollParent = (e.currentTarget as HTMLElement).closest('[data-radix-scroll-area-viewport]');
+              const scrollTop = scrollParent?.scrollTop || 0;
+              requestAnimationFrame(() => {
+                if (scrollParent) {
+                  scrollParent.scrollTop = scrollTop;
+                }
+              });
+            }}
             className={`relative flex items-center ${
               expanded ? 'gap-3 px-4 py-3' : 'justify-center px-2 py-3'
             } text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-300 rounded-xl overflow-visible cursor-pointer`}
@@ -692,6 +806,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       animate={{ width: expanded ? 280 : 96 }}
       transition={{ type: 'spring', stiffness: 200, damping: 28 }}
       className="relative z-30 hidden h-full flex-col overflow-hidden border-r border-slate-700 bg-slate-800 text-white shadow-2xl lg:flex"
+      style={{ scrollBehavior: 'auto' }}
     >
       <div className="relative px-4 pb-4 pt-6">
         <div className="mb-6 flex items-center justify-between gap-3">
@@ -721,8 +836,8 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
       </div>
 
       {/* Scrollable Navigation Area */}
-      <div className="flex-1 overflow-y-auto px-4 pb-6">
-        <div className="space-y-1">
+      <div className="flex-1 px-4 pb-6 overflow-y-auto overflow-x-hidden" style={{ scrollBehavior: 'auto', overflowAnchor: 'none' }}>
+        <div className="space-y-1 pr-4">
           {renderNavItems(expanded)}
         </div>
       </div>
@@ -751,6 +866,7 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
             exit={{ x: -320 }}
             transition={{ type: 'spring', stiffness: 220, damping: 30 }}
             className="relative z-10 flex h-full w-80 flex-col overflow-y-auto border-r border-slate-700 bg-slate-800 text-white shadow-2xl"
+            style={{ scrollBehavior: 'auto', overflowAnchor: 'none' }}
           >
             <div className="flex items-center justify-between px-5 py-6">
               <div className="flex items-center gap-3">
@@ -782,8 +898,8 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
             </div>
 
             {/* Scrollable Navigation Area for Mobile */}
-            <div className="flex-1 overflow-y-auto px-4 pb-6 mt-2">
-              <div className="space-y-1">
+            <div className="flex-1 px-4 pb-6 mt-2 overflow-y-auto overflow-x-hidden" style={{ scrollBehavior: 'auto', overflowAnchor: 'none' }}>
+              <div className="space-y-1 pr-4">
                 {renderNavItems(true)}
               </div>
             </div>
