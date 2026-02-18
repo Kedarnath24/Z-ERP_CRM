@@ -297,7 +297,7 @@ export default function LeadCommunication() {
               <MessageCircle className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Lead Management - Communication Actions</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">CRM - Communication Actions</h1>
               <p className="text-sm text-gray-600">Send WhatsApp, Email, or make Calls to your leads</p>
             </div>
           </div>

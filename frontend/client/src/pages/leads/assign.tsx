@@ -510,7 +510,7 @@ export default function LeadAssign() {
               <UserPlus className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Lead Management - Assign Lead</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">CRM - Assign Lead</h1>
               <p className="text-sm text-gray-600">Assign leads to sales executives and track assignments</p>
             </div>
           </div>

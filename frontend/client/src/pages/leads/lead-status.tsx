@@ -344,7 +344,7 @@ export default function LeadStatusPage() {
               <Flag className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Lead Management - Lead Status</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">CRM - Lead Status</h1>
               <p className="text-sm text-gray-600">Track and manage lead progression through the sales pipeline</p>
             </div>
           </div>

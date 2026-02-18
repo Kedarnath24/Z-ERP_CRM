@@ -415,7 +415,7 @@ export default function LeadCallStatus() {
               <PhoneCall className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Lead Management - Call Status</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">CRM - Call Status</h1>
               <p className="text-sm text-gray-600">Track lead call outcomes and manage follow-ups</p>
             </div>
           </div>

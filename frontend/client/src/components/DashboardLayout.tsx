@@ -108,6 +108,16 @@ const DashboardLayout = ({ children }: { children: ReactNode }) => {
     { name: 'Projects', icon: FolderKanban, path: '/projects' },
     { name: 'HRM', icon: UserCheck, path: '/hrm' },
     { 
+      name: 'CRM', 
+      icon: Users, 
+      path: '/leads',
+      hasSubmenu: true,
+      submenuKey: 'leads',
+      submenu: [
+        { name: 'Call Status', path: '/leads/call-status' },
+      ]
+    },
+    { 
       name: 'Sales', 
       icon: TrendingUp, 
       path: '/sales',
