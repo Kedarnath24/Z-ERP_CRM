@@ -90,6 +90,9 @@ import LeadProposals from "@/pages/leads/proposals";
 // Contract Types
 import ContractTypes from "@/pages/contracts/contract-types";
 
+// Team Space Module
+import TeamSpaceDashboard from "@/pages/team-space/team-space-dashboard";
+
 // Settings Module
 import SettingsDashboard from "@/pages/settings/SettingsDashboard";
 import GeneralSettings from "@/pages/settings/GeneralSettings";
@@ -105,6 +108,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Route, Switch } from "wouter";
 import { queryClient } from "./lib/queryClient";
+import CallsModule from "./pages/team-space/calls";
 
 // No authentication required - all routes are accessible
 
@@ -193,6 +197,11 @@ function AppRouter() {
       <Route path="/leads/*" component={LeadsWorkflow} />
       <Route path="/leads" component={LeadsWorkflow} />
       
+      {/* Team Space Module */}
+      <Route path="/team-space/*" component={TeamSpaceDashboard} />
+      <Route path="/team-space" component={TeamSpaceDashboard} />
+      <Route path="/team-space/calls" component={CallsModule} />
+
       {/* Admin Setup Module */}
       <Route path="/admin/*" component={AdminSetup} />
       <Route path="/admin" component={AdminSetup} />
