@@ -56,7 +56,7 @@ export default function SettingsDashboard() {
     },
     {
       title: "Leads Settings",
-      description: "Configure lead capture and assignment rules",
+      description: "Config  ure lead capture and assignment rules",
       icon: Target,
       color: "text-amber-600",
       bgColor: "bg-amber-50",

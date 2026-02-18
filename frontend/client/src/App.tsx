@@ -76,16 +76,14 @@ import RolesPage from "@/pages/setup/roles";
 // Customer Groups
 import CustomerGroups from "@/pages/customers/customer-groups";
 
-// Lead Sections
+// Lead Management Pages
+import LeadStatus from "@/pages/leads/lead-status";
 import LeadNotes from "@/pages/leads/notes";
 import LeadReminders from "@/pages/leads/reminders";
 import LeadCommunication from "@/pages/leads/communication";
-import LeadStatusPage from "@/pages/leads/lead-status";
 import LeadAssign from "@/pages/leads/assign";
 import LeadCallStatus from "@/pages/leads/call-status";
 import LeadProposals from "@/pages/leads/proposals";
-
-
 
 // Contract Types
 import ContractTypes from "@/pages/contracts/contract-types";
@@ -190,7 +188,7 @@ function AppRouter() {
       <Route path="/leads/notes" component={LeadNotes} />
       <Route path="/leads/reminders" component={LeadReminders} />
       <Route path="/leads/communication" component={LeadCommunication} />
-      <Route path="/leads/lead-status" component={LeadStatusPage} />
+      <Route path="/leads/lead-status" component={LeadStatus} />
       <Route path="/leads/assign" component={LeadAssign} />
       <Route path="/leads/call-status" component={LeadCallStatus} />
       <Route path="/leads/proposals" component={LeadProposals} />
@@ -200,7 +198,7 @@ function AppRouter() {
       {/* Team Space Module */}
       <Route path="/team-space/*" component={TeamSpaceDashboard} />
       <Route path="/team-space" component={TeamSpaceDashboard} />
-      <Route path="/team-space/calls" component={CallsModule} />
+      
 
       {/* Admin Setup Module */}
       <Route path="/admin/*" component={AdminSetup} />
