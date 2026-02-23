@@ -79,11 +79,11 @@ import CustomerGroups from "@/pages/customers/customer-groups";
 // Lead Management Pages
 import LeadStatus from "@/pages/leads/lead-status";
 import LeadNotes from "@/pages/leads/notes";
+import LeadReminders from "@/pages/leads/reminders";
 import LeadCommunication from "@/pages/leads/communication";
 import LeadAssign from "@/pages/leads/assign";
 import LeadCallStatus from "@/pages/leads/call-status";
 import LeadProposals from "@/pages/leads/proposals";
-import BulkImport from "@/pages/leads/bulk-import";
 
 // Contract Types
 import ContractTypes from "@/pages/contracts/contract-types";
@@ -186,12 +186,12 @@ function AppRouter() {
       
       {/* Leads & Workflow Module */}
       <Route path="/leads/notes" component={LeadNotes} />
+      <Route path="/leads/reminders" component={LeadReminders} />
       <Route path="/leads/communication" component={LeadCommunication} />
       <Route path="/leads/lead-status" component={LeadStatus} />
       <Route path="/leads/assign" component={LeadAssign} />
       <Route path="/leads/call-status" component={LeadCallStatus} />
       <Route path="/leads/proposals" component={LeadProposals} />
-      <Route path="/leads/bulk-import" component={BulkImport} />
       <Route path="/leads/*" component={LeadsWorkflow} />
       <Route path="/leads" component={LeadsWorkflow} />
       
