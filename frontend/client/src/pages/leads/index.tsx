@@ -18,7 +18,8 @@ import {
   CheckCheck, AlertTriangle, Sparkles, Brain, TrendingDown,
   ArrowUpRight, ArrowDownRight, Clock3, Users2, FileCheck,
   MessageSquare, PlusCircle, Save, Briefcase, MapPinned, History,
-  Loader2, ExternalLink, PhoneCall
+  Loader2, ExternalLink, PhoneCall, RotateCw, ListChecks, Archive,
+  CalendarClock, BookOpen
 } from "lucide-react";
 import {
   Dialog,
@@ -28,6 +29,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -56,6 +67,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import WorkflowGuide from "@/components/crm/WorkflowGuide";
+import QuickActionsPanel from "@/components/crm/QuickActionsPanel";
+import LeadJourney from "@/components/crm/LeadJourney";
 
 // ==================== TYPES ====================
 interface Attachment {
@@ -104,6 +118,12 @@ interface Reminder {
   category?: string;
   notifyBefore?: number; // minutes before to notify
   snoozedUntil?: string;
+  status: "pending" | "completed" | "cancelled" | "rescheduled";
+  recurrence: "once" | "daily" | "weekly" | "monthly";
+  cancellationReason?: string;
+  parentReminderId?: string;
+  rescheduledCount: number;
+  rescheduledTo?: string;
 }
 
 interface ProposalLineItem {
@@ -199,6 +219,7 @@ export default function LeadsModule() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [addLeadModalOpen, setAddLeadModalOpen] = useState(false);
   const [activeDetailTab, setActiveDetailTab] = useState("overview");
+  const [showWorkflowGuide, setShowWorkflowGuide] = useState(false);
   
   // Filter states
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
@@ -363,6 +384,53 @@ export default function LeadsModule() {
           sentAt: null,
           validUntil: "Mar 15, 2026"
         }
+      ],
+      reminders: [
+        {
+          id: "rem-1",
+          date: "2026-02-21",
+          time: "10:00",
+          message: "Follow up on pricing proposal - discuss implementation timeline",
+          priority: "high",
+          category: "follow-up",
+          notifyBefore: 30,
+          recurrence: "once",
+          createdBy: "John Smith",
+          createdAt: "Feb 18, 2026 at 9:15 AM",
+          completed: false,
+          status: "pending",
+          rescheduledCount: 0
+        },
+        {
+          id: "rem-2",
+          date: "2026-02-15",
+          time: "14:00",
+          message: "Send product demo preparation email",
+          priority: "medium",
+          category: "email",
+          notifyBefore: 60,
+          recurrence: "once",
+          createdBy: "John Smith",
+          createdAt: "Feb 13, 2026 at 11:30 AM",
+          completed: true,
+          status: "completed",
+          rescheduledCount: 0
+        },
+        {
+          id: "rem-3",
+          date: "2026-02-25",
+          time: "15:30",
+          message: "Weekly check-in call with Sarah - discuss any concerns",
+          priority: "medium",
+          category: "meeting",
+          notifyBefore: 1440,
+          recurrence: "weekly",
+          createdBy: "John Smith",
+          createdAt: "Feb 12, 2026 at 3:00 PM",
+          completed: false,
+          status: "pending",
+          rescheduledCount: 1
+        }
       ]
     },
     {
@@ -388,7 +456,39 @@ export default function LeadsModule() {
       aiSummary: "Michael Chen is Founder at Startup Inc. Mid-value startup lead. Initial contact made via LinkedIn. Needs follow-up.",
       activities: [],
       tasks: [],
-      notes: []
+      notes: [],
+      reminders: [
+        {
+          id: "rem-6",
+          date: "2026-02-21",
+          time: "11:00",
+          message: "Initial follow-up call to discuss ERP needs and timeline",
+          priority: "high",
+          category: "follow-up",
+          notifyBefore: 15,
+          recurrence: "once",
+          createdBy: "Emily Davis",
+          createdAt: "Feb 19, 2026 at 4:30 PM",
+          completed: false,
+          status: "pending",
+          rescheduledCount: 0
+        },
+        {
+          id: "rem-7",
+          date: "2026-02-23",
+          time: "14:00",
+          message: "Send product brochure and pricing information",
+          priority: "medium",
+          category: "email",
+          notifyBefore: 30,
+          recurrence: "once",
+          createdBy: "Emily Davis",
+          createdAt: "Feb 19, 2026 at 4:35 PM",
+          completed: false,
+          status: "pending",
+          rescheduledCount: 0
+        }
+      ]
     },
     {
       id: "3",
@@ -473,6 +573,40 @@ export default function LeadsModule() {
           sentAt: "Feb 9, 2026 at 11:00 AM",
           validUntil: "Mar 10, 2026"
         }
+      ],
+      reminders: [
+        {
+          id: "rem-4",
+          date: "2026-02-22",
+          time: "09:00",
+          message: "Follow up on proposal - check if they have questions",
+          priority: "high",
+          category: "follow-up",
+          notifyBefore: 15,
+          recurrence: "once",
+          createdBy: "Emily Davis",
+          createdAt: "Feb 17, 2026 at 2:15 PM",
+          completed: false,
+          status: "pending",
+          rescheduledCount: 0
+        },
+        {
+          id: "rem-5",
+          date: "2026-02-16",
+          time: "16:00",
+          message: "Call to discuss contract terms",
+          priority: "high",
+          category: "meeting",
+          notifyBefore: 30,
+          recurrence: "once",
+          createdBy: "Emily Davis",
+          createdAt: "Feb 14, 2026 at 10:00 AM",
+          completed: false,
+          status: "cancelled",
+          cancellationReason: "Client requested to postpone",
+          rescheduledCount: 1,
+          rescheduledTo: "rem-4"
+        }
       ]
     },
     {
@@ -498,7 +632,54 @@ export default function LeadsModule() {
       aiSummary: "David Park is CTO at E-Commerce Plus. Met at recent trade show. Moderate interest, needs nurturing.",
       activities: [],
       tasks: [],
-      notes: []
+      notes: [],
+      reminders: [
+        {
+          id: "rem-8",
+          date: "2026-02-20",
+          time: "16:00",
+          message: "URGENT: Follow up on inventory management demo request",
+          priority: "high",
+          category: "follow-up",
+          notifyBefore: 60,
+          recurrence: "once",
+          createdBy: "Emily Davis",
+          createdAt: "Feb 18, 2026 at 11:00 AM",
+          completed: false,
+          status: "pending",
+          rescheduledCount: 0
+        },
+        {
+          id: "rem-9",
+          date: "2026-02-24",
+          time: "10:30",
+          message: "Schedule product demo - inventory module focus",
+          priority: "high",
+          category: "demo",
+          notifyBefore: 1440,
+          recurrence: "once",
+          createdBy: "Emily Davis",
+          createdAt: "Feb 19, 2026 at 2:00 PM",
+          completed: false,
+          status: "pending",
+          rescheduledCount: 0
+        },
+        {
+          id: "rem-10",
+          date: "2026-03-01",
+          time: "15:00",
+          message: "Weekly check-in call with David",
+          priority: "medium",
+          category: "meeting",
+          notifyBefore: 120,
+          recurrence: "weekly",
+          createdBy: "Emily Davis",
+          createdAt: "Feb 19, 2026 at 3:15 PM",
+          completed: false,
+          status: "pending",
+          rescheduledCount: 0
+        }
+      ]
     },
     {
       id: "5",
@@ -575,6 +756,53 @@ export default function LeadsModule() {
           createdAt: "Feb 5, 2026",
           sentAt: "Feb 12, 2026 at 9:15 AM",
           validUntil: "Mar 5, 2026"
+        }
+      ],
+      reminders: [
+        {
+          id: "rem-11",
+          date: "2026-02-21",
+          time: "09:00",
+          message: "Call to finalize contract signing and implementation schedule",
+          priority: "high",
+          category: "meeting",
+          notifyBefore: 30,
+          recurrence: "once",
+          createdBy: "John Smith",
+          createdAt: "Feb 19, 2026 at 5:00 PM",
+          completed: false,
+          status: "pending",
+          rescheduledCount: 0
+        },
+        {
+          id: "rem-12",
+          date: "2026-02-22",
+          time: "14:00",
+          message: "Send contract documents for legal review",
+          priority: "high",
+          category: "email",
+          notifyBefore: 60,
+          recurrence: "once",
+          createdBy: "John Smith",
+          createdAt: "Feb 19, 2026 at 5:05 PM",
+          completed: false,
+          status: "pending",
+          rescheduledCount: 0
+        },
+        {
+          id: "rem-13",
+          date: "2026-02-18",
+          time: "10:00",
+          message: "Sent compliance documentation and security certifications",
+          priority: "medium",
+          category: "email",
+          notifyBefore: 15,
+          recurrence: "once",
+          createdBy: "John Smith",
+          createdAt: "Feb 17, 2026 at 3:00 PM",
+          completed: true,
+          status: "completed",
+          rescheduledCount: 0
         }
       ]
     }
@@ -1196,10 +1424,21 @@ export default function LeadsModule() {
                 <p className="text-gray-500 mt-1">Leads Management</p>
               </div>
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" onClick={handleImport} className="hover:bg-blue-50 hover:border-blue-500">
-                  <Import className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Import</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowWorkflowGuide(true)} 
+                  className="hover:bg-purple-50 hover:border-purple-500"
+                >
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">View Workflow</span>
                 </Button>
+                <Link href="/leads/bulk-import">
+                  <Button variant="outline" size="sm" className="hover:bg-blue-50 hover:border-blue-500">
+                    <Import className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Bulk Import</span>
+                  </Button>
+                </Link>
                 <Button variant="outline" size="sm" onClick={handleExport} className="hover:bg-green-50 hover:border-green-500">
                   <Download className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Export</span>
@@ -2849,6 +3088,17 @@ export default function LeadsModule() {
           />
         )}
       </div>
+
+      {/* Workflow Guide Modal */}
+      {showWorkflowGuide && (
+        <WorkflowGuide
+          onClose={() => setShowWorkflowGuide(false)}
+          onStartLead={() => {
+            setShowWorkflowGuide(false);
+            openAddLeadModal();
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }
@@ -2889,13 +3139,32 @@ function LeadDetailModal({
   const [reminderPriority, setReminderPriority] = useState<"high" | "medium" | "low">("medium");
   const [reminderCategory, setReminderCategory] = useState("follow-up");
   const [reminderNotifyBefore, setReminderNotifyBefore] = useState(15);
+  const [reminderRecurrence, setReminderRecurrence] = useState<"once" | "daily" | "weekly" | "monthly">("once");
   const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
+  
+  // Dialog states for cancellation and rescheduling
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
+  const [selectedReminderForAction, setSelectedReminderForAction] = useState<Reminder | null>(null);
+  const [cancellationReason, setCancellationReason] = useState("");
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleTime, setRescheduleTime] = useState("");
+  
   const [currentStatus, setCurrentStatus] = useState(lead.status);
   const [currentPriority, setCurrentPriority] = useState(lead.priority);
   const [statusNotes, setStatusNotes] = useState("");
   const [currentAssignee, setCurrentAssignee] = useState(lead.assignedTo);
   const [assignmentReason, setAssignmentReason] = useState("");
   const [notifyAssignee, setNotifyAssignee] = useState(true);
+  const [teamMembers, setTeamMembers] = useState([
+    "John Smith",
+    "Sarah Wilson",
+    "Michael Chen",
+    "Emily Davis",
+    "David Brown"
+  ]);
+  const [showAddAssigneeDialog, setShowAddAssigneeDialog] = useState(false);
+  const [newAssigneeName, setNewAssigneeName] = useState("");
   const [currentCallStatus, setCurrentCallStatus] = useState<CallStatus>(lead.callStatus || "not_called");
   const [callOutcome, setCallOutcome] = useState("");
   const [callDuration, setCallDuration] = useState("");
@@ -2954,6 +3223,36 @@ function LeadDetailModal({
     setAssignmentReason("");
   };
 
+  const handleAddNewAssignee = () => {
+    if (!newAssigneeName.trim()) {
+      toast({
+        title: "⚠️ Name Required",
+        description: "Please enter a name for the new assignee",
+        duration: 3000,
+      });
+      return;
+    }
+    
+    if (teamMembers.includes(newAssigneeName.trim())) {
+      toast({
+        title: "⚠️ Already Exists",
+        description: "This assignee name already exists",
+        duration: 3000,
+      });
+      return;
+    }
+
+    setTeamMembers([...teamMembers, newAssigneeName.trim()]);
+    setCurrentAssignee(newAssigneeName.trim());
+    toast({
+      title: "✅ Assignee Added",
+      description: `${newAssigneeName.trim()} has been added to the team`,
+      duration: 3000,
+    });
+    setNewAssigneeName("");
+    setShowAddAssigneeDialog(false);
+  };
+
   const handleSaveCallLog = () => {
     if (onUpdateLead) {
       onUpdateLead(lead.id, () => ({
@@ -2976,6 +3275,163 @@ function LeadDetailModal({
     setCallNotes("");
     setNextSteps("");
     setCallDuration("");
+  };
+
+  // Reminder Helper Functions
+  const calculateNextReminderDate = (currentDate: string, recurrence: string): string => {
+    const date = new Date(currentDate);
+    
+    switch (recurrence) {
+      case "daily":
+        date.setDate(date.getDate() + 1);
+        break;
+      case "weekly":
+        date.setDate(date.getDate() + 7);
+        break;
+      case "monthly":
+        date.setMonth(date.getMonth() + 1);
+        break;
+      default:
+        return currentDate;
+    }
+    
+    return date.toISOString().split('T')[0];
+  };
+
+  const handleCancelAndReschedule = async (reminderId: string, reason?: string) => {
+    const reminder = lead.reminders?.find(r => r.id === reminderId);
+    if (!reminder) return;
+
+    // Open cancellation dialog
+    setSelectedReminderForAction(reminder);
+    setCancelDialogOpen(true);
+  };
+  
+  const confirmCancelReminder = () => {
+    if (!selectedReminderForAction) return;
+
+    const shouldAutoReschedule = selectedReminderForAction.recurrence !== "once";
+
+    // Cancel current reminder
+    const cancelledReminder = {
+      ...selectedReminderForAction,
+      status: "cancelled" as const,
+      cancelledAt: new Date().toISOString(),
+      cancellationReason: cancellationReason || "Cancelled by user",
+    };
+
+    if (shouldAutoReschedule) {
+      // Create rescheduled reminder automatically for recurring reminders
+      const nextDate = calculateNextReminderDate(selectedReminderForAction.date, selectedReminderForAction.recurrence);
+      
+      const rescheduledReminder: Reminder = {
+        ...selectedReminderForAction,
+        id: String(Date.now()),
+        date: nextDate,
+        status: "pending",
+        parentReminderId: selectedReminderForAction.id,
+        rescheduledCount: selectedReminderForAction.rescheduledCount + 1,
+        createdAt: new Date().toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true
+        }),
+      };
+
+      // Update cancelled reminder to reference the new one
+      cancelledReminder.rescheduledTo = rescheduledReminder.id;
+
+      // Update lead with both cancelled and rescheduled reminders
+      if (onUpdateLead) {
+        onUpdateLead(lead.id, (l) => ({
+          reminders: [
+            ...(l.reminders?.map(r => r.id === selectedReminderForAction.id ? cancelledReminder : r) || []),
+            rescheduledReminder
+          ]
+        }));
+      }
+
+      toast({
+        title: "🔄 Reminder Auto-Rescheduled",
+        description: `Cancelled and automatically rescheduled to ${new Date(nextDate).toLocaleDateString()} at ${selectedReminderForAction.time}`,
+        duration: 4000,
+      });
+    } else {
+      // Just cancel without auto-rescheduling
+      if (onUpdateLead) {
+        onUpdateLead(lead.id, (l) => ({
+          reminders: l.reminders?.map(r => r.id === selectedReminderForAction.id ? cancelledReminder : r)
+        }));
+      }
+
+      toast({
+        title: "🚫 Reminder Cancelled",
+        description: "Reminder has been cancelled. You can reschedule it if needed.",
+        duration: 3000,
+      });
+    }
+
+    setCancelDialogOpen(false);
+    setCancellationReason("");
+    setSelectedReminderForAction(null);
+  };
+  
+  const handleRescheduleReminder = (reminder: Reminder) => {
+    setSelectedReminderForAction(reminder);
+    setRescheduleDate(reminder.date);
+    setRescheduleTime(reminder.time);
+    setRescheduleDialogOpen(true);
+  };
+  
+  const confirmReschedule = () => {
+    if (!selectedReminderForAction || !rescheduleDate || !rescheduleTime) {
+      toast({
+        title: "⚠️ Missing Information",
+        description: "Please select new date and time.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate date is not in the past
+    const newDateTime = new Date(`${rescheduleDate}T${rescheduleTime}`);
+    if (newDateTime < new Date()) {
+      toast({
+        title: "⚠️ Invalid Date/Time",
+        description: "Rescheduled date and time cannot be in the past.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (onUpdateLead) {
+      onUpdateLead(lead.id, (l) => ({
+        reminders: l.reminders?.map(r =>
+          r.id === selectedReminderForAction.id
+            ? {
+                ...r,
+                date: rescheduleDate,
+                time: rescheduleTime,
+                status: "pending",
+                rescheduledCount: r.rescheduledCount + 1,
+              }
+            : r
+        )
+      }));
+    }
+
+    toast({
+      title: "🔄 Reminder Rescheduled",
+      description: `Reminder rescheduled to ${new Date(`${rescheduleDate}T${rescheduleTime}`).toLocaleString()}`,
+    });
+
+    setRescheduleDialogOpen(false);
+    setRescheduleDate("");
+    setRescheduleTime("");
+    setSelectedReminderForAction(null);
   };
 
   const handleAddLineItem = () => {
@@ -3738,12 +4194,14 @@ Generated: ${new Date().toLocaleString()}
                             <p className="text-xs text-gray-600 font-normal mt-0.5">Scheduled follow-ups and reminders</p>
                           </div>
                         </span>
-                        <Link href="/leads/reminders">
-                          <Button size="sm" className="text-xs bg-orange-600 hover:bg-orange-700 text-white shadow-md">
-                            <Eye className="w-3 h-3 mr-1" />
-                            View All
-                          </Button>
-                        </Link>
+                        <Button 
+                          size="sm" 
+                          onClick={() => onTabChange("reminders")}
+                          className="text-xs bg-orange-600 hover:bg-orange-700 text-white shadow-md"
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          View All
+                        </Button>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-5 pb-5">
@@ -5167,6 +5625,50 @@ Generated: ${new Date().toLocaleString()}
                           </Select>
                         </div>
                       </div>
+
+                      {/* Recurrence Selector - NEW */}
+                      <div className="space-y-2">
+                        <Label htmlFor="reminder-recurrence" className="text-sm font-medium flex items-center gap-1">
+                          <RotateCw className="w-4 h-4 text-purple-600" />
+                          Recurrence Pattern
+                        </Label>
+                        <Select
+                          value={reminderRecurrence}
+                          onValueChange={(value: "once" | "daily" | "weekly" | "monthly") => setReminderRecurrence(value)}
+                        >
+                          <SelectTrigger className="w-full text-sm border-purple-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="once" className="text-sm">
+                              <span className="flex items-center gap-2">
+                                Once (No repeat)
+                              </span>
+                            </SelectItem>
+                            <SelectItem value="daily" className="text-sm">
+                              <span className="flex items-center gap-2">
+                                🔄 Daily (Auto-reschedule every day)
+                              </span>
+                            </SelectItem>
+                            <SelectItem value="weekly" className="text-sm">
+                              <span className="flex items-center gap-2">
+                                🔄 Weekly (Auto-reschedule every week)
+                              </span>
+                            </SelectItem>
+                            <SelectItem value="monthly" className="text-sm">
+                              <span className="flex items-center gap-2">
+                                🔄 Monthly (Auto-reschedule every month)
+                              </span>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {reminderRecurrence !== "once" && (
+                          <p className="text-xs text-blue-600 flex items-center gap-1 bg-blue-50 p-2 rounded mt-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            When cancelled, this reminder will automatically reschedule to the next {reminderRecurrence === "daily" ? "day" : reminderRecurrence === "weekly" ? "week" : "month"}
+                          </p>
+                        )}
+                      </div>
                       
                       {/* Reminder Message */}
                       <div className="space-y-2">
@@ -5198,6 +5700,7 @@ Generated: ${new Date().toLocaleString()}
                               setReminderPriority("medium");
                               setReminderCategory("follow-up");
                               setReminderNotifyBefore(15);
+                              setReminderRecurrence("once");
                             }}
                             className="w-full sm:w-auto border-gray-300"
                           >
@@ -5243,7 +5746,8 @@ Generated: ${new Date().toLocaleString()}
                                           message: reminderMessage,
                                           priority: reminderPriority,
                                           category: reminderCategory,
-                                          notifyBefore: reminderNotifyBefore
+                                          notifyBefore: reminderNotifyBefore,
+                                          recurrence: reminderRecurrence
                                         }
                                       : r
                                   )
@@ -5267,6 +5771,7 @@ Generated: ${new Date().toLocaleString()}
                                 priority: reminderPriority,
                                 category: reminderCategory,
                                 notifyBefore: reminderNotifyBefore,
+                                recurrence: reminderRecurrence,
                                 createdBy: "Current User",
                                 createdAt: new Date().toLocaleString("en-US", {
                                   month: "short",
@@ -5276,7 +5781,9 @@ Generated: ${new Date().toLocaleString()}
                                   minute: "2-digit",
                                   hour12: true
                                 }),
-                                completed: false
+                                completed: false,
+                                status: "pending",
+                                rescheduledCount: 0
                               };
 
                               // Update lead with new reminder
@@ -5301,6 +5808,7 @@ Generated: ${new Date().toLocaleString()}
                             setReminderPriority("medium");
                             setReminderCategory("follow-up");
                             setReminderNotifyBefore(15);
+                            setReminderRecurrence("once");
                           }}
                           className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md"
                         >
@@ -5314,60 +5822,79 @@ Generated: ${new Date().toLocaleString()}
                   {/* Reminders List */}
                   {lead.reminders && lead.reminders.length > 0 ? (
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap gap-3">
                         <h3 className="font-semibold text-gray-900 text-sm sm:text-base flex items-center gap-2">
                           <History className="w-4 h-4" />
-                          Scheduled Reminders ({lead.reminders.filter(r => !r.completed).length} active)
+                          Scheduled Reminders ({lead.reminders.filter(r => r.status === "pending").length} active)
                         </h3>
-                        {lead.reminders.filter(r => r.completed).length > 0 && (
-                          <Badge variant="outline" className="text-xs">
-                            {lead.reminders.filter(r => r.completed).length} completed
-                          </Badge>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {lead.reminders.filter(r => r.completed).length > 0 && (
+                            <Badge variant="outline" className="text-xs">
+                              {lead.reminders.filter(r => r.completed).length} completed
+                            </Badge>
+                          )}
+                          {lead.reminders.filter(r => r.status === "cancelled").length > 0 && (
+                            <Badge variant="outline" className="text-xs bg-gray-100">
+                              {lead.reminders.filter(r => r.status === "cancelled").length} cancelled
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       
                       {lead.reminders
                         .sort((a, b) => {
-                          // Sort by completed status first, then by date/time
+                          // Sort by status first, then by date/time
+                          if (a.status === "cancelled" && b.status !== "cancelled") return 1;
+                          if (a.status !== "cancelled" && b.status === "cancelled") return -1;
                           if (a.completed && !b.completed) return 1;
                           if (!a.completed && b.completed) return -1;
                           return new Date(`${a.date}T${a.time}`).getTime() - new Date(`${b.date}T${b.time}`).getTime();
                         })
                         .map(reminder => {
                           const reminderDateTime = new Date(`${reminder.date}T${reminder.time}`);
-                          const isOverdue = reminderDateTime < new Date() && !reminder.completed;
+                          const isOverdue = reminderDateTime < new Date() && !reminder.completed && reminder.status === "pending";
                           const isUpcoming = reminderDateTime > new Date() && reminderDateTime < new Date(Date.now() + 24 * 60 * 60 * 1000);
+                          const isCancelled = reminder.status === "cancelled";
                           
                           return (
                             <Card key={reminder.id} className={`border-2 transition-all ${
-                              reminder.completed 
-                                ? 'border-gray-200 bg-gray-50' 
-                                : isOverdue
-                                  ? 'border-red-300 bg-red-50 hover:border-red-400 hover:shadow-md'
-                                  : isUpcoming
-                                    ? 'border-yellow-300 bg-yellow-50 hover:border-yellow-400 hover:shadow-md'
-                                    : 'border-purple-200 hover:border-purple-300 hover:shadow-md bg-white'
+                              isCancelled
+                                ? 'border-gray-300 bg-gray-50 opacity-70'
+                                : reminder.completed 
+                                  ? 'border-gray-200 bg-gray-50' 
+                                  : isOverdue
+                                    ? 'border-red-300 bg-red-50 hover:border-red-400 hover:shadow-md'
+                                    : isUpcoming
+                                      ? 'border-yellow-300 bg-yellow-50 hover:border-yellow-400 hover:shadow-md'
+                                      : 'border-purple-200 hover:border-purple-300 hover:shadow-md bg-white'
                             }`}>
                               <CardContent className="p-3 sm:p-4">
-                                <div className="flex items-start gap-3">
-                                  {/* Checkbox */}
-                                  <input
-                                    type="checkbox"
-                                    checked={reminder.completed || false}
-                                    onChange={() => {
-                                      if (onUpdateLead) {
-                                        onUpdateLead(lead.id, (l) => ({
-                                          reminders: l.reminders?.map(r => 
-                                            r.id === reminder.id ? { ...r, completed: !r.completed } : r
-                                          )
-                                        }));
-                                      }
-                                    }}
-                                    className="mt-1 w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
-                                  />
+                                <div className="flex flex-col sm:flex-row items-start gap-3">
+                                  {/* Completion Checkbox - for non-cancelled */}
+                                  {!isCancelled && (
+                                    <div className="flex items-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={reminder.completed || false}
+                                        onChange={() => {
+                                          if (onUpdateLead) {
+                                            onUpdateLead(lead.id, (l) => ({
+                                              reminders: l.reminders?.map(r => 
+                                                r.id === reminder.id 
+                                                  ? { ...r, completed: !r.completed, status: !r.completed ? "completed" : "pending" } 
+                                                  : r
+                                              )
+                                            }));
+                                          }
+                                        }}
+                                        className="w-5 h-5 rounded border-gray-300 text-purple-600 focus:ring-purple-500 cursor-pointer flex-shrink-0"
+                                        title={reminder.completed ? "Mark as incomplete" : "Mark as complete"}
+                                      />
+                                    </div>
+                                  )}
                                   
                                   {/* Content */}
-                                  <div className="flex-1 min-w-0">
+                                  <div className="flex-1 min-w-0 w-full">
                                     {/* Priority and Category Badges */}
                                     <div className="flex flex-wrap items-center gap-2 mb-2">
                                       {reminder.priority && (
@@ -5391,13 +5918,31 @@ Generated: ${new Date().toLocaleString()}
                                           {reminder.category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                                         </Badge>
                                       )}
-                                      {isOverdue && !reminder.completed && (
+                                      {reminder.recurrence && reminder.recurrence !== "once" && (
+                                        <Badge variant="outline" className="text-xs border-blue-300 bg-blue-50 text-blue-700">
+                                          <RotateCw className="w-3 h-3 mr-1" />
+                                          {reminder.recurrence.charAt(0).toUpperCase() + reminder.recurrence.slice(1)}
+                                        </Badge>
+                                      )}
+                                      {isCancelled && (
+                                        <Badge variant="outline" className="text-xs border-gray-400 bg-gray-200 text-gray-700">
+                                          <XCircle className="w-3 h-3 mr-1" />
+                                          Cancelled
+                                        </Badge>
+                                      )}
+                                      {reminder.rescheduledCount > 0 && (
+                                        <Badge variant="outline" className="text-xs border-orange-300 bg-orange-50 text-orange-700">
+                                          <Archive className="w-3 h-3 mr-1" />
+                                          Rescheduled {reminder.rescheduledCount}x
+                                        </Badge>
+                                      )}
+                                      {isOverdue && !reminder.completed && !isCancelled && (
                                         <Badge variant="destructive" className="text-xs">
                                           <AlertTriangle className="w-3 h-3 mr-1" />
                                           Overdue
                                         </Badge>
                                       )}
-                                      {isUpcoming && !reminder.completed && (
+                                      {isUpcoming && !reminder.completed && !isCancelled && (
                                         <Badge className="text-xs bg-yellow-500">
                                           <Zap className="w-3 h-3 mr-1" />
                                           Due Soon
@@ -5405,11 +5950,30 @@ Generated: ${new Date().toLocaleString()}
                                       )}
                                     </div>
 
+                                    {/* Lead Name */}
+                                    <p className="text-xs text-gray-500 mb-1 font-medium">
+                                      {lead.name} - {lead.company}
+                                    </p>
+
+                                    {/* Message */}
                                     <p className={`text-sm sm:text-base mb-2 leading-relaxed ${
-                                      reminder.completed ? 'line-through text-gray-400' : 'text-gray-700 font-medium'
+                                      reminder.completed || isCancelled ? 'line-through text-gray-400' : 'text-gray-700 font-medium'
                                     }`}>
                                       {reminder.message}
                                     </p>
+
+                                    {/* Cancellation Reason */}
+                                    {isCancelled && reminder.cancellationReason && (
+                                      <div className="mb-2 p-2 bg-gray-100 border-l-2 border-gray-400 rounded text-xs text-gray-600">
+                                        <strong>Reason:</strong> {reminder.cancellationReason}
+                                        {reminder.rescheduledTo && (
+                                          <span className="block mt-1 text-blue-600">
+                                            → Rescheduled automatically
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                    
                                     <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                                       <span className={`flex items-center gap-1 px-2 py-1 rounded ${
                                         isOverdue && !reminder.completed ? 'bg-red-100 text-red-700' : 'bg-purple-50'
@@ -5452,8 +6016,8 @@ Generated: ${new Date().toLocaleString()}
                                   </div>
                                   
                                   {/* Action Buttons */}
-                                  <div className="flex items-center gap-1 flex-shrink-0">
-                                    {!reminder.completed && (
+                                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-1 mt-3 sm:mt-0 justify-end sm:justify-start w-full sm:w-auto">
+                                    {!reminder.completed && reminder.status === "pending" && (
                                       <>
                                         <TooltipProvider>
                                           <Tooltip>
@@ -5469,17 +6033,63 @@ Generated: ${new Date().toLocaleString()}
                                                   setReminderPriority(reminder.priority || "medium");
                                                   setReminderCategory(reminder.category || "follow-up");
                                                   setReminderNotifyBefore(reminder.notifyBefore || 15);
+                                                  setReminderRecurrence(reminder.recurrence || "once");
                                                   
                                                   // Scroll to form
                                                   window.scrollTo({ top: 0, behavior: 'smooth' });
                                                 }}
-                                                className="text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                                                className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 h-8 sm:h-9"
                                               >
                                                 <Edit className="w-4 h-4" />
                                               </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>
                                               <p>Edit reminder</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleRescheduleReminder(reminder)}
+                                                className="text-purple-500 hover:text-purple-700 hover:bg-purple-50 h-8 sm:h-9"
+                                              >
+                                                <CalendarClock className="w-4 h-4" />
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Reschedule reminder</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleCancelAndReschedule(reminder.id)}
+                                                className="text-orange-500 hover:text-orange-700 hover:bg-orange-50 h-8 sm:h-9"
+                                              >
+                                                {reminder.recurrence !== "once" ? (
+                                                  <RotateCw className="w-4 h-4" />
+                                                ) : (
+                                                  <XCircle className="w-4 h-4" />
+                                                )}
+                                              </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>
+                                                {reminder.recurrence !== "once" 
+                                                  ? `Cancel & auto-reschedule (${reminder.recurrence})`
+                                                  : "Cancel reminder"
+                                                }
+                                              </p>
                                             </TooltipContent>
                                           </Tooltip>
                                         </TooltipProvider>
@@ -5514,7 +6124,7 @@ Generated: ${new Date().toLocaleString()}
                                                     duration: 2000,
                                                   });
                                                 }}
-                                                className="text-orange-500 hover:text-orange-700 hover:bg-orange-50"
+                                                className="text-yellow-500 hover:text-yellow-700 hover:bg-yellow-50 h-8 sm:h-9"
                                               >
                                                 <Clock3 className="w-4 h-4" />
                                               </Button>
@@ -5527,6 +6137,27 @@ Generated: ${new Date().toLocaleString()}
                                       </>
                                     )}
 
+                                    {/* Reschedule button for cancelled reminders */}
+                                    {isCancelled && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => handleRescheduleReminder(reminder)}
+                                              className="text-blue-500 hover:text-blue-700 hover:bg-blue-50 h-8 sm:h-9"
+                                            >
+                                              <RotateCw className="w-4 h-4" />
+                                            </Button>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Reschedule cancelled reminder</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+
                                     <TooltipProvider>
                                       <Tooltip>
                                         <TooltipTrigger asChild>
@@ -5534,7 +6165,7 @@ Generated: ${new Date().toLocaleString()}
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => {
-                                              if (confirm('Delete this reminder?')) {
+                                              if (confirm('Delete this reminder permanently?')) {
                                                 if (onUpdateLead) {
                                                   onUpdateLead(lead.id, (l) => ({
                                                     reminders: l.reminders?.filter(r => r.id !== reminder.id)
@@ -5547,13 +6178,13 @@ Generated: ${new Date().toLocaleString()}
                                                 });
                                               }
                                             }}
-                                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 sm:h-9"
                                           >
                                             <Trash2 className="w-4 h-4" />
                                           </Button>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          <p>Delete reminder</p>
+                                          <p>Delete reminder permanently</p>
                                         </TooltipContent>
                                       </Tooltip>
                                     </TooltipProvider>
@@ -5574,6 +6205,166 @@ Generated: ${new Date().toLocaleString()}
                       <p className="text-xs mt-1">Create your first reminder above to stay on top of follow-ups</p>
                     </div>
                   )}
+
+                  {/* Cancel Reminder Dialog */}
+                  <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Cancel Reminder</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {selectedReminderForAction?.recurrence !== "once" 
+                            ? `This is a ${selectedReminderForAction?.recurrence} recurring reminder. Cancelling will automatically create the next occurrence.`
+                            : "Are you sure you want to cancel this reminder? You can provide a reason below."
+                          }
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      
+                      <div className="space-y-2 py-4">
+                        <Label htmlFor="cancellation-reason">Cancellation Reason (Optional)</Label>
+                        <Textarea
+                          id="cancellation-reason"
+                          placeholder="Enter reason for cancellation..."
+                          value={cancellationReason}
+                          onChange={(e) => setCancellationReason(e.target.value)}
+                          className="min-h-[100px]"
+                        />
+                      </div>
+
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => {
+                          setCancelDialogOpen(false);
+                          setSelectedReminderForAction(null);
+                          setCancellationReason("");
+                        }}>
+                          Keep Reminder
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={confirmCancelReminder}
+                          className="bg-orange-500 hover:bg-orange-600"
+                        >
+                          Cancel Reminder
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  {/* Reschedule Reminder Dialog */}
+                  <Dialog open={rescheduleDialogOpen} onOpenChange={setRescheduleDialogOpen}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Reschedule Reminder</DialogTitle>
+                        <DialogDescription>
+                          Update the date and time for this reminder.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="space-y-4 py-4">
+                        {selectedReminderForAction && (
+                          <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <p className="text-sm font-medium text-gray-700 mb-1">Current Schedule</p>
+                            <p className="text-xs text-gray-500">
+                              {new Date(selectedReminderForAction.date).toLocaleDateString('en-US', { 
+                                month: 'long', 
+                                day: 'numeric', 
+                                year: 'numeric' 
+                              })} at {selectedReminderForAction.time}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reschedule-date">New Date</Label>
+                          <Input
+                            id="reschedule-date"
+                            type="date"
+                            value={rescheduleDate}
+                            onChange={(e) => setRescheduleDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="reschedule-time">New Time</Label>
+                          <Input
+                            id="reschedule-time"
+                            type="time"
+                            value={rescheduleTime}
+                            onChange={(e) => setRescheduleTime(e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setRescheduleDialogOpen(false);
+                            setSelectedReminderForAction(null);
+                            setRescheduleDate("");
+                            setRescheduleTime("");
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={confirmReschedule}
+                          className="bg-purple-500 hover:bg-purple-600"
+                        >
+                          <CalendarClock className="w-4 h-4 mr-2" />
+                          Reschedule
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+
+                  {/* Add Assignee Dialog */}
+                  <Dialog open={showAddAssigneeDialog} onOpenChange={setShowAddAssigneeDialog}>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add New Assignee</DialogTitle>
+                        <DialogDescription>
+                          Add a new team member to the assignee list.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="new-assignee-name">Full Name</Label>
+                          <Input
+                            id="new-assignee-name"
+                            type="text"
+                            placeholder="Enter full name..."
+                            value={newAssigneeName}
+                            onChange={(e) => setNewAssigneeName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                handleAddNewAssignee();
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setShowAddAssigneeDialog(false);
+                            setNewAssigneeName("");
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          onClick={handleAddNewAssignee}
+                          className="bg-indigo-600 hover:bg-indigo-700"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Assignee
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 </TabsContent>
 
                 {/* LEAD STATUS TAB */}
@@ -5748,18 +6539,27 @@ Generated: ${new Date().toLocaleString()}
                           <Users className="w-4 h-4 text-indigo-600" />
                           Reassign To
                         </Label>
-                        <Select value={currentAssignee} onValueChange={setCurrentAssignee}>
-                          <SelectTrigger id="assign-to" className="w-full text-sm border-indigo-200">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="John Smith">👤 John Smith</SelectItem>
-                            <SelectItem value="Sarah Wilson">👤 Sarah Wilson</SelectItem>
-                            <SelectItem value="Michael Chen">👤 Michael Chen</SelectItem>
-                            <SelectItem value="Emily Davis">👤 Emily Davis</SelectItem>
-                            <SelectItem value="David Brown">👤 David Brown</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <div className="flex gap-2">
+                          <Select value={currentAssignee} onValueChange={setCurrentAssignee}>
+                            <SelectTrigger id="assign-to" className="w-full text-sm border-indigo-200">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {teamMembers.map((member) => (
+                                <SelectItem key={member} value={member}>👤 {member}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowAddAssigneeDialog(true)}
+                            className="shrink-0 border-indigo-200 hover:bg-indigo-50"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
 
                       {/* Assignment Reason */}
